@@ -214,10 +214,10 @@
      <Compile Include="Library\PackageCache\com.unity.timeline@1.4.8\Editor\State\SequencePath.cs" />
      <Compile Include="Library\PackageCache\com.unity.timeline@1.4.8\Editor\Actions\ClipAction.cs" />
      <Compile Include="Library\PackageCache\com.unity.timeline@1.4.8\Editor\Animation\AnimationTrackActions.cs" />
-     <Compile Include="Library\PackageCache\com.unity.timeline@1.4.8\Editor\Utilities\SpacePartitioner.cs" />
      <Compile Include="Library\PackageCache\com.unity.timeline@1.4.8\Editor\Utilities\Graphics.cs" />
      <Compile Include="Library\PackageCache\com.unity.timeline@1.4.8\Editor\treeview\TrackGui\InlineCurveEditor.cs" />
      <Compile Include="Library\PackageCache\com.unity.timeline@1.4.8\Editor\Recording\TimelineRecording_PlayableAsset.cs" />
+     <Compile Include="Library\PackageCache\com.unity.timeline@1.4.8\Editor\Utilities\SpacePartitioner.cs" />
      <Compile Include="Library\PackageCache\com.unity.timeline@1.4.8\Editor\inspectors\TimelineProjectSettings.cs" />
      <Compile Include="Library\PackageCache\com.unity.timeline@1.4.8\Editor\Trackhead.cs" />
      <Compile Include="Library\PackageCache\com.unity.timeline@1.4.8\Editor\Animation\CurveTreeViewNode.cs" />

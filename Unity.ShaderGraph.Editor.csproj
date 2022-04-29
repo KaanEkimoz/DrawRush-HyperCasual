@@ -172,9 +172,9 @@
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.8.1\Editor\Data\Nodes\Input\Geometry\UVNode.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.8.1\Editor\Data\Interfaces\IMayRequireVertexColor.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.8.1\Editor\Drawing\Views\IdentifierField.cs" />
-     <Compile Include="Library\PackageCache\com.unity.shadergraph@10.8.1\Editor\Generation\Enumerations\IncludeLocation.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.8.1\Editor\Extensions\StencilExtensions.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.8.1\Editor\Data\Nodes\Artistic\Adjustment\HueNode.cs" />
+     <Compile Include="Library\PackageCache\com.unity.shadergraph@10.8.1\Editor\Generation\Enumerations\IncludeLocation.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.8.1\Editor\Data\Util\FunctionRegistry.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.8.1\Editor\Data\Nodes\Math\Trigonometry\SineNode.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.8.1\Editor\Data\Nodes\Math\Vector\ProjectionNode.cs" />
@@ -279,8 +279,8 @@
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.8.1\Editor\Data\Nodes\Artistic\Normal\NormalBlendNode.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.8.1\Editor\Data\Nodes\Math\Vector\TransformNode.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.8.1\Editor\Drawing\Colors\IColorProvider.cs" />
-     <Compile Include="Library\PackageCache\com.unity.shadergraph@10.8.1\Editor\AssetCallbacks\CreateShaderSubGraph.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.8.1\Editor\Data\Graphs\PreviewMode.cs" />
+     <Compile Include="Library\PackageCache\com.unity.shadergraph@10.8.1\Editor\AssetCallbacks\CreateShaderSubGraph.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.8.1\Editor\Drawing\Inspector\PropertyDrawers\ColorPropertyDrawer.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.8.1\Editor\Data\Graphs\IMaterialGraphAsset.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.8.1\Editor\Data\Interfaces\IMayRequireDepthTexture.cs" />
@@ -342,8 +342,8 @@
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.8.1\Editor\Generation\Targets\VFXTarget.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.8.1\Editor\Data\Nodes\Math\Advanced\AbsoluteNode.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.8.1\Editor\Data\Graphs\Vector3ShaderProperty.cs" />
-     <Compile Include="Library\PackageCache\com.unity.shadergraph@10.8.1\Editor\Generation\Data\ConditionalField.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.8.1\Editor\Data\Nodes\Artistic\Adjustment\ReplaceColorNode.cs" />
+     <Compile Include="Library\PackageCache\com.unity.shadergraph@10.8.1\Editor\Generation\Data\ConditionalField.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.8.1\Editor\Data\Nodes\Math\Basic\DivideNode.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.8.1\Editor\Data\Nodes\Math\Vector\SphereMaskNode.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.8.1\Editor\Drawing\Controls\CubemapControl.cs" />

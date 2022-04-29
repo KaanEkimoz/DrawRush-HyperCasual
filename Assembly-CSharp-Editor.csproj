@@ -673,6 +673,10 @@
       <Project>{a90371b1-06a9-d59d-a23a-426019d8e0f2}</Project>
       <Name>UnityEditor.TestRunner</Name>
     </ProjectReference>
+    <ProjectReference Include="Unity.Recorder.Editor.csproj">
+      <Project>{5136aa99-979b-185f-08a7-ecd636b8624e}</Project>
+      <Name>Unity.Recorder.Editor</Name>
+    </ProjectReference>
     <ProjectReference Include="Unity.VSCode.Editor.csproj">
       <Project>{f7e7e8ab-c6a3-7e0c-58e1-b3bdba99f3a3}</Project>
       <Name>Unity.VSCode.Editor</Name>
@@ -680,6 +684,10 @@
     <ProjectReference Include="Unity.RenderPipelines.Universal.Shaders.csproj">
       <Project>{bd6eeab8-4cc8-9b9d-8c71-55e8661071f4}</Project>
       <Name>Unity.RenderPipelines.Universal.Shaders</Name>
+    </ProjectReference>
+    <ProjectReference Include="Unity.Recorder.Base.csproj">
+      <Project>{486a02c3-64b6-c1ab-c767-47bb4d42f022}</Project>
+      <Name>Unity.Recorder.Base</Name>
     </ProjectReference>
     <ProjectReference Include="Unity.RenderPipelines.Universal.Runtime.csproj">
       <Project>{bd6ae397-c46f-ee17-ffbb-12dd618d1ba1}</Project>
@@ -760,6 +768,10 @@
     <ProjectReference Include="Unity.RenderPipelines.Core.Editor.csproj">
       <Project>{313d5c20-f82b-0c80-dfa9-4dc960afb07e}</Project>
       <Name>Unity.RenderPipelines.Core.Editor</Name>
+    </ProjectReference>
+    <ProjectReference Include="Unity.Recorder.csproj">
+      <Project>{631dc64a-e41c-c863-4d77-1f3fc0f866d7}</Project>
+      <Name>Unity.Recorder</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

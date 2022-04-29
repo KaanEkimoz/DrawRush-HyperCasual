@@ -129,8 +129,8 @@
      <Compile Include="Library\PackageCache\com.unity.test-framework@1.1.31\UnityEngine.TestRunner\NUnitExtensions\Commands\BeforeAfterTestCommandState.cs" />
      <Compile Include="Library\PackageCache\com.unity.test-framework@1.1.31\UnityEngine.TestRunner\Utils\AssemblyProvider\IAssemblyWrapper.cs" />
      <Compile Include="Library\PackageCache\com.unity.test-framework@1.1.31\UnityEngine.TestRunner\Assertions\Is.cs" />
-     <Compile Include="Library\PackageCache\com.unity.test-framework@1.1.31\UnityEngine.TestRunner\Utils\AssemblyProvider\AssemblyWrapper.cs" />
      <Compile Include="Library\PackageCache\com.unity.test-framework@1.1.31\UnityEngine.TestRunner\NUnitExtensions\Filters\CategoryFilterExtended.cs" />
+     <Compile Include="Library\PackageCache\com.unity.test-framework@1.1.31\UnityEngine.TestRunner\Utils\AssemblyProvider\AssemblyWrapper.cs" />
      <Compile Include="Library\PackageCache\com.unity.test-framework@1.1.31\UnityEngine.TestRunner\Utils\TestRunCallbackAttribute.cs" />
      <Compile Include="Library\PackageCache\com.unity.test-framework@1.1.31\UnityEngine.TestRunner\NUnitExtensions\BaseDelegator.cs" />
      <Compile Include="Library\PackageCache\com.unity.test-framework@1.1.31\UnityEngine.TestRunner\NUnitExtensions\Commands\UnityTestMethodCommand.cs" />
