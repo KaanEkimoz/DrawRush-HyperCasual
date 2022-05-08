@@ -20,9 +20,8 @@ public class GameManager : MonoBehaviour
             foreach (var enemy in enemies)
             {
                 Destroy(enemy);
-                
-                _gameOverPanel.SetActive(true);
             }
+            _gameOverPanel.SetActive(true);
         }
     }
 }

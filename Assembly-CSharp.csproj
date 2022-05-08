@@ -54,6 +54,7 @@
   <ItemGroup>
      <Compile Include="Assets\CodeMonkey\Utils\Button_UI.cs" />
      <Compile Include="Assets\CodeMonkey\Utils\World_Mesh.cs" />
+     <Compile Include="Assets\Scripts\DrawPart.cs" />
      <Compile Include="Assets\CodeMonkey\MonoBehaviours\CameraFollowSetup.cs" />
      <Compile Include="Assets\CodeMonkey\MonoBehaviours\CameraFollow.cs" />
      <Compile Include="Assets\Scripts\PlayerTrapCreater.cs" />
@@ -61,14 +62,12 @@
      <Compile Include="Assets\Scripts\PlayerInteract.cs" />
      <Compile Include="Assets\Scripts\GameManager.cs" />
      <Compile Include="Assets\CodeMonkey\Utils\FunctionUpdater.cs" />
-     <Compile Include="Assets\Scripts\Wall.cs" />
      <Compile Include="Assets\CodeMonkey\Utils\FunctionTimer.cs" />
-     <Compile Include="Assets\Scripts\SimpleCameraController.cs" />
-     <Compile Include="Assets\Scripts\WallPart.cs" />
+     <Compile Include="Assets\ExampleAssets\SimpleCameraController.cs" />
      <Compile Include="Assets\Scripts\EnemyFollow.cs" />
      <Compile Include="Assets\CodeMonkey\Utils\UI_Sprite.cs" />
-     <Compile Include="Assets\WallManager.cs" />
-     <Compile Include="Assets\Scripts\IInteractable.cs" />
+     <Compile Include="Assets\Scripts\WallManager.cs" />
+     <Compile Include="Assets\Scripts\Interfaces\IInteractable.cs" />
      <Compile Include="Assets\CodeMonkey\Utils\UI_TextComplex.cs" />
      <Compile Include="Assets\CodeMonkey\Utils\Button_Sprite.cs" />
      <Compile Include="Assets\CodeMonkey\Assets.cs" />
@@ -77,14 +76,13 @@
      <Compile Include="Assets\CodeMonkey\Utils\UtilsClass.cs" />
      <Compile Include="Assets\CodeMonkey\MonoBehaviours\PositionRendererSorter.cs" />
      <Compile Include="Assets\Scripts\ThirdPersonMovement.cs" />
-     <Compile Include="Assets\Scripts\Pathfinding.cs" />
+     <Compile Include="Assets\Scripts\OldVersion\Pathfinding.cs" />
      <Compile Include="Assets\CodeMonkey\Utils\UI_Bar.cs" />
-     <Compile Include="Assets\Scripts\Grid.cs" />
-     <Compile Include="Assets\Scripts\WallTrail.cs" />
+     <Compile Include="Assets\Scripts\OldVersion\Grid.cs" />
      <Compile Include="Assets\Inputs\PlayerControls.cs" />
      <Compile Include="Assets\CodeMonkey\MonoBehaviours\ComponentActions.cs" />
      <Compile Include="Assets\CodeMonkey\Utils\UI_BarMultiple.cs" />
-     <Compile Include="Assets\Scripts\PathNode.cs" />
+     <Compile Include="Assets\Scripts\OldVersion\PathNode.cs" />
      <Compile Include="Assets\CodeMonkey\CMDebug.cs" />
      <Compile Include="Assets\CodeMonkey\Utils\FunctionPeriodic.cs" />
      <None Include="Assets\TextMesh Pro\Shaders\TMPro.cginc" />

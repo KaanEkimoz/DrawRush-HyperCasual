@@ -4,8 +4,8 @@
 TagManager:
   serializedVersion: 2
   tags:
-  - WallTrail
   - Enemy
+  - DrawArea
   layers:
   - Default
   - TransparentFX

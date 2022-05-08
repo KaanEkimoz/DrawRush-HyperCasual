@@ -279,8 +279,8 @@
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.8.1\Editor\Data\Nodes\Artistic\Normal\NormalBlendNode.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.8.1\Editor\Data\Nodes\Math\Vector\TransformNode.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.8.1\Editor\Drawing\Colors\IColorProvider.cs" />
-     <Compile Include="Library\PackageCache\com.unity.shadergraph@10.8.1\Editor\Data\Graphs\PreviewMode.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.8.1\Editor\AssetCallbacks\CreateShaderSubGraph.cs" />
+     <Compile Include="Library\PackageCache\com.unity.shadergraph@10.8.1\Editor\Data\Graphs\PreviewMode.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.8.1\Editor\Drawing\Inspector\PropertyDrawers\ColorPropertyDrawer.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.8.1\Editor\Data\Graphs\IMaterialGraphAsset.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.8.1\Editor\Data\Interfaces\IMayRequireDepthTexture.cs" />

@@ -5,36 +5,50 @@ using UnityEngine;
 
 public class PlayerInteract : MonoBehaviour
 {
-    [SerializeField] private GameObject _trail;
-    void Start()
+    [SerializeField] private GameObject previousPart;
+    public GameObject trail;
+    [HideInInspector] public bool isDrawing;
+    private bool canDraw;
+
+    private void Awake()
     {
-        
-    }
-    void Update()
-    {
-        
+        isDrawing = false;
     }
 
     private void OnTriggerEnter(Collider other)
     {
+        if (other.CompareTag("DrawArea"))
+        {
+            canDraw = true;
+        }
         var interactable = other.GetComponent<IInteractable>();
-        if (interactable != null)
+        if (interactable != null && canDraw)
         {
             interactable.Interact();
-        }
-    }
-
-    private void OnTriggerStay(Collider other)
-    {
-        Debug.Log("TriggerStay");
-        if (other.gameObject.CompareTag("WallTrail"))
-        {
-            _trail.SetActive(true);
+            isDrawing = true;
+            if (previousPart == null)
+            {
+                previousPart = other.gameObject;
+            }
+            else
+            {
+                previousPart.GetComponent<DrawPart>().isDrawCompleted = true;
+                other.gameObject.GetComponent<DrawPart>().isDrawCompleted = true;
+                previousPart = null;
+                isDrawing = false;
+            }
         }
     }
 
     private void OnTriggerExit(Collider other)
     {
-        _trail.SetActive(false);
+        if (other.CompareTag("DrawArea"))
+        {
+            canDraw = false;
+            isDrawing = false;
+            previousPart = null;
+            Destroy(trail);
+        }
+        
     }
 }
