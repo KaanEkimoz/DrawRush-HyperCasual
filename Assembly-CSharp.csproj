@@ -85,6 +85,8 @@
      <Compile Include="Assets\Scripts\OldVersion\PathNode.cs" />
      <Compile Include="Assets\CodeMonkey\CMDebug.cs" />
      <Compile Include="Assets\CodeMonkey\Utils\FunctionPeriodic.cs" />
+     <Compile Include="Assets\Scripts\EnemyCombat.cs" />
+     <Compile Include="Assets\Scripts\PlayerCombat.cs" />
      <None Include="Assets\TextMesh Pro\Shaders\TMPro.cginc" />
      <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF-Mobile Overlay.shader" />
      <None Include="Assets\TextMesh Pro\Shaders\TMP_Bitmap.shader" />

@@ -15,8 +15,7 @@ public class ThirdPersonMovement : MonoBehaviour
     
     private CharacterController _playerCharController;
     private float _turnSmoothVelocity;
-    
-    
+
     //Gravity variables
     private const float Gravity = -9.81f;
     private Vector3 _velocity = Vector3.zero;
@@ -32,6 +31,8 @@ public class ThirdPersonMovement : MonoBehaviour
     {
         get => isMoving;
     }
+
+    [SerializeField] private Animator _playerAnim;
 
     private void OnEnable()
     {
@@ -70,8 +71,15 @@ public class ThirdPersonMovement : MonoBehaviour
     }
     void FixedUpdate()
     {
-        Move();
-        AddGravity();
+        if (!GameManager.isGameOver)
+        {
+            Move();
+            AddGravity();
+        }
+        else
+        {
+            _playerAnim.SetBool("b_isDancing",true);
+        }
     }
     private void Move()
     {
