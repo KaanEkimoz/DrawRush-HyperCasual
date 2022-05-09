@@ -16,6 +16,10 @@ public class EnemyFollow : MonoBehaviour
 
     private void Update()
     {
-        _enemyNavMeshAgent.SetDestination(_playerTransform.position);
+        if (_playerTransform)
+        {
+            _enemyNavMeshAgent.SetDestination(_playerTransform.position);
+        }
+        
     }
 }

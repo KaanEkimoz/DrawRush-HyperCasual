@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class PlayerCombat : MonoBehaviour
 {
-    public static int healthPoint = 3;
+    public static int healthPoint = 5;
 
     private void Update()
     {

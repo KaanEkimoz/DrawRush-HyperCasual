@@ -152,8 +152,8 @@
      <Compile Include="Library\PackageCache\com.unity.test-framework@1.1.31\UnityEngine.TestRunner\Assertions\UnexpectedLogMessageException.cs" />
      <Compile Include="Library\PackageCache\com.unity.test-framework@1.1.31\UnityEngine.TestRunner\Utils\ITestRunCallback.cs" />
      <Compile Include="Library\PackageCache\com.unity.test-framework@1.1.31\UnityEngine.TestRunner\NUnitExtensions\Commands\EnumerableRetryTestCommand.cs" />
-     <Compile Include="Library\PackageCache\com.unity.test-framework@1.1.31\UnityEngine.TestRunner\TestRunner\RemoteHelpers\IRemoteTestResultDataFactory.cs" />
      <Compile Include="Library\PackageCache\com.unity.test-framework@1.1.31\UnityEngine.TestRunner\TestRunner\RemoteHelpers\RemoteTestResultDataFactory.cs" />
+     <Compile Include="Library\PackageCache\com.unity.test-framework@1.1.31\UnityEngine.TestRunner\TestRunner\RemoteHelpers\IRemoteTestResultDataFactory.cs" />
      <Compile Include="Library\PackageCache\com.unity.test-framework@1.1.31\UnityEngine.TestRunner\NUnitExtensions\Runner\UnityLogCheckDelegatingCommand.cs" />
      <Compile Include="Library\PackageCache\com.unity.test-framework@1.1.31\UnityEngine.TestRunner\TestRunner\TestEnumeratorWrapper.cs" />
      <Compile Include="Library\PackageCache\com.unity.test-framework@1.1.31\UnityEngine.TestRunner\Utils\IPostBuildCleanup.cs" />

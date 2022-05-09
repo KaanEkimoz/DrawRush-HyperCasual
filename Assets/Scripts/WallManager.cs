@@ -24,7 +24,7 @@ public class WallManager : MonoBehaviour
                 trueCounter++;
                 if (trueCounter == _drawParts.Count)
                 {
-                    GameManager.isGameOver = true;
+                    GameManager.isGameWon = true;
                     CreateWalls();
                 }
             }

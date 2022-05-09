@@ -71,7 +71,7 @@ public class ThirdPersonMovement : MonoBehaviour
     }
     void FixedUpdate()
     {
-        if (!GameManager.isGameOver)
+        if (!GameManager.isGameWon)
         {
             Move();
             AddGravity();

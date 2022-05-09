@@ -127,8 +127,8 @@
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.8.1\Editor\Generation\Processors\MatrixNames.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.8.1\Editor\Generation\Enumerations\RenderQueue.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.8.1\Editor\Data\Nodes\Channel\SwizzleNode.cs" />
-     <Compile Include="Library\PackageCache\com.unity.shadergraph@10.8.1\Editor\Data\Nodes\Math\Range\RemapNode.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.8.1\Editor\Generation\Collections\FieldCollection.cs" />
+     <Compile Include="Library\PackageCache\com.unity.shadergraph@10.8.1\Editor\Data\Nodes\Math\Range\RemapNode.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.8.1\Editor\Data\Attributes\SGPropertyDrawerAttribute.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.8.1\Editor\Drawing\Manipulators\ResizeSideHandle.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.8.1\Editor\Data\Graphs\CubemapMaterialSlot.cs" />
