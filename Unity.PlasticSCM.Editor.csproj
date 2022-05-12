@@ -66,8 +66,8 @@
      <Compile Include="Library\PackageCache\com.unity.collab-proxy@1.15.16\Editor\PlasticSCM\Views\History\HistorySelection.cs" />
      <Compile Include="Library\PackageCache\com.unity.collab-proxy@1.15.16\Editor\PlasticSCM\Gluon\UpdateReport\UpdateReportListHeaderState.cs" />
      <Compile Include="Library\PackageCache\com.unity.collab-proxy@1.15.16\Editor\PlasticSCM\UI\PlasticDialog.cs" />
-     <Compile Include="Library\PackageCache\com.unity.collab-proxy@1.15.16\Editor\PlasticSCM\Inspector\DrawInspectorOperations.cs" />
      <Compile Include="Library\PackageCache\com.unity.collab-proxy@1.15.16\Editor\PlasticSCM\UI\Tree\TreeHeaderColumns.cs" />
+     <Compile Include="Library\PackageCache\com.unity.collab-proxy@1.15.16\Editor\PlasticSCM\Inspector\DrawInspectorOperations.cs" />
      <Compile Include="Library\PackageCache\com.unity.collab-proxy@1.15.16\Editor\PlasticSCM\UI\MeasureMaxWidth.cs" />
      <Compile Include="Library\PackageCache\com.unity.collab-proxy@1.15.16\Editor\PlasticSCM\WebApi\ChangesetFromCollabCommitResponse.cs" />
      <Compile Include="Library\PackageCache\com.unity.collab-proxy@1.15.16\Editor\PlasticSCM\Views\IncomingChanges\Gluon\Errors\ErrorListViewItem.cs" />
@@ -140,8 +140,8 @@
      <Compile Include="Library\PackageCache\com.unity.collab-proxy@1.15.16\Editor\PlasticSCM\PlasticWindow\PlasticSCMWindow.cs" />
      <Compile Include="Library\PackageCache\com.unity.collab-proxy@1.15.16\Editor\PlasticSCM\UI\Progress\DrawProgressForMigration.cs" />
      <Compile Include="Library\PackageCache\com.unity.collab-proxy@1.15.16\Editor\PlasticSCM\UI\DrawSearchField.cs" />
-     <Compile Include="Library\PackageCache\com.unity.collab-proxy@1.15.16\Editor\PlasticSCM\Views\Diff\DiffPanel.cs" />
      <Compile Include="Library\PackageCache\com.unity.collab-proxy@1.15.16\Editor\PlasticSCM\Views\Welcome\DownloadAndInstallOperation.cs" />
+     <Compile Include="Library\PackageCache\com.unity.collab-proxy@1.15.16\Editor\PlasticSCM\Views\Diff\DiffPanel.cs" />
      <Compile Include="Library\PackageCache\com.unity.collab-proxy@1.15.16\Editor\PlasticSCM\Gluon\ProgressOperationHandler.cs" />
      <Compile Include="Library\PackageCache\com.unity.collab-proxy@1.15.16\Editor\PlasticSCM\Views\PendingChanges\Dialogs\CheckinMergeNeededDialog.cs" />
      <Compile Include="Library\PackageCache\com.unity.collab-proxy@1.15.16\Editor\PlasticSCM\Views\PendingChanges\PendingChangesTab.cs" />

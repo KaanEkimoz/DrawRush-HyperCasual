@@ -88,8 +88,8 @@
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.9.0\Editor\Data\Nodes\Artistic\Normal\NormalFromHeightNode.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.9.0\Editor\Data\Implementation\IHasDependencies.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.9.0\Editor\Generation\Processors\PropertyCollector.cs" />
-     <Compile Include="Library\PackageCache\com.unity.shadergraph@10.9.0\Editor\Generation\Enumerations\KeywordDefinition.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.9.0\Editor\Data\Nodes\Input\Texture\SampleTexture2DArrayNode.cs" />
+     <Compile Include="Library\PackageCache\com.unity.shadergraph@10.9.0\Editor\Generation\Enumerations\KeywordDefinition.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.9.0\Editor\Data\Nodes\IPropertyFromNode.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.9.0\Editor\Generation\Descriptors\SubShaderDescriptor.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.9.0\Editor\Data\Nodes\Utility\SubGraphNode.cs" />
@@ -172,9 +172,9 @@
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.9.0\Editor\Data\Nodes\Input\Geometry\UVNode.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.9.0\Editor\Data\Interfaces\IMayRequireVertexColor.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.9.0\Editor\Drawing\Views\IdentifierField.cs" />
+     <Compile Include="Library\PackageCache\com.unity.shadergraph@10.9.0\Editor\Generation\Enumerations\IncludeLocation.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.9.0\Editor\Extensions\StencilExtensions.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.9.0\Editor\Data\Nodes\Artistic\Adjustment\HueNode.cs" />
-     <Compile Include="Library\PackageCache\com.unity.shadergraph@10.9.0\Editor\Generation\Enumerations\IncludeLocation.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.9.0\Editor\Data\Util\FunctionRegistry.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.9.0\Editor\Data\Nodes\Math\Trigonometry\SineNode.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.9.0\Editor\Data\Nodes\Math\Vector\ProjectionNode.cs" />
@@ -279,8 +279,8 @@
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.9.0\Editor\Data\Nodes\Artistic\Normal\NormalBlendNode.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.9.0\Editor\Data\Nodes\Math\Vector\TransformNode.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.9.0\Editor\Drawing\Colors\IColorProvider.cs" />
-     <Compile Include="Library\PackageCache\com.unity.shadergraph@10.9.0\Editor\AssetCallbacks\CreateShaderSubGraph.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.9.0\Editor\Data\Graphs\PreviewMode.cs" />
+     <Compile Include="Library\PackageCache\com.unity.shadergraph@10.9.0\Editor\AssetCallbacks\CreateShaderSubGraph.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.9.0\Editor\Drawing\Inspector\PropertyDrawers\ColorPropertyDrawer.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.9.0\Editor\Data\Graphs\IMaterialGraphAsset.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.9.0\Editor\Data\Interfaces\IMayRequireDepthTexture.cs" />
@@ -572,8 +572,8 @@
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.9.0\Editor\Drawing\Views\Slots\ColorSlotControlView.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.9.0\Editor\Data\Nodes\Math\Advanced\ExponentialNode.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.9.0\Editor\Drawing\Colors\PrecisionColors.cs" />
-     <Compile Include="Library\PackageCache\com.unity.shadergraph@10.9.0\Editor\Data\Graphs\UVMaterialSlot.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.9.0\Editor\Drawing\Inspector\TabbedView\TabbedView.cs" />
+     <Compile Include="Library\PackageCache\com.unity.shadergraph@10.9.0\Editor\Data\Graphs\UVMaterialSlot.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.9.0\Editor\Data\Nodes\Math\Round\SignNode.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.9.0\Editor\Data\Graphs\SamplerStateMaterialSlot.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.9.0\Editor\Serialization\SerializationExtensions.cs" />

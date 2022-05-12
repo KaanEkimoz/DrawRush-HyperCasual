@@ -169,9 +169,9 @@
      <Compile Include="Library\PackageCache\com.unity.timeline@1.4.8\Editor\Window\TimelineWindow_TimeArea.cs" />
      <Compile Include="Library\PackageCache\com.unity.timeline@1.4.8\Editor\Utilities\AnimatedParameterCache.cs" />
      <Compile Include="Library\PackageCache\com.unity.timeline@1.4.8\Editor\State\WindowState.cs" />
-     <Compile Include="Library\PackageCache\com.unity.timeline@1.4.8\Editor\inspectors\DirectorNamedColorInspector.cs" />
      <Compile Include="Library\PackageCache\com.unity.timeline@1.4.8\Editor\Utilities\Scopes\GUIColorOverride.cs" />
      <Compile Include="Library\PackageCache\com.unity.timeline@1.4.8\Editor\treeview\ItemGui\TimelineClipGUI.cs" />
+     <Compile Include="Library\PackageCache\com.unity.timeline@1.4.8\Editor\inspectors\DirectorNamedColorInspector.cs" />
      <Compile Include="Library\PackageCache\com.unity.timeline@1.4.8\Editor\inspectors\AnimationPlayableAssetInspector.cs" />
      <Compile Include="Library\PackageCache\com.unity.timeline@1.4.8\Editor\Actions\TrackAction.cs" />
      <Compile Include="Library\PackageCache\com.unity.timeline@1.4.8\Editor\Utilities\Range.cs" />
@@ -274,8 +274,8 @@
      <Compile Include="Library\PackageCache\com.unity.timeline@1.4.8\Editor\DirectorNamedColor.cs" />
      <Compile Include="Library\PackageCache\com.unity.timeline@1.4.8\Editor\Signals\SignalEventDrawer.cs" />
      <Compile Include="Library\PackageCache\com.unity.timeline@1.4.8\Editor\Actions\IMenuChecked.cs" />
-     <Compile Include="Library\PackageCache\com.unity.timeline@1.4.8\Editor\Actions\IAction.cs" />
      <Compile Include="Library\PackageCache\com.unity.timeline@1.4.8\Editor\treeview\Drawers\ClipDrawer.cs" />
+     <Compile Include="Library\PackageCache\com.unity.timeline@1.4.8\Editor\Actions\IAction.cs" />
      <Compile Include="Library\PackageCache\com.unity.timeline@1.4.8\Editor\Utilities\TrackModifier.cs" />
      <Compile Include="Library\PackageCache\com.unity.timeline@1.4.8\Editor\Items\ITimelineItem.cs" />
      <Compile Include="Library\PackageCache\com.unity.timeline@1.4.8\Editor\Manipulators\Sequence\TrimClip.cs" />

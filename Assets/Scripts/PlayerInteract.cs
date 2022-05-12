@@ -5,9 +5,10 @@ using UnityEngine;
 
 public class PlayerInteract : MonoBehaviour
 {
-    [SerializeField] private GameObject previousPart;
-    public GameObject trail;
+    [HideInInspector] private GameObject previousPart;
+    [HideInInspector] public GameObject trail;
     [HideInInspector] public bool isDrawing;
+    [SerializeField] private Material _lineMaterial;
     private bool canDraw;
 
     private void Awake()
@@ -17,6 +18,7 @@ public class PlayerInteract : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
+        Debug.Log("Player Trigger Enter");
         if (other.CompareTag("DrawArea"))
         {
             canDraw = true;
@@ -32,10 +34,15 @@ public class PlayerInteract : MonoBehaviour
             }
             else
             {
-                previousPart.GetComponent<DrawPart>().isDrawCompleted = true;
-                other.gameObject.GetComponent<DrawPart>().isDrawCompleted = true;
-                previousPart = null;
-                isDrawing = false;
+                    LineRenderer lineRenderer = previousPart.AddComponent(typeof(LineRenderer)) as LineRenderer;
+                    lineRenderer.material = _lineMaterial;
+                    lineRenderer.SetPosition(0, previousPart.transform.position);
+                    lineRenderer.SetPosition(1, other.gameObject.transform.position);
+                    
+                    previousPart.GetComponent<DrawPart>().isDrawCompleted = true;
+                    other.gameObject.GetComponent<DrawPart>().isDrawCompleted = true;
+                    previousPart = null;
+                    isDrawing = false;
             }
         }
     }
@@ -46,6 +53,7 @@ public class PlayerInteract : MonoBehaviour
         {
             canDraw = false;
             isDrawing = false;
+            previousPart.GetComponent<DrawPart>().playerEntered = false;
             previousPart = null;
             Destroy(trail);
         }

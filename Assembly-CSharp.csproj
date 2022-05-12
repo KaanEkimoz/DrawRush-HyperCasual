@@ -56,7 +56,7 @@
      <Compile Include="Assets\CodeMonkey\Utils\World_Mesh.cs" />
      <Compile Include="Assets\Scripts\DrawPart.cs" />
      <Compile Include="Assets\CodeMonkey\MonoBehaviours\CameraFollowSetup.cs" />
-     <Compile Include="Assets\PackageAsset\JMO Assets\Toony Colors Pro\Scripts\TCP2_PlanarReflection.cs" />
+     <Compile Include="Assets\_OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Scripts\TCP2_PlanarReflection.cs" />
      <Compile Include="Assets\CodeMonkey\MonoBehaviours\CameraFollow.cs" />
      <Compile Include="Assets\Scripts\PlayerTrapCreater.cs" />
      <Compile Include="Assets\CodeMonkey\Utils\World_Bar.cs" />
@@ -68,16 +68,16 @@
      <Compile Include="Assets\ExampleAssets\SimpleCameraController.cs" />
      <Compile Include="Assets\Scripts\EnemyFollow.cs" />
      <Compile Include="Assets\Scripts\EnemyCombat.cs" />
-     <Compile Include="Assets\PackageAsset\JMO Assets\Toony Colors Pro\Scripts\TCP2_GetPosOnWater.cs" />
+     <Compile Include="Assets\_OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Scripts\TCP2_GetPosOnWater.cs" />
      <Compile Include="Assets\CodeMonkey\Utils\UI_Sprite.cs" />
      <Compile Include="Assets\Scripts\WallManager.cs" />
      <Compile Include="Assets\Scripts\Interfaces\IInteractable.cs" />
      <Compile Include="Assets\CodeMonkey\Utils\UI_TextComplex.cs" />
      <Compile Include="Assets\CodeMonkey\Utils\Button_Sprite.cs" />
-     <Compile Include="Assets\PackageAsset\JMO Assets\Toony Colors Pro\Scripts\TCP2_RuntimeUtils.cs" />
+     <Compile Include="Assets\_OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Scripts\TCP2_RuntimeUtils.cs" />
      <Compile Include="Assets\CodeMonkey\Assets.cs" />
      <Compile Include="Assets\CodeMonkey\Utils\World_Sprite.cs" />
-     <Compile Include="Assets\TutorialInfo\Scripts\Readme.cs" />
+     <Compile Include="Assets\_OtherAssets\TutorialInfo\Scripts\Readme.cs" />
      <Compile Include="Assets\CodeMonkey\Utils\UtilsClass.cs" />
      <Compile Include="Assets\CodeMonkey\MonoBehaviours\PositionRendererSorter.cs" />
      <Compile Include="Assets\Scripts\ThirdPersonMovement.cs" />
@@ -86,10 +86,10 @@
      <Compile Include="Assets\Scripts\OldVersion\Grid.cs" />
      <Compile Include="Assets\Inputs\PlayerControls.cs" />
      <Compile Include="Assets\CodeMonkey\MonoBehaviours\ComponentActions.cs" />
-     <Compile Include="Assets\PackageAsset\JMO Assets\Toony Colors Pro\Scripts\TCP2_ShaderUpdateUnityTime.cs" />
+     <Compile Include="Assets\_OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Scripts\TCP2_ShaderUpdateUnityTime.cs" />
      <Compile Include="Assets\CodeMonkey\Utils\UI_BarMultiple.cs" />
      <Compile Include="Assets\Scripts\OldVersion\PathNode.cs" />
-     <Compile Include="Assets\PackageAsset\JMO Assets\Toony Colors Pro\Scripts\TCP2_CameraDepth.cs" />
+     <Compile Include="Assets\_OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Scripts\TCP2_CameraDepth.cs" />
      <Compile Include="Assets\CodeMonkey\CMDebug.cs" />
      <Compile Include="Assets\CodeMonkey\Utils\FunctionPeriodic.cs" />
      <None Include="Assets\TextMesh Pro\Shaders\TMPro.cginc" />
@@ -99,7 +99,7 @@
      <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF SSD.shader" />
      <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF-Surface-Mobile.shader" />
      <None Include="Assets\CodeMonkey\README.txt" />
-     <None Include="Assets\PackageAsset\JMO Assets\Toony Colors Pro\Shaders\Hybrid\TCP2 Hybrid Include.cginc" />
+     <None Include="Assets\_OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Shaders\Hybrid\TCP2 Hybrid Include.cginc" />
      <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF-Surface.shader" />
      <None Include="Assets\TextMesh Pro\Sprites\EmojiOne Attribution.txt" />
      <None Include="Assets\TextMesh Pro\Shaders\TMP_Bitmap-Custom-Atlas.shader" />
@@ -110,12 +110,12 @@
      <None Include="Assets\TextMesh Pro\Shaders\TMPro_Surface.cginc" />
      <None Include="Assets\TextMesh Pro\Resources\LineBreaking Following Characters.txt" />
      <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF-Mobile Masking.shader" />
-     <None Include="Assets\PackageAsset\JMO Assets\Toony Colors Pro\Shaders\Hybrid\TCP2 Hybrid URP Support.cginc" />
+     <None Include="Assets\_OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Shaders\Hybrid\TCP2 Hybrid URP Support.cginc" />
      <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF Overlay.shader" />
      <None Include="Assets\TextMesh Pro\Shaders\TMP_Bitmap-Mobile.shader" />
      <None Include="Assets\TextMesh Pro\Fonts\LiberationSans - OFL.txt" />
      <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF-Mobile.shader" />
-     <None Include="Assets\PackageAsset\JMO Assets\Toony Colors Pro\Shaders\Hybrid\TCP2 Hybrid Shader.shader" />
+     <None Include="Assets\_OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Shaders\Hybrid\TCP2 Hybrid Shader.shader" />
      <None Include="Assets\TextMesh Pro\Shaders\TMP_Sprite.shader" />
  <Reference Include="UnityEngine">
  <HintPath>C:/Program Files/Unity/Hub/Editor/2020.3.34f1/Editor/Data/Managed/UnityEngine/UnityEngine.dll</HintPath>
@@ -750,6 +750,14 @@
     <ProjectReference Include="Unity.ShaderGraph.Editor.csproj">
       <Project>{2907e873-4a2e-1ba5-5d67-296b7e9bc932}</Project>
       <Name>Unity.ShaderGraph.Editor</Name>
+    </ProjectReference>
+    <ProjectReference Include="Cinemachine.csproj">
+      <Project>{10db717b-52a2-8fa0-1d38-713a6823b07d}</Project>
+      <Name>Cinemachine</Name>
+    </ProjectReference>
+    <ProjectReference Include="com.unity.cinemachine.editor.csproj">
+      <Project>{69da2974-7deb-43f3-138d-181880ed3dcd}</Project>
+      <Name>com.unity.cinemachine.editor</Name>
     </ProjectReference>
     <ProjectReference Include="Unity.RenderPipelines.Universal.Editor.csproj">
       <Project>{825b601d-a7bf-9925-fee7-55a429b6c2b0}</Project>

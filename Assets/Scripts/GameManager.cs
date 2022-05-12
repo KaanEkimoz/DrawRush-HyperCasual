@@ -7,12 +7,16 @@ using UnityEngine.SceneManagement;
 public class GameManager : MonoBehaviour
 {
     public static bool isGameWon;
-    [SerializeField] private GameObject _winPanel, _losePanel;
+    [SerializeField] private GameObject _winPanel, _losePanel, _gameUI;
     private GameObject _player;
     private int _level = 1;
     [SerializeField] private TextMeshProUGUI _levelText;
+    [SerializeField] private GameObject _particles;
+    private bool waitEnds;
+
     void Start()
     {
+        _gameUI.SetActive(true);
         _winPanel.SetActive(false);
         _losePanel.SetActive(false);
         _level = PlayerPrefs.GetInt("Level", 1);
@@ -31,6 +35,7 @@ public class GameManager : MonoBehaviour
         {
             GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
             TrailRenderer[] trails = GameObject.FindObjectsOfType<TrailRenderer>();
+            LineRenderer[] lines = GameObject.FindObjectsOfType<LineRenderer>();
             foreach (var enemy in enemies)
             {
                 Destroy(enemy);
@@ -40,8 +45,25 @@ public class GameManager : MonoBehaviour
             {
                 Destroy(trail);
             }
-            _winPanel.SetActive(true);
+            foreach (var line in lines)
+            {
+                Destroy(line);
+            }
+            _particles.SetActive(true);
+            Invoke("GameWon",3.0f);
         }
+    }
+
+    private void GameWon()
+    {
+        
+        //StartCoroutine(WaitForParticles());
+        _winPanel.SetActive(true);
+    }
+    
+    IEnumerator WaitForParticles()
+    {
+        yield return new WaitForSeconds(2f);
     }
 
     #region SceneManagement

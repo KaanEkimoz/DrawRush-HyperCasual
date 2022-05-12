@@ -5,15 +5,17 @@ using UnityEngine;
 
 public class DrawPart : MonoBehaviour, IInteractable
 {
+    [HideInInspector] public bool playerEntered;
     [SerializeField] private GameObject _trailPrefab;
     private GameObject _playerRef;
     private PlayerInteract _playerInteract;
     private GameObject _currTrail;
     private Transform _trailPoint;
-    [HideInInspector]public bool isDrawCompleted;
+    public bool isDrawCompleted;
 
     private void Awake()
     {
+        playerEntered = false;
         isDrawCompleted = false;
         if (_playerRef == null)
         {
@@ -25,9 +27,9 @@ public class DrawPart : MonoBehaviour, IInteractable
 
     public void Interact()
     {
-        Debug.Log("DrawPart Trigger");
-        if (!isDrawCompleted)
+        if (!isDrawCompleted && !playerEntered)
         {
+            playerEntered = true;
             if (_currTrail == null)
             {
                 CreateTrail();
@@ -44,18 +46,20 @@ public class DrawPart : MonoBehaviour, IInteractable
             else
             {
                 _playerInteract.trail.transform.parent = gameObject.transform;
+                foreach (Transform child in gameObject.transform)
+                {
+                    Destroy(child.gameObject);
+                }
                 _playerInteract.trail = null;
                 isDrawCompleted = true;
                 _playerInteract.isDrawing = false;
+                playerEntered = false;
             }
         }
     }
     private void CreateTrail()
     {
-        _currTrail = Instantiate(_trailPrefab,gameObject.transform.position - new Vector3(0,-0.25f,0),Quaternion.Euler(91,40,38), gameObject.transform);/*
-        _currTrail.transform.rotation = Quaternion.Euler(-91, 40, 38);
-        _currTrail.transform.transform.position = new Vector3(_currTrail.transform.position.x, 0f, _trailPoint.position.z);
-        _currTrail.transform.position = new Vector3(_currTrail.transform.position.x, 0.2f, _trailPoint.position.z);*/
+        _currTrail = Instantiate(_trailPrefab,gameObject.transform.position - new Vector3(0,-0.25f,0),Quaternion.Euler(91,40,38), gameObject.transform);
         _currTrail.SetActive(false);
     }
 }

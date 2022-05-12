@@ -174,8 +174,8 @@
      <Compile Include="Library\PackageCache\com.unity.inputsystem@1.3.0\InputSystem\Plugins\Steam\SteamControllerType.cs" />
      <Compile Include="Library\PackageCache\com.unity.inputsystem@1.3.0\InputSystem\Plugins\Users\InputUserSettings.cs" />
      <Compile Include="Library\PackageCache\com.unity.inputsystem@1.3.0\InputSystem\Plugins\XR\Controls\PoseControl.cs" />
-     <Compile Include="Library\PackageCache\com.unity.inputsystem@1.3.0\InputSystem\Plugins\Switch\SwitchSupportHID.cs" />
      <Compile Include="Library\PackageCache\com.unity.inputsystem@1.3.0\InputSystem\Plugins\WebGL\WebGLSupport.cs" />
+     <Compile Include="Library\PackageCache\com.unity.inputsystem@1.3.0\InputSystem\Plugins\Switch\SwitchSupportHID.cs" />
      <Compile Include="Library\PackageCache\com.unity.inputsystem@1.3.0\InputSystem\Plugins\iOS\iOSStepCounter.cs" />
      <Compile Include="Library\PackageCache\com.unity.inputsystem@1.3.0\InputSystem\Devices\Commands\InitiateUserAccountPairingCommand.cs" />
      <Compile Include="Library\PackageCache\com.unity.inputsystem@1.3.0\InputSystem\Editor\Internal\InputStateWindow.cs" />

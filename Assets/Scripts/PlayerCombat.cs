@@ -7,6 +7,11 @@ public class PlayerCombat : MonoBehaviour
 {
     public static int healthPoint = 5;
 
+    private void Start()
+    {
+        healthPoint = 5;
+    }
+
     private void Update()
     {
         if (healthPoint <= 0)

@@ -444,6 +444,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Standard_Run_with_skin
       objectReference: {fileID: 0}
+    - target: {fileID: 6561032388189534522, guid: cc8a60b4dd295dc4eae2fc128e328640, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: d43c903fd6d1d1e4cbb0093351388afd, type: 2}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: cc8a60b4dd295dc4eae2fc128e328640, type: 3}
 --- !u!1 &1480284378336454101 stripped
