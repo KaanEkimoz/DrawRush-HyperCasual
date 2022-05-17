@@ -14,7 +14,6 @@ public class PartManager : MonoBehaviour
     }
     void Update()
     {
-        
         foreach (var part in _childParts)
         {
             if (part.isDrawCompleted)

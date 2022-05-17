@@ -33,22 +33,22 @@ public class GameManager : MonoBehaviour
         }
         if (isGameWon)
         {
-            GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
+            EnemyCombat[] enemies = GameObject.FindObjectsOfType<EnemyCombat>();
             TrailRenderer[] trails = GameObject.FindObjectsOfType<TrailRenderer>();
             
             foreach (var enemy in enemies)
             {
-                Destroy(enemy);
+                enemy.enemyAnim.SetTrigger("t_die");
             }
             foreach (var trail in trails)
             {
                 Destroy(trail);
             }
-            /*LineRenderer[] lines = GameObject.FindObjectsOfType<LineRenderer>();
+            LineRenderer[] lines = GameObject.FindObjectsOfType<LineRenderer>();
             foreach (var line in lines)
             {
                 Destroy(line);
-            }*/
+            }
             _particles.SetActive(true);
             Invoke("GameWon",3.0f);
         }

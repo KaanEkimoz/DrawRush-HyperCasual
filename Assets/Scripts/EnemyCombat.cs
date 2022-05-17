@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class EnemyCombat : MonoBehaviour
 {
-    [SerializeField] private Animator _enemyAnim;
+    public Animator enemyAnim;
     private int damage = 1;
 
     private void OnTriggerEnter(Collider other)
@@ -13,8 +13,7 @@ public class EnemyCombat : MonoBehaviour
         Debug.Log("EnemyTriggerEnter");
         if (other.gameObject.CompareTag("Player"))
         {
-            _enemyAnim.SetTrigger("t_attack");
-            PlayerCombat.healthPoint -= damage;
+            //Deal damage to Enemy
         }
     }
 }
