@@ -6,7 +6,7 @@ using UnityEngine;
 public class PlayerInteract : MonoBehaviour
 {
     [HideInInspector] private GameObject previousPart;
-    [HideInInspector] public GameObject trail;
+     public GameObject trail;
     [HideInInspector] public bool isDrawing;
     [SerializeField] private Material _lineMaterial;
     private bool canDraw;
@@ -14,49 +14,70 @@ public class PlayerInteract : MonoBehaviour
     private void Awake()
     {
         isDrawing = false;
+        previousPart = null;
     }
-
     private void OnTriggerEnter(Collider other)
     {
-        Debug.Log("Player Trigger Enter");
+        
         if (other.CompareTag("DrawArea"))
         {
             canDraw = true;
+            Debug.Log("Player DrawArea Trigger Enter");
         }
-        var interactable = other.GetComponent<IInteractable>();
-        if (interactable != null && canDraw)
+        else
         {
-            interactable.Interact();
-            isDrawing = true;
-            if (previousPart == null)
+            Debug.Log("Player DrawPart Trigger Enter");
+            var interactable = other.GetComponent<IInteractable>();
+            if (interactable != null && canDraw)
             {
-                previousPart = other.gameObject;
-            }
-            else
-            {
-                    LineRenderer lineRenderer = previousPart.AddComponent(typeof(LineRenderer)) as LineRenderer;
-                    lineRenderer.material = _lineMaterial;
-                    lineRenderer.SetPosition(0, previousPart.transform.position);
-                    lineRenderer.SetPosition(1, other.gameObject.transform.position);
-                    
+                if (previousPart == null)
+                {
+                    interactable.Interact();
+                    previousPart = other.gameObject;
+                }
+                else if(isDrawing)
+                {
+                    interactable.Interact();
                     previousPart.GetComponent<DrawPart>().isDrawCompleted = true;
                     other.gameObject.GetComponent<DrawPart>().isDrawCompleted = true;
+                    LineRenderer lineRenderer = previousPart.AddComponent(typeof(LineRenderer)) as LineRenderer;
+                    AdjustLineRenderer(lineRenderer,other.gameObject.transform.position,previousPart.transform.position);
+                    Destroy(trail);
                     previousPart = null;
                     isDrawing = false;
+                    interactable = null;
+                }
             }
         }
+        
     }
-
     private void OnTriggerExit(Collider other)
     {
+        
         if (other.CompareTag("DrawArea"))
         {
-            canDraw = false;
-            isDrawing = false;
-            previousPart.GetComponent<DrawPart>().playerEntered = false;
-            previousPart = null;
+            Debug.Log("Exit from DrawArea");
             Destroy(trail);
+            //When it leaves the DrawableArea
+            //Can't draw
+            canDraw = false;
+            //Currently not drawing
+            isDrawing = false;
+            if (previousPart)
+            {
+                //Previous and Current DrawPart Resetted
+                previousPart.GetComponent<DrawPart>().isPlayerEntered = false;
+                previousPart = null;
+            }
+            
         }
-        
+    }
+    private void AdjustLineRenderer(LineRenderer lineRenderer,Vector3 startPosition, Vector3 endPosition)
+    {
+        startPosition.y = 0f;
+        endPosition.y = 0f;
+        lineRenderer.material = _lineMaterial;
+        lineRenderer.SetPosition(0, startPosition);
+        lineRenderer.SetPosition(1, endPosition);
     }
 }

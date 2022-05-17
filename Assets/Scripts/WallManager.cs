@@ -25,12 +25,11 @@ public class WallManager : MonoBehaviour
                 if (trueCounter == _drawParts.Count)
                 {
                     GameManager.isGameWon = true;
-                    CreateWalls();
+                    //CreateWalls();
                 }
             }
         }
     }
-
     private void CreateWalls()
     {
         foreach (var wall in walls)

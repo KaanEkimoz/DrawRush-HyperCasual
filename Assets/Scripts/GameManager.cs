@@ -35,20 +35,20 @@ public class GameManager : MonoBehaviour
         {
             GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
             TrailRenderer[] trails = GameObject.FindObjectsOfType<TrailRenderer>();
-            LineRenderer[] lines = GameObject.FindObjectsOfType<LineRenderer>();
+            
             foreach (var enemy in enemies)
             {
                 Destroy(enemy);
             }
-
             foreach (var trail in trails)
             {
                 Destroy(trail);
             }
+            /*LineRenderer[] lines = GameObject.FindObjectsOfType<LineRenderer>();
             foreach (var line in lines)
             {
                 Destroy(line);
-            }
+            }*/
             _particles.SetActive(true);
             Invoke("GameWon",3.0f);
         }
@@ -56,18 +56,9 @@ public class GameManager : MonoBehaviour
 
     private void GameWon()
     {
-        
-        //StartCoroutine(WaitForParticles());
         _winPanel.SetActive(true);
     }
-    
-    IEnumerator WaitForParticles()
-    {
-        yield return new WaitForSeconds(2f);
-    }
-
     #region SceneManagement
-
     public void RestartLevel()
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
@@ -78,6 +69,5 @@ public class GameManager : MonoBehaviour
         PlayerPrefs.SetInt("Level", PlayerPrefs.GetInt("Level") + 1);
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
     }
-
     #endregion
 }
