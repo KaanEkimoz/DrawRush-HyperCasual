@@ -5,15 +5,28 @@ using UnityEngine;
 
 public class EnemyCombat : MonoBehaviour
 {
+    [SerializeField] private int damage = 1;
     public Animator enemyAnim;
-    private int damage = 1;
 
+    private void Awake()
+    {
+        if (enemyAnim == null)
+        {
+            enemyAnim = GetComponentInChildren<Animator>();
+        }
+    }
     private void OnTriggerEnter(Collider other)
     {
         Debug.Log("EnemyTriggerEnter");
         if (other.gameObject.CompareTag("Player"))
         {
-            //Deal damage to Enemy
+            Attack();
         }
+    }
+
+    private void Attack()
+    {
+        PlayerCombat.healthPoint -= damage;
+        GameManager.playerHP.text = PlayerCombat.healthPoint.ToString();
     }
 }

@@ -11,6 +11,7 @@ public class GameManager : MonoBehaviour
     private GameObject _player;
     private int _level = 1;
     [SerializeField] private TextMeshProUGUI _levelText;
+    public static TextMeshProUGUI playerHP;
     [SerializeField] private GameObject _particles;
     private bool waitEnds;
 
@@ -58,6 +59,7 @@ public class GameManager : MonoBehaviour
     {
         _winPanel.SetActive(true);
     }
+    
     #region SceneManagement
     public void RestartLevel()
     {

@@ -90,9 +90,9 @@
      <Compile Include="Assets\!OtherAssets\CodeMonkey\Utils\UI_BarMultiple.cs" />
      <Compile Include="Assets\Scripts\OldVersion\PathNode.cs" />
      <Compile Include="Assets\!OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Scripts\TCP2_CameraDepth.cs" />
+     <Compile Include="Assets\PartManager.cs" />
      <Compile Include="Assets\!OtherAssets\CodeMonkey\CMDebug.cs" />
      <Compile Include="Assets\!OtherAssets\CodeMonkey\Utils\FunctionPeriodic.cs" />
-     <Compile Include="Assets\PartManager.cs" />
      <None Include="Assets\TextMesh Pro\Shaders\TMPro.cginc" />
      <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF-Mobile Overlay.shader" />
      <None Include="Assets\TextMesh Pro\Shaders\TMP_Bitmap.shader" />
