@@ -1,15 +1,17 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 public class PlayerCombat : MonoBehaviour
 {
-    public static int healthPoint = 5;
+    private int healthPoint = 3;
+    [SerializeField] private TextMeshProUGUI playerHP;
 
     private void Start()
     {
-        healthPoint = 5;
+        healthPoint = 3;
     }
 
     private void Update()
@@ -18,5 +20,11 @@ public class PlayerCombat : MonoBehaviour
         {
             Destroy(gameObject);
         }
+    }
+
+    public void TakeDamage(int damage)
+    {
+        healthPoint += damage;
+        playerHP.text = healthPoint.ToString();
     }
 }

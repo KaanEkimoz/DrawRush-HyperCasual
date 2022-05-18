@@ -6,20 +6,26 @@ using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
+    [Header("UI Panel Elements"), Space] 
+    [SerializeField] private GameObject winPanel;
+    [SerializeField] private GameObject losePanel;
+    [SerializeField] private GameObject gameUI;
+    [Header("Others")]
+   
+    [SerializeField] private TextMeshProUGUI _levelText;
+    [SerializeField] private GameObject _particles;
+    
+    private TextMeshProUGUI playerHP;
     public static bool isGameWon;
-    [SerializeField] private GameObject _winPanel, _losePanel, _gameUI;
     private GameObject _player;
     private int _level = 1;
-    [SerializeField] private TextMeshProUGUI _levelText;
-    public static TextMeshProUGUI playerHP;
-    [SerializeField] private GameObject _particles;
     private bool waitEnds;
 
     void Start()
     {
-        _gameUI.SetActive(true);
-        _winPanel.SetActive(false);
-        _losePanel.SetActive(false);
+        gameUI.SetActive(true);
+        winPanel.SetActive(false);
+        losePanel.SetActive(false);
         _level = PlayerPrefs.GetInt("Level", 1);
         isGameWon = false;
         _player = GameObject.FindWithTag("Player");
@@ -30,7 +36,7 @@ public class GameManager : MonoBehaviour
         if (!_player)
         {
             Time.timeScale = 0.0f;
-            _losePanel.SetActive(true);
+            losePanel.SetActive(true);
         }
         if (isGameWon)
         {
@@ -51,13 +57,13 @@ public class GameManager : MonoBehaviour
                 Destroy(line);
             }
             _particles.SetActive(true);
-            Invoke("GameWon",3.0f);
+            Invoke(nameof(GameWon),3.0f);
         }
     }
 
     private void GameWon()
     {
-        _winPanel.SetActive(true);
+        winPanel.SetActive(true);
     }
     
     #region SceneManagement
