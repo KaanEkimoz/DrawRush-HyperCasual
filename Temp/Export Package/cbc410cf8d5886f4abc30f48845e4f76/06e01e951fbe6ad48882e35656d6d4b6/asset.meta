@@ -1,0 +1,159 @@
+fileFormatVersion: 2
+guid: 06e01e951fbe6ad48882e35656d6d4b6
+timeCreated: 1462109148
+licenseType: Store
+ModelImporter:
+  serializedVersion: 21
+  fileIDToRecycleName:
+    100000: //RootNode
+    100002: Camera
+    100004: cow
+    100006: cow.001
+    100008: Cube
+    100010: giraffe
+    100012: giraffe.001
+    100014: horse
+    100016: horse.001
+    100018: shark
+    100020: shark.001
+    100022: shark.002
+    100024: SharkMain
+    100026: SharkMain.002
+    100028: snake
+    100030: snake.001
+    400000: //RootNode
+    400002: Camera
+    400004: cow
+    400006: cow.001
+    400008: Cube
+    400010: giraffe
+    400012: giraffe.001
+    400014: horse
+    400016: horse.001
+    400018: shark
+    400020: shark.001
+    400022: shark.002
+    400024: SharkMain
+    400026: SharkMain.002
+    400028: snake
+    400030: snake.001
+    2300000: //RootNode
+    2300002: cow
+    2300004: cow.001
+    2300006: Cube
+    2300008: giraffe
+    2300010: giraffe.001
+    2300012: horse
+    2300014: horse.001
+    2300016: shark
+    2300018: shark.001
+    2300020: shark.002
+    2300022: SharkMain
+    2300024: SharkMain.002
+    2300026: snake
+    2300028: snake.001
+    3300000: //RootNode
+    3300002: cow
+    3300004: cow.001
+    3300006: Cube
+    3300008: giraffe
+    3300010: giraffe.001
+    3300012: horse
+    3300014: horse.001
+    3300016: shark
+    3300018: shark.001
+    3300020: shark.002
+    3300022: SharkMain
+    3300024: SharkMain.002
+    3300026: snake
+    3300028: snake.001
+    4300000: horse_01
+    4300002: horse.001
+    4300004: horse
+    4300006: shark.002
+    4300008: shark
+    4300010: SharkMain.002
+    4300012: SharkMain
+    4300014: giraffe.001
+    4300016: cow.001
+    4300018: cow
+    4300020: giraffe
+    4300022: snake.001
+    4300024: Cube
+    4300026: snake
+    4300028: shark.001
+  materials:
+    importMaterials: 0
+    materialName: 0
+    materialSearch: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    motionNodeName: 
+    rigImportErrors: 
+    rigImportWarnings: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    animationCompression: 1
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    extraUserProperties: []
+    clipAnimations: []
+    isReadable: 1
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    importVisibility: 0
+    importBlendShapes: 0
+    importCameras: 0
+    importLights: 0
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    optimizeMeshForGPU: 1
+    keepQuads: 0
+    weldVertices: 1
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+    normalCalculationMode: 0
+  importAnimation: 0
+  copyAvatar: 0
+  humanDescription:
+    serializedVersion: 2
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    rootMotionBoneName: 
+    rootMotionBoneRotation: {x: 0, y: 0, z: 0, w: 1}
+    hasTranslationDoF: 0
+    hasExtraRoot: 0
+    skeletonHasParents: 0
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  animationType: 0
+  humanoidOversampling: 1
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
