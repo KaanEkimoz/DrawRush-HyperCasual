@@ -90,6 +90,26 @@
      <Compile Include="Assets\!OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Editor\Shader Generator\UIFeatures.cs" />
      <Compile Include="Assets\!OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Editor\Inspectors\TCP2_GetPosOnWater_Editor.cs" />
      <Compile Include="Assets\!OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Editor\Utils\TCP2_ExpressionParser.cs" />
+     <Compile Include="Assets\GameAnalytics\Editor\GA_SettingsInspector.cs" />
+     <Compile Include="Assets\GameAnalytics\Editor\Playmaker\SendResourceEventActionEditor.cs" />
+     <Compile Include="Assets\GameAnalytics\Editor\Playmaker\PlayMakerPresenceCheck.cs" />
+     <Compile Include="Assets\GameAnalytics\Editor\GA_UpdateWindow.cs" />
+     <Compile Include="Assets\GameAnalytics\Editor\GA_AutoRun.cs" />
+     <Compile Include="Assets\GameAnalytics\Editor\GA_EditorUtilities.cs" />
+     <Compile Include="Assets\GameAnalytics\Editor\GA_SignUp.cs" />
+     <Compile Include="Assets\GameAnalytics\Editor\GA_AssetPostprocessor.cs" />
+     <Compile Include="Assets\GameAnalytics\Editor\GA_ContinuationManager.cs" />
+     <Compile Include="Assets\GameAnalytics\Editor\GA_Menu.cs" />
+     <Compile Include="Assets\GameAnalytics\Editor\GA_PostprocessBuild.cs" />
+     <Compile Include="Assets\GameAnalytics\Editor\GameAnalyticsInspector.cs" />
+     <Compile Include="Assets\GameAnalytics\Editor\Playmaker\SendProgressionEventActionEditor.cs" />
+     <None Include="Assets\ExternalDependencyManager\Editor\external-dependency-manager_version-1.2.169_manifest.txt" />
+     <None Include="Assets\ExternalDependencyManager\Editor\GoogleRegistries.xml" />
+     <None Include="Assets\PlayServicesResolver\Editor\play-services-resolver_v1.2.135.0.txt" />
+     <None Include="Assets\GameAnalytics\Editor\Android\Dependencies.xml" />
+     <None Include="Assets\FacebookSDK\Plugins\Editor\Dependencies.xml" />
+     <None Include="Assets\ExternalDependencyManager\Editor\external-dependency-manager_v1.2.144.txt" />
+     <None Include="Assets\PlayServicesResolver\Editor\play-services-resolver_v1.2.137.0.txt" />
  <Reference Include="UnityEngine">
  <HintPath>C:/Program Files/Unity/Hub/Editor/2020.3.34f1/Editor/Data/Managed/UnityEngine/UnityEngine.dll</HintPath>
  </Reference>
@@ -335,6 +355,33 @@
  </Reference>
  <Reference Include="unityplastic">
  <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Library/PackageCache/com.unity.collab-proxy@1.15.16/Lib/Editor/PlasticSCM/unityplastic.dll</HintPath>
+ </Reference>
+ <Reference Include="Google.VersionHandlerImpl">
+ <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Assets/ExternalDependencyManager/Editor/1.2.169/Google.VersionHandlerImpl.dll</HintPath>
+ </Reference>
+ <Reference Include="Google.VersionHandler">
+ <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Assets/ExternalDependencyManager/Editor/Google.VersionHandler.dll</HintPath>
+ </Reference>
+ <Reference Include="Google.IOSResolver">
+ <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Assets/ExternalDependencyManager/Editor/1.2.169/Google.IOSResolver.dll</HintPath>
+ </Reference>
+ <Reference Include="Google.JarResolver">
+ <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Assets/ExternalDependencyManager/Editor/1.2.169/Google.JarResolver.dll</HintPath>
+ </Reference>
+ <Reference Include="Facebook.Unity.Editor">
+ <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Assets/FacebookSDK/Plugins/Editor/Facebook.Unity.Editor.dll</HintPath>
+ </Reference>
+ <Reference Include="Facebook.Unity.Gameroom">
+ <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Assets/FacebookSDK/Plugins/Gameroom/Facebook.Unity.Gameroom.dll</HintPath>
+ </Reference>
+ <Reference Include="FacebookNamedPipeClient">
+ <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Assets/FacebookSDK/Plugins/Gameroom/FacebookNamedPipeClient.dll</HintPath>
+ </Reference>
+ <Reference Include="Facebook.Unity.Settings">
+ <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Assets/FacebookSDK/Plugins/Settings/Facebook.Unity.Settings.dll</HintPath>
+ </Reference>
+ <Reference Include="Facebook.Unity">
+ <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Assets/FacebookSDK/Plugins/Facebook.Unity.dll</HintPath>
  </Reference>
  <Reference Include="nunit.framework">
  <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Library/PackageCache/com.unity.ext.nunit@1.0.6/net35/unity-custom/nunit.framework.dll</HintPath>
@@ -814,6 +861,14 @@
     <ProjectReference Include="Unity.Recorder.csproj">
       <Project>{631dc64a-e41c-c863-4d77-1f3fc0f866d7}</Project>
       <Name>Unity.Recorder</Name>
+    </ProjectReference>
+    <ProjectReference Include="AppsFlyer.csproj">
+      <Project>{0ae54626-cc9d-363f-e6d2-a1214ba4cf70}</Project>
+      <Name>AppsFlyer</Name>
+    </ProjectReference>
+    <ProjectReference Include="AppsFlyer.Editor.csproj">
+      <Project>{104fc682-65c8-cdde-3735-759a9a9a2854}</Project>
+      <Name>AppsFlyer.Editor</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

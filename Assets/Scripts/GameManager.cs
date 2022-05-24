@@ -67,6 +67,11 @@ public class GameManager : MonoBehaviour
             _particles.SetActive(true);
             Invoke(nameof(GameWon),3.0f);
         }
+        else
+        {
+            winPanel.SetActive(false);
+            losePanel.SetActive(false);
+        }
     }
 
     public void StartTheGame()
@@ -78,6 +83,11 @@ public class GameManager : MonoBehaviour
     {
         winPanel.SetActive(true);
     }
+    public void ResetTheGame()
+    {
+        winPanel.SetActive(false);
+        losePanel.SetActive(false);
+    } 
     
     #region SceneManagement
     public void RestartLevel()
