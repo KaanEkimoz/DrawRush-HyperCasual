@@ -43,8 +43,8 @@ public class GameManager : MonoBehaviour
     {
         if (!_player)
         {
-            Time.timeScale = 0.0f;
-            losePanel.SetActive(true);
+                Time.timeScale = 0.0f;
+                losePanel.SetActive(true);
         }
         if (isGameWon)
         {

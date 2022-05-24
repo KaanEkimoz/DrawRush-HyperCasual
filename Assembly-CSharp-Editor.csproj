@@ -52,6 +52,7 @@
     <ImplicitlyExpandDesignTimeFacades>false</ImplicitlyExpandDesignTimeFacades>
   </PropertyGroup>
   <ItemGroup>
+     <Compile Include="Assets\GameAnalytics\Editor\GA_PostprocessBuild.cs" />
      <Compile Include="Assets\!OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Editor\Shader Generator\CodeInjection.cs" />
      <Compile Include="Assets\!OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Editor\Legacy\TCP2_ShaderGenerator.UIFeatures.cs" />
      <Compile Include="Assets\!OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Editor\Shader Generator\ReorderableLayoutList.cs" />
@@ -59,50 +60,49 @@
      <Compile Include="Assets\!OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Editor\Legacy\TCP2_MaterialInspector_SG.cs" />
      <Compile Include="Assets\!OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Editor\Legacy\TCP2_ShaderGenerator.cs" />
      <Compile Include="Assets\!OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Editor\Inspectors\TCP2_ShaderUpdateUnityTime_Editor.cs" />
+     <Compile Include="Assets\GameAnalytics\Editor\GA_AutoRun.cs" />
      <Compile Include="Assets\!OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Editor\Inspectors\TCP2_MaterialInspector.cs" />
      <Compile Include="Assets\!OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Editor\Shader Generator\MaterialLayer.cs" />
      <Compile Include="Assets\!OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Editor\Shader Generator\ShaderGenerator2.cs" />
      <Compile Include="Assets\!OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Editor\TCP2_RampGenerator.cs" />
+     <Compile Include="Assets\GameAnalytics\Editor\GA_AssetPostprocessor.cs" />
      <Compile Include="Assets\!OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Editor\Inspectors\MaterialInspector_SG2.cs" />
      <Compile Include="Assets\!OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Editor\TCP2_SmoothedNormalsUtility.cs" />
      <Compile Include="Assets\!OtherAssets\TutorialInfo\Scripts\Editor\ReadmeEditor.cs" />
      <Compile Include="Assets\!OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Editor\Shader Generator\Serialization.cs" />
+     <Compile Include="Assets\GameAnalytics\Editor\GA_ContinuationManager.cs" />
      <Compile Include="Assets\!OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Editor\Shader Generator\GlobalOptions.cs" />
      <Compile Include="Assets\!OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Editor\Inspectors\TCP2_OutlineInspector.cs" />
+     <Compile Include="Assets\GameAnalytics\Editor\GA_Menu.cs" />
      <Compile Include="Assets\!OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Editor\Shader Generator\Config.cs" />
      <Compile Include="Assets\!OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Editor\Utils\TCP2_GUI.cs" />
      <Compile Include="Assets\!OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Editor\Utils\TCP2_Utils.cs" />
+     <Compile Include="Assets\GameAnalytics\Editor\GameAnalyticsInspector.cs" />
      <Compile Include="Assets\!OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Editor\Shader Generator\Module.cs" />
      <Compile Include="Assets\!OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Editor\TCP2_BuildShaderPreprocessor.cs" />
      <Compile Include="Assets\!OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Editor\Shader Generator\Tooltip.cs" />
+     <Compile Include="Assets\GameAnalytics\Editor\Playmaker\PlayMakerPresenceCheck.cs" />
      <Compile Include="Assets\!OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Editor\Shader Generator\ShaderProperty.Implementations.cs" />
      <Compile Include="Assets\!OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Editor\Legacy\TCP2_MaterialInspector_PBS_SG.cs" />
+     <Compile Include="Assets\GameAnalytics\Editor\GA_EditorUtilities.cs" />
      <Compile Include="Assets\!OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Editor\Shader Generator\SGUILayout.cs" />
      <Compile Include="Assets\!OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Editor\TCP2_Menu.cs" />
      <Compile Include="Assets\!OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Editor\Shader Generator\ShaderProperty.CustomMaterialProperty.cs" />
      <Compile Include="Assets\!OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Editor\Legacy\TCP2_MaterialInspector_SurfacePBS_SG.cs" />
+     <Compile Include="Assets\GameAnalytics\Editor\Playmaker\SendResourceEventActionEditor.cs" />
+     <Compile Include="Assets\GameAnalytics\Editor\Playmaker\SendProgressionEventActionEditor.cs" />
      <Compile Include="Assets\!OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Editor\Inspectors\MaterialInspector_Hybrid.cs" />
      <Compile Include="Assets\!OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Editor\Inspectors\TCP2_MaterialInspector_PBS.cs" />
+     <Compile Include="Assets\GameAnalytics\Editor\GA_SettingsInspector.cs" />
      <Compile Include="Assets\!OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Editor\Shader Generator\ShaderProperty.cs" />
      <Compile Include="Assets\!OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Editor\Shader Generator\Template.cs" />
      <Compile Include="Assets\!OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Editor\Legacy\TCP2_Config.cs" />
+     <Compile Include="Assets\GameAnalytics\Editor\GA_SignUp.cs" />
      <Compile Include="Assets\!OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Editor\TCP2_GradientManager.cs" />
+     <Compile Include="Assets\GameAnalytics\Editor\GA_UpdateWindow.cs" />
      <Compile Include="Assets\!OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Editor\Shader Generator\UIFeatures.cs" />
      <Compile Include="Assets\!OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Editor\Inspectors\TCP2_GetPosOnWater_Editor.cs" />
      <Compile Include="Assets\!OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Editor\Utils\TCP2_ExpressionParser.cs" />
-     <Compile Include="Assets\GameAnalytics\Editor\GA_SettingsInspector.cs" />
-     <Compile Include="Assets\GameAnalytics\Editor\Playmaker\SendResourceEventActionEditor.cs" />
-     <Compile Include="Assets\GameAnalytics\Editor\Playmaker\PlayMakerPresenceCheck.cs" />
-     <Compile Include="Assets\GameAnalytics\Editor\GA_UpdateWindow.cs" />
-     <Compile Include="Assets\GameAnalytics\Editor\GA_AutoRun.cs" />
-     <Compile Include="Assets\GameAnalytics\Editor\GA_EditorUtilities.cs" />
-     <Compile Include="Assets\GameAnalytics\Editor\GA_SignUp.cs" />
-     <Compile Include="Assets\GameAnalytics\Editor\GA_AssetPostprocessor.cs" />
-     <Compile Include="Assets\GameAnalytics\Editor\GA_ContinuationManager.cs" />
-     <Compile Include="Assets\GameAnalytics\Editor\GA_Menu.cs" />
-     <Compile Include="Assets\GameAnalytics\Editor\GA_PostprocessBuild.cs" />
-     <Compile Include="Assets\GameAnalytics\Editor\GameAnalyticsInspector.cs" />
-     <Compile Include="Assets\GameAnalytics\Editor\Playmaker\SendProgressionEventActionEditor.cs" />
      <None Include="Assets\ExternalDependencyManager\Editor\external-dependency-manager_version-1.2.169_manifest.txt" />
      <None Include="Assets\ExternalDependencyManager\Editor\GoogleRegistries.xml" />
      <None Include="Assets\PlayServicesResolver\Editor\play-services-resolver_v1.2.135.0.txt" />
@@ -341,47 +341,47 @@
  <Reference Include="UnityEditor.WindowsStandalone.Extensions">
  <HintPath>C:/Program Files/Unity/Hub/Editor/2020.3.34f1/Editor/Data/PlaybackEngines/WindowsStandaloneSupport/UnityEditor.WindowsStandalone.Extensions.dll</HintPath>
  </Reference>
- <Reference Include="Unity.Plastic.Newtonsoft.Json">
- <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Library/PackageCache/com.unity.collab-proxy@1.15.16/Lib/Editor/PlasticSCM/Unity.Plastic.Newtonsoft.Json.dll</HintPath>
- </Reference>
- <Reference Include="Unity.Plastic.Antlr3.Runtime">
- <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Library/PackageCache/com.unity.collab-proxy@1.15.16/Lib/Editor/PlasticSCM/Unity.Plastic.Antlr3.Runtime.dll</HintPath>
- </Reference>
- <Reference Include="log4netPlastic">
- <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Library/PackageCache/com.unity.collab-proxy@1.15.16/Lib/Editor/PlasticSCM/log4netPlastic.dll</HintPath>
- </Reference>
- <Reference Include="ICSharpCode.NRefactory">
- <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Library/PackageCache/com.unity.render-pipelines.core@10.9.0/Editor/ShaderGenerator/ICSharpCode.NRefactory.dll</HintPath>
- </Reference>
- <Reference Include="unityplastic">
- <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Library/PackageCache/com.unity.collab-proxy@1.15.16/Lib/Editor/PlasticSCM/unityplastic.dll</HintPath>
- </Reference>
- <Reference Include="Google.VersionHandlerImpl">
- <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Assets/ExternalDependencyManager/Editor/1.2.169/Google.VersionHandlerImpl.dll</HintPath>
- </Reference>
- <Reference Include="Google.VersionHandler">
- <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Assets/ExternalDependencyManager/Editor/Google.VersionHandler.dll</HintPath>
- </Reference>
- <Reference Include="Google.IOSResolver">
- <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Assets/ExternalDependencyManager/Editor/1.2.169/Google.IOSResolver.dll</HintPath>
- </Reference>
- <Reference Include="Google.JarResolver">
- <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Assets/ExternalDependencyManager/Editor/1.2.169/Google.JarResolver.dll</HintPath>
- </Reference>
  <Reference Include="Facebook.Unity.Editor">
  <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Assets/FacebookSDK/Plugins/Editor/Facebook.Unity.Editor.dll</HintPath>
  </Reference>
  <Reference Include="Facebook.Unity.Gameroom">
  <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Assets/FacebookSDK/Plugins/Gameroom/Facebook.Unity.Gameroom.dll</HintPath>
  </Reference>
+ <Reference Include="log4netPlastic">
+ <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Library/PackageCache/com.unity.collab-proxy@1.15.16/Lib/Editor/PlasticSCM/log4netPlastic.dll</HintPath>
+ </Reference>
+ <Reference Include="Google.VersionHandler">
+ <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Assets/ExternalDependencyManager/Editor/Google.VersionHandler.dll</HintPath>
+ </Reference>
  <Reference Include="FacebookNamedPipeClient">
  <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Assets/FacebookSDK/Plugins/Gameroom/FacebookNamedPipeClient.dll</HintPath>
+ </Reference>
+ <Reference Include="Unity.Plastic.Newtonsoft.Json">
+ <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Library/PackageCache/com.unity.collab-proxy@1.15.16/Lib/Editor/PlasticSCM/Unity.Plastic.Newtonsoft.Json.dll</HintPath>
  </Reference>
  <Reference Include="Facebook.Unity.Settings">
  <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Assets/FacebookSDK/Plugins/Settings/Facebook.Unity.Settings.dll</HintPath>
  </Reference>
+ <Reference Include="Unity.Plastic.Antlr3.Runtime">
+ <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Library/PackageCache/com.unity.collab-proxy@1.15.16/Lib/Editor/PlasticSCM/Unity.Plastic.Antlr3.Runtime.dll</HintPath>
+ </Reference>
+ <Reference Include="Google.VersionHandlerImpl">
+ <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Assets/ExternalDependencyManager/Editor/1.2.169/Google.VersionHandlerImpl.dll</HintPath>
+ </Reference>
+ <Reference Include="Google.IOSResolver">
+ <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Assets/ExternalDependencyManager/Editor/1.2.169/Google.IOSResolver.dll</HintPath>
+ </Reference>
+ <Reference Include="ICSharpCode.NRefactory">
+ <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Library/PackageCache/com.unity.render-pipelines.core@10.9.0/Editor/ShaderGenerator/ICSharpCode.NRefactory.dll</HintPath>
+ </Reference>
  <Reference Include="Facebook.Unity">
  <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Assets/FacebookSDK/Plugins/Facebook.Unity.dll</HintPath>
+ </Reference>
+ <Reference Include="Google.JarResolver">
+ <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Assets/ExternalDependencyManager/Editor/1.2.169/Google.JarResolver.dll</HintPath>
+ </Reference>
+ <Reference Include="unityplastic">
+ <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Library/PackageCache/com.unity.collab-proxy@1.15.16/Lib/Editor/PlasticSCM/unityplastic.dll</HintPath>
  </Reference>
  <Reference Include="nunit.framework">
  <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Library/PackageCache/com.unity.ext.nunit@1.0.6/net35/unity-custom/nunit.framework.dll</HintPath>
@@ -782,6 +782,10 @@
       <Project>{135e0af0-7798-7173-19e8-52b6d3eae608}</Project>
       <Name>Unity.VisualStudio.Editor</Name>
     </ProjectReference>
+    <ProjectReference Include="AppsFlyer.csproj">
+      <Project>{0ae54626-cc9d-363f-e6d2-a1214ba4cf70}</Project>
+      <Name>AppsFlyer</Name>
+    </ProjectReference>
     <ProjectReference Include="Unity.Timeline.csproj">
       <Project>{2f1f013d-81aa-7857-aa6c-e1d9d790c8e6}</Project>
       <Name>Unity.Timeline</Name>
@@ -797,6 +801,10 @@
     <ProjectReference Include="Unity.RenderPipelines.Core.Runtime.csproj">
       <Project>{229463fe-585c-bf6f-4de3-25d8440235a8}</Project>
       <Name>Unity.RenderPipelines.Core.Runtime</Name>
+    </ProjectReference>
+    <ProjectReference Include="AppsFlyer.Editor.csproj">
+      <Project>{104fc682-65c8-cdde-3735-759a9a9a2854}</Project>
+      <Name>AppsFlyer.Editor</Name>
     </ProjectReference>
     <ProjectReference Include="Unity.InputSystem.csproj">
       <Project>{987a4cbf-3256-7866-dfcd-c571388b1c98}</Project>
@@ -861,14 +869,6 @@
     <ProjectReference Include="Unity.Recorder.csproj">
       <Project>{631dc64a-e41c-c863-4d77-1f3fc0f866d7}</Project>
       <Name>Unity.Recorder</Name>
-    </ProjectReference>
-    <ProjectReference Include="AppsFlyer.csproj">
-      <Project>{0ae54626-cc9d-363f-e6d2-a1214ba4cf70}</Project>
-      <Name>AppsFlyer</Name>
-    </ProjectReference>
-    <ProjectReference Include="AppsFlyer.Editor.csproj">
-      <Project>{104fc682-65c8-cdde-3735-759a9a9a2854}</Project>
-      <Name>AppsFlyer.Editor</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

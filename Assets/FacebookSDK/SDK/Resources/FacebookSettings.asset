@@ -16,15 +16,15 @@ MonoBehaviour:
   clientTokens:
   - 
   appIds:
-  - 0
+  - 671322330620557
   appLabels:
-  - App Name
+  - DrawRush
   cookie: 1
   logging: 1
   status: 1
   xfbml: 0
   frictionlessRequests: 1
-  androidKeystorePath: 
+  androidKeystorePath: Desktop/user.keystore
   iosURLSuffix: 
   appLinkSchemes:
   - list: []

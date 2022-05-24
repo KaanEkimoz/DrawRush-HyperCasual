@@ -94,8 +94,8 @@
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.9.0\Editor\Generation\Descriptors\SubShaderDescriptor.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.9.0\Editor\Data\Nodes\Utility\SubGraphNode.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.9.0\Editor\Data\Util\ListPool.cs" />
-     <Compile Include="Library\PackageCache\com.unity.shadergraph@10.9.0\Editor\Data\Nodes\Input\Texture\SamplerStateNode.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.9.0\Editor\Data\Graphs\VectorShaderProperty.cs" />
+     <Compile Include="Library\PackageCache\com.unity.shadergraph@10.9.0\Editor\Data\Nodes\Input\Texture\SamplerStateNode.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.9.0\Editor\Generation\Enumerations\Cull.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.9.0\Editor\Generation\Enumerations\BlendOp.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.9.0\Editor\Interface\IShaderString.cs" />
@@ -563,8 +563,8 @@
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.9.0\Editor\Data\Attributes\NeverAllowedByTargetAttribute.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.9.0\Editor\Data\Legacy\SlotReference0.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.9.0\Editor\Data\Graphs\Vector1MaterialSlot.cs" />
-     <Compile Include="Library\PackageCache\com.unity.shadergraph@10.9.0\Editor\Generation\Descriptors\PragmaDescriptor.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.9.0\Editor\Data\Nodes\Input\Texture\SampleRawCubemapNode.cs" />
+     <Compile Include="Library\PackageCache\com.unity.shadergraph@10.9.0\Editor\Generation\Descriptors\PragmaDescriptor.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.9.0\Editor\Data\Legacy\SpriteUnlitMasterNode1.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.9.0\Editor\Data\Graphs\Texture3DShaderProperty.cs" />
      <Compile Include="Library\PackageCache\com.unity.shadergraph@10.9.0\Editor\Generation\Data\FieldDependency.cs" />
@@ -939,47 +939,47 @@
  <Reference Include="UnityEditor.WindowsStandalone.Extensions">
  <HintPath>C:/Program Files/Unity/Hub/Editor/2020.3.34f1/Editor/Data/PlaybackEngines/WindowsStandaloneSupport/UnityEditor.WindowsStandalone.Extensions.dll</HintPath>
  </Reference>
- <Reference Include="Unity.Plastic.Newtonsoft.Json">
- <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Library/PackageCache/com.unity.collab-proxy@1.15.16/Lib/Editor/PlasticSCM/Unity.Plastic.Newtonsoft.Json.dll</HintPath>
- </Reference>
- <Reference Include="Unity.Plastic.Antlr3.Runtime">
- <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Library/PackageCache/com.unity.collab-proxy@1.15.16/Lib/Editor/PlasticSCM/Unity.Plastic.Antlr3.Runtime.dll</HintPath>
- </Reference>
- <Reference Include="log4netPlastic">
- <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Library/PackageCache/com.unity.collab-proxy@1.15.16/Lib/Editor/PlasticSCM/log4netPlastic.dll</HintPath>
- </Reference>
- <Reference Include="ICSharpCode.NRefactory">
- <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Library/PackageCache/com.unity.render-pipelines.core@10.9.0/Editor/ShaderGenerator/ICSharpCode.NRefactory.dll</HintPath>
- </Reference>
- <Reference Include="unityplastic">
- <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Library/PackageCache/com.unity.collab-proxy@1.15.16/Lib/Editor/PlasticSCM/unityplastic.dll</HintPath>
- </Reference>
- <Reference Include="Google.VersionHandlerImpl">
- <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Assets/ExternalDependencyManager/Editor/1.2.169/Google.VersionHandlerImpl.dll</HintPath>
- </Reference>
- <Reference Include="Google.VersionHandler">
- <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Assets/ExternalDependencyManager/Editor/Google.VersionHandler.dll</HintPath>
- </Reference>
- <Reference Include="Google.IOSResolver">
- <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Assets/ExternalDependencyManager/Editor/1.2.169/Google.IOSResolver.dll</HintPath>
- </Reference>
- <Reference Include="Google.JarResolver">
- <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Assets/ExternalDependencyManager/Editor/1.2.169/Google.JarResolver.dll</HintPath>
- </Reference>
  <Reference Include="Facebook.Unity.Editor">
  <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Assets/FacebookSDK/Plugins/Editor/Facebook.Unity.Editor.dll</HintPath>
  </Reference>
  <Reference Include="Facebook.Unity.Gameroom">
  <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Assets/FacebookSDK/Plugins/Gameroom/Facebook.Unity.Gameroom.dll</HintPath>
  </Reference>
+ <Reference Include="log4netPlastic">
+ <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Library/PackageCache/com.unity.collab-proxy@1.15.16/Lib/Editor/PlasticSCM/log4netPlastic.dll</HintPath>
+ </Reference>
+ <Reference Include="Google.VersionHandler">
+ <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Assets/ExternalDependencyManager/Editor/Google.VersionHandler.dll</HintPath>
+ </Reference>
  <Reference Include="FacebookNamedPipeClient">
  <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Assets/FacebookSDK/Plugins/Gameroom/FacebookNamedPipeClient.dll</HintPath>
+ </Reference>
+ <Reference Include="Unity.Plastic.Newtonsoft.Json">
+ <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Library/PackageCache/com.unity.collab-proxy@1.15.16/Lib/Editor/PlasticSCM/Unity.Plastic.Newtonsoft.Json.dll</HintPath>
  </Reference>
  <Reference Include="Facebook.Unity.Settings">
  <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Assets/FacebookSDK/Plugins/Settings/Facebook.Unity.Settings.dll</HintPath>
  </Reference>
+ <Reference Include="Unity.Plastic.Antlr3.Runtime">
+ <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Library/PackageCache/com.unity.collab-proxy@1.15.16/Lib/Editor/PlasticSCM/Unity.Plastic.Antlr3.Runtime.dll</HintPath>
+ </Reference>
+ <Reference Include="Google.VersionHandlerImpl">
+ <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Assets/ExternalDependencyManager/Editor/1.2.169/Google.VersionHandlerImpl.dll</HintPath>
+ </Reference>
+ <Reference Include="Google.IOSResolver">
+ <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Assets/ExternalDependencyManager/Editor/1.2.169/Google.IOSResolver.dll</HintPath>
+ </Reference>
+ <Reference Include="ICSharpCode.NRefactory">
+ <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Library/PackageCache/com.unity.render-pipelines.core@10.9.0/Editor/ShaderGenerator/ICSharpCode.NRefactory.dll</HintPath>
+ </Reference>
  <Reference Include="Facebook.Unity">
  <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Assets/FacebookSDK/Plugins/Facebook.Unity.dll</HintPath>
+ </Reference>
+ <Reference Include="Google.JarResolver">
+ <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Assets/ExternalDependencyManager/Editor/1.2.169/Google.JarResolver.dll</HintPath>
+ </Reference>
+ <Reference Include="unityplastic">
+ <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Library/PackageCache/com.unity.collab-proxy@1.15.16/Lib/Editor/PlasticSCM/unityplastic.dll</HintPath>
  </Reference>
  <Reference Include="nunit.framework">
  <HintPath>C:/Users/yuusu/Desktop/208Studios/TrapDrawer/Library/PackageCache/com.unity.ext.nunit@1.0.6/net35/unity-custom/nunit.framework.dll</HintPath>

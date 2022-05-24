@@ -53,105 +53,105 @@
   </PropertyGroup>
   <ItemGroup>
      <Compile Include="Assets\!OtherAssets\CodeMonkey\Utils\Button_UI.cs" />
+     <Compile Include="Assets\FacebookSDK\Examples\Scripts\LogView.cs" />
+     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\GameAnalytics.cs" />
+     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\Enums.cs" />
+     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\Wrapper\GA_tvOSWrapper.cs" />
      <Compile Include="Assets\!OtherAssets\CodeMonkey\Utils\World_Mesh.cs" />
+     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\Wrapper\GA_WebGLWrapper.cs" />
+     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\Utilities\GA_MiniJson.cs" />
      <Compile Include="Assets\Scripts\DrawPart.cs" />
      <Compile Include="Assets\!OtherAssets\CodeMonkey\MonoBehaviours\CameraFollowSetup.cs" />
      <Compile Include="Assets\!OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Scripts\TCP2_PlanarReflection.cs" />
      <Compile Include="Assets\!OtherAssets\CodeMonkey\MonoBehaviours\CameraFollow.cs" />
+     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\Wrapper\GA_AndroidWrapper.cs" />
      <Compile Include="Assets\Scripts\PlayerTrapCreater.cs" />
+     <Compile Include="Assets\FacebookSDK\Examples\Scripts\SubMenus\AppRequests.cs" />
+     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\Events\GA_Debug.cs" />
+     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\ILRD\AdMob\GAAdMobIntegration.cs" />
+     <Compile Include="Assets\GameAnalytics\Plugins\Playmaker\SendAdEvent.cs" />
      <Compile Include="Assets\!OtherAssets\CodeMonkey\Utils\World_Bar.cs" />
+     <Compile Include="Assets\GameAnalytics\Plugins\Playmaker\GetABTestingVariantId.cs" />
      <Compile Include="Assets\Scripts\PlayerInteract.cs" />
      <Compile Include="Assets\Scripts\GameManager.cs" />
      <Compile Include="Assets\Scripts\PlayerCombat.cs" />
+     <Compile Include="Assets\GameAnalytics\Plugins\Playmaker\SendProgressionEvent.cs" />
+     <Compile Include="Assets\FacebookSDK\Examples\Scripts\MenuBase.cs" />
+     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\Wrapper\GA_MonoWrapper.cs" />
      <Compile Include="Assets\!OtherAssets\CodeMonkey\Utils\FunctionUpdater.cs" />
+     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\Wrapper\GA_iOSWrapper.cs" />
      <Compile Include="Assets\!OtherAssets\CodeMonkey\Utils\FunctionTimer.cs" />
      <Compile Include="Assets\ExampleAssets\SimpleCameraController.cs" />
+     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\ILRD\GameAnalyticsILRD.cs" />
+     <Compile Include="Assets\GameAnalytics\Plugins\Playmaker\GetRemoteConfigsValueAsString.cs" />
+     <Compile Include="Assets\FacebookSDK\Examples\Scripts\ConsoleBase.cs" />
      <Compile Include="Assets\Scripts\EnemyFollow.cs" />
+     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\Events\GA_Error.cs" />
      <Compile Include="Assets\Scripts\EnemyCombat.cs" />
+     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\ILRD\HyperBid\GAHyperBidIntegration.cs" />
      <Compile Include="Assets\!OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Scripts\TCP2_GetPosOnWater.cs" />
+     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\Events\GA_SpecialEvents.cs" />
      <Compile Include="Assets\!OtherAssets\CodeMonkey\Utils\UI_Sprite.cs" />
+     <Compile Include="Assets\GameAnalytics\Plugins\Playmaker\GAInitialize.cs" />
+     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\ILRD\Fyber\GAFyberIntegration.cs" />
+     <Compile Include="Assets\GameAnalytics\Plugins\Playmaker\SendBusinessEvent.cs" />
+     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\ILRD\IronSource\GAIronSourceIntegration.cs" />
+     <Compile Include="Assets\GameAnalytics\Plugins\Playmaker\SendErrorEvent.cs" />
+     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\ILRD\TopOn\GATopOnIntegration.cs" />
      <Compile Include="Assets\Scripts\WallManager.cs" />
      <Compile Include="Assets\Scripts\Interfaces\IInteractable.cs" />
+     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\Events\GA_Setup.cs" />
      <Compile Include="Assets\!OtherAssets\CodeMonkey\Utils\UI_TextComplex.cs" />
+     <Compile Include="Assets\FacebookSDK\Examples\Scripts\SubMenus\DialogShare.cs" />
      <Compile Include="Assets\!OtherAssets\CodeMonkey\Utils\Button_Sprite.cs" />
      <Compile Include="Assets\!OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Scripts\TCP2_RuntimeUtils.cs" />
+     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\Events\GA_Ads.cs" />
      <Compile Include="Assets\!OtherAssets\CodeMonkey\Assets.cs" />
      <Compile Include="Assets\!OtherAssets\CodeMonkey\Utils\World_Sprite.cs" />
+     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\Events\GAValidator.cs" />
      <Compile Include="Assets\!OtherAssets\TutorialInfo\Scripts\Readme.cs" />
      <Compile Include="Assets\!OtherAssets\CodeMonkey\Utils\UtilsClass.cs" />
      <Compile Include="Assets\!OtherAssets\CodeMonkey\MonoBehaviours\PositionRendererSorter.cs" />
+     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\Events\GA_Resource.cs" />
      <Compile Include="Assets\Scripts\ThirdPersonMovement.cs" />
+     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\Wrapper\GA_UWPWrapper.cs" />
+     <Compile Include="Assets\GameAnalytics\Plugins\Playmaker\IsRemoteConfigsReady.cs" />
      <Compile Include="Assets\Scripts\DontDestroyOnLoad.cs" />
      <Compile Include="Assets\Scripts\OldVersion\Pathfinding.cs" />
+     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\ILRD\Max\GAMaxIntegration.cs" />
+     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\IGameAnalyticsATTListener.cs" />
+     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\ILRD\Aequus\GAAequusIntegration.cs" />
+     <Compile Include="Assets\GameAnalytics\Plugins\Playmaker\SendDesignEvent.cs" />
+     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\Events\GA_Design.cs" />
      <Compile Include="Assets\!OtherAssets\CodeMonkey\Utils\UI_Bar.cs" />
+     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\Setup\Settings.cs" />
+     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\Events\GA_Business.cs" />
      <Compile Include="Assets\Scripts\OldVersion\Grid.cs" />
+     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\ILRD\Mopub\GAMopubIntegration.cs" />
+     <Compile Include="Assets\GameAnalytics\Plugins\Playmaker\GetABTestingId.cs" />
+     <Compile Include="Assets\FacebookSDK\Examples\Scripts\SubMenus\GraphRequest.cs" />
      <Compile Include="Assets\Inputs\PlayerControls.cs" />
+     <Compile Include="Assets\FacebookSDK\Examples\Scripts\SubMenus\AccessTokenMenu.cs" />
+     <Compile Include="Assets\FacebookSDK\Examples\Scripts\SubMenus\AppLinks.cs" />
+     <Compile Include="Assets\GameAnalytics\Plugins\Playmaker\SendResourceEvent.cs" />
      <Compile Include="Assets\!OtherAssets\CodeMonkey\MonoBehaviours\ComponentActions.cs" />
+     <Compile Include="Assets\FacebookSDK\Examples\Scripts\SubMenus\MainMenu.cs" />
+     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\Events\GA_Progression.cs" />
+     <Compile Include="Assets\GameAnalytics\Plugins\Playmaker\SetCustomDimension.cs" />
+     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\ATT\GameAnalyticsATTClient.cs" />
      <Compile Include="Assets\!OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Scripts\TCP2_ShaderUpdateUnityTime.cs" />
      <Compile Include="Assets\!OtherAssets\CodeMonkey\Utils\UI_BarMultiple.cs" />
+     <Compile Include="Assets\FacebookSDK\Examples\Scripts\SubMenus\Pay.cs" />
+     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\Wrapper\GA_Wrapper.cs" />
+     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\Wrapper\GA_TizenWrapper.cs" />
      <Compile Include="Assets\Scripts\OldVersion\PathNode.cs" />
+     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\ATT\GameAnalyticsATTObjCBridge.cs" />
      <Compile Include="Assets\!OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Scripts\TCP2_CameraDepth.cs" />
+     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\State\GAState.cs" />
      <Compile Include="Assets\Scripts\PartManager.cs" />
      <Compile Include="Assets\!OtherAssets\CodeMonkey\CMDebug.cs" />
      <Compile Include="Assets\!OtherAssets\CodeMonkey\Utils\FunctionPeriodic.cs" />
-     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\Events\GA_Error.cs" />
-     <Compile Include="Assets\GameAnalytics\Plugins\Playmaker\SendErrorEvent.cs" />
-     <Compile Include="Assets\GameAnalytics\Plugins\Playmaker\SendBusinessEvent.cs" />
-     <Compile Include="Assets\GameAnalytics\Plugins\Playmaker\SendDesignEvent.cs" />
-     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\Events\GA_Design.cs" />
-     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\Events\GA_Business.cs" />
-     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\ILRD\GameAnalyticsILRD.cs" />
-     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\ILRD\HyperBid\GAHyperBidIntegration.cs" />
-     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\Setup\Settings.cs" />
-     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\Wrapper\GA_Wrapper.cs" />
-     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\Wrapper\GA_AndroidWrapper.cs" />
-     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\Wrapper\GA_TizenWrapper.cs" />
-     <Compile Include="Assets\GameAnalytics\Plugins\Playmaker\SendProgressionEvent.cs" />
-     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\ILRD\Fyber\GAFyberIntegration.cs" />
-     <Compile Include="Assets\GameAnalytics\Plugins\Playmaker\GetRemoteConfigsValueAsString.cs" />
-     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\Events\GA_Debug.cs" />
-     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\ILRD\TopOn\GATopOnIntegration.cs" />
-     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\Wrapper\GA_UWPWrapper.cs" />
-     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\ILRD\AdMob\GAAdMobIntegration.cs" />
-     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\Wrapper\GA_WebGLWrapper.cs" />
-     <Compile Include="Assets\GameAnalytics\Plugins\Playmaker\IsRemoteConfigsReady.cs" />
-     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\Events\GA_SpecialEvents.cs" />
-     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\ILRD\IronSource\GAIronSourceIntegration.cs" />
-     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\ILRD\Max\GAMaxIntegration.cs" />
-     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\ILRD\Aequus\GAAequusIntegration.cs" />
-     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\Events\GA_Progression.cs" />
-     <Compile Include="Assets\GameAnalytics\Plugins\Playmaker\SetCustomDimension.cs" />
-     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\IGameAnalyticsATTListener.cs" />
-     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\ILRD\Mopub\GAMopubIntegration.cs" />
-     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\Wrapper\GA_MonoWrapper.cs" />
-     <Compile Include="Assets\GameAnalytics\Plugins\Playmaker\SendAdEvent.cs" />
-     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\Utilities\GA_MiniJson.cs" />
-     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\Events\GA_Setup.cs" />
-     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\ATT\GameAnalyticsATTObjCBridge.cs" />
-     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\Events\GAValidator.cs" />
-     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\ATT\GameAnalyticsATTClient.cs" />
-     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\GameAnalytics.cs" />
-     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\Events\GA_Resource.cs" />
-     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\State\GAState.cs" />
-     <Compile Include="Assets\GameAnalytics\Plugins\Playmaker\SendResourceEvent.cs" />
-     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\Wrapper\GA_iOSWrapper.cs" />
-     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\Events\GA_Ads.cs" />
-     <Compile Include="Assets\GameAnalytics\Plugins\Playmaker\GAInitialize.cs" />
-     <Compile Include="Assets\GameAnalytics\Plugins\Playmaker\GetABTestingId.cs" />
-     <Compile Include="Assets\GameAnalytics\Plugins\Playmaker\GetABTestingVariantId.cs" />
-     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\Enums.cs" />
-     <Compile Include="Assets\GameAnalytics\Plugins\Scripts\Wrapper\GA_tvOSWrapper.cs" />
-     <Compile Include="Assets\FacebookSDK\Examples\Scripts\LogView.cs" />
-     <Compile Include="Assets\FacebookSDK\Examples\Scripts\ConsoleBase.cs" />
-     <Compile Include="Assets\FacebookSDK\Examples\Scripts\SubMenus\AccessTokenMenu.cs" />
-     <Compile Include="Assets\FacebookSDK\Examples\Scripts\SubMenus\AppLinks.cs" />
-     <Compile Include="Assets\FacebookSDK\Examples\Scripts\SubMenus\GraphRequest.cs" />
-     <Compile Include="Assets\FacebookSDK\Examples\Scripts\SubMenus\Pay.cs" />
-     <Compile Include="Assets\FacebookSDK\Examples\Scripts\SubMenus\DialogShare.cs" />
-     <Compile Include="Assets\FacebookSDK\Examples\Scripts\SubMenus\AppRequests.cs" />
      <Compile Include="Assets\FacebookSDK\Examples\Scripts\SubMenus\AppEvents.cs" />
-     <Compile Include="Assets\FacebookSDK\Examples\Scripts\MenuBase.cs" />
-     <Compile Include="Assets\FacebookSDK\Examples\Scripts\SubMenus\MainMenu.cs" />
      <None Include="Assets\GameAnalytics\Readme.txt" />
      <None Include="Assets\TextMesh Pro\Shaders\TMPro.cginc" />
      <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF-Mobile Overlay.shader" />
@@ -785,6 +785,10 @@
       <Project>{135e0af0-7798-7173-19e8-52b6d3eae608}</Project>
       <Name>Unity.VisualStudio.Editor</Name>
     </ProjectReference>
+    <ProjectReference Include="AppsFlyer.csproj">
+      <Project>{0ae54626-cc9d-363f-e6d2-a1214ba4cf70}</Project>
+      <Name>AppsFlyer</Name>
+    </ProjectReference>
     <ProjectReference Include="Unity.Timeline.csproj">
       <Project>{2f1f013d-81aa-7857-aa6c-e1d9d790c8e6}</Project>
       <Name>Unity.Timeline</Name>
@@ -800,6 +804,10 @@
     <ProjectReference Include="Unity.RenderPipelines.Core.Runtime.csproj">
       <Project>{229463fe-585c-bf6f-4de3-25d8440235a8}</Project>
       <Name>Unity.RenderPipelines.Core.Runtime</Name>
+    </ProjectReference>
+    <ProjectReference Include="AppsFlyer.Editor.csproj">
+      <Project>{104fc682-65c8-cdde-3735-759a9a9a2854}</Project>
+      <Name>AppsFlyer.Editor</Name>
     </ProjectReference>
     <ProjectReference Include="Unity.InputSystem.csproj">
       <Project>{987a4cbf-3256-7866-dfcd-c571388b1c98}</Project>
@@ -864,14 +872,6 @@
     <ProjectReference Include="Unity.Recorder.csproj">
       <Project>{631dc64a-e41c-c863-4d77-1f3fc0f866d7}</Project>
       <Name>Unity.Recorder</Name>
-    </ProjectReference>
-    <ProjectReference Include="AppsFlyer.csproj">
-      <Project>{0ae54626-cc9d-363f-e6d2-a1214ba4cf70}</Project>
-      <Name>AppsFlyer</Name>
-    </ProjectReference>
-    <ProjectReference Include="AppsFlyer.Editor.csproj">
-      <Project>{104fc682-65c8-cdde-3735-759a9a9a2854}</Project>
-      <Name>AppsFlyer.Editor</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
