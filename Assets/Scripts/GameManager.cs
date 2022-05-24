@@ -1,8 +1,10 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Random = UnityEngine.Random;
 
 public class GameManager : MonoBehaviour
 {
@@ -20,6 +22,12 @@ public class GameManager : MonoBehaviour
     private GameObject _player;
     private int _level = 1;
     private bool waitEnds;
+    private static List<int> randomLevelList = new List<int>{1,2,3};
+
+    private void Awake()
+    {
+        Time.timeScale = 0.0f;
+    }
 
     void Start()
     {
@@ -61,6 +69,11 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    public void StartTheGame()
+    {
+        Time.timeScale = 1.0f;
+    }
+
     private void GameWon()
     {
         winPanel.SetActive(true);
@@ -76,6 +89,27 @@ public class GameManager : MonoBehaviour
     {
         PlayerPrefs.SetInt("Level", PlayerPrefs.GetInt("Level") + 1);
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+    }
+    public void LoadRandomLevel()
+    {
+        PlayerPrefs.SetInt("Level", PlayerPrefs.GetInt("Level") + 1);
+        int randomInt = Random.Range(1, 5);
+        while (randomInt == SceneManager.GetActiveScene().buildIndex)
+        {
+            randomInt = Random.Range(1, 5);
+        }
+
+        if (randomLevelList.Count != 0)
+        {
+            randomLevelList.Remove(randomInt);
+        }
+        else
+        {
+            randomLevelList.Add(1);
+            randomLevelList.Add(2);
+            randomLevelList.Add(3);
+        }
+        SceneManager.LoadScene(randomInt);
     }
     #endregion
 }

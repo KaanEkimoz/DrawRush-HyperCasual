@@ -53,7 +53,6 @@ public class PlayerInteract : MonoBehaviour
     }
     private void OnTriggerExit(Collider other)
     {
-        
         if (other.CompareTag("DrawArea"))
         {
             Debug.Log("Exit from DrawArea");
@@ -69,7 +68,6 @@ public class PlayerInteract : MonoBehaviour
                 previousPart.GetComponent<DrawPart>().isPlayerEntered = false;
                 previousPart = null;
             }
-            
         }
     }
     private void AdjustLineRenderer(LineRenderer lineRenderer,Vector3 startPosition, Vector3 endPosition)
@@ -77,6 +75,8 @@ public class PlayerInteract : MonoBehaviour
         startPosition.y = 0f;
         endPosition.y = 0f;
         lineRenderer.material = _lineMaterial;
+        lineRenderer.startWidth = 0.4f;
+        lineRenderer.endWidth = 0.4f;
         lineRenderer.SetPosition(0, startPosition);
         lineRenderer.SetPosition(1, endPosition);
     }

@@ -81,6 +81,7 @@
      <Compile Include="Assets\!OtherAssets\CodeMonkey\Utils\UtilsClass.cs" />
      <Compile Include="Assets\!OtherAssets\CodeMonkey\MonoBehaviours\PositionRendererSorter.cs" />
      <Compile Include="Assets\Scripts\ThirdPersonMovement.cs" />
+     <Compile Include="Assets\Scripts\DontDestroyOnLoad.cs" />
      <Compile Include="Assets\Scripts\OldVersion\Pathfinding.cs" />
      <Compile Include="Assets\!OtherAssets\CodeMonkey\Utils\UI_Bar.cs" />
      <Compile Include="Assets\Scripts\OldVersion\Grid.cs" />
@@ -90,10 +91,9 @@
      <Compile Include="Assets\!OtherAssets\CodeMonkey\Utils\UI_BarMultiple.cs" />
      <Compile Include="Assets\Scripts\OldVersion\PathNode.cs" />
      <Compile Include="Assets\!OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Scripts\TCP2_CameraDepth.cs" />
-     <Compile Include="Assets\PartManager.cs" />
+     <Compile Include="Assets\Scripts\PartManager.cs" />
      <Compile Include="Assets\!OtherAssets\CodeMonkey\CMDebug.cs" />
      <Compile Include="Assets\!OtherAssets\CodeMonkey\Utils\FunctionPeriodic.cs" />
-     <Compile Include="Assets\DontDestroyOnLoad.cs" />
      <None Include="Assets\TextMesh Pro\Shaders\TMPro.cginc" />
      <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF-Mobile Overlay.shader" />
      <None Include="Assets\TextMesh Pro\Shaders\TMP_Bitmap.shader" />

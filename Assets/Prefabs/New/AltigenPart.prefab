@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 6003754108678459022}
   - component: {fileID: 2099502885615405787}
   - component: {fileID: 3942937934700730338}
+  - component: {fileID: 5984823880290118182}
   m_Layer: 0
   m_Name: AltigenEdge2
   m_TagString: Untagged
@@ -81,6 +82,20 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!64 &5984823880290118182
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1853982070954223206}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 4
+  m_Convex: 1
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 2786440611349163606, guid: b793602c14d6acb40a3965474fe2c4d5, type: 3}
 --- !u!1 &2979208669846577563
 GameObject:
   m_ObjectHideFlags: 0
@@ -92,6 +107,7 @@ GameObject:
   - component: {fileID: 837569078576607834}
   - component: {fileID: 3407498615072499900}
   - component: {fileID: 3500404412139875716}
+  - component: {fileID: 8882175642614748835}
   m_Layer: 0
   m_Name: AltigenEdge1
   m_TagString: Untagged
@@ -162,6 +178,20 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!64 &8882175642614748835
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2979208669846577563}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 4
+  m_Convex: 1
+  m_CookingOptions: 30
+  m_Mesh: {fileID: -8163526336849700479, guid: b793602c14d6acb40a3965474fe2c4d5, type: 3}
 --- !u!1 &3226994665798939779
 GameObject:
   m_ObjectHideFlags: 0
