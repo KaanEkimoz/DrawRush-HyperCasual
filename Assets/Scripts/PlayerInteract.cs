@@ -37,15 +37,18 @@ public class PlayerInteract : MonoBehaviour
                 }
                 else if(isDrawing)
                 {
-                    interactable.Interact();
-                    previousPart.GetComponent<DrawPart>().isDrawCompleted = true;
-                    other.gameObject.GetComponent<DrawPart>().isDrawCompleted = true;
-                    LineRenderer lineRenderer = previousPart.AddComponent(typeof(LineRenderer)) as LineRenderer;
-                    AdjustLineRenderer(lineRenderer,other.gameObject.transform.position,previousPart.transform.position);
-                    Destroy(trail);
-                    previousPart = null;
-                    isDrawing = false;
-                    interactable = null;
+                    if (previousPart.gameObject != other.gameObject)
+                    {
+                        interactable.Interact();
+                        previousPart.GetComponent<DrawPart>().isDrawCompleted = true;
+                        other.gameObject.GetComponent<DrawPart>().isDrawCompleted = true;
+                        LineRenderer lineRenderer = previousPart.AddComponent(typeof(LineRenderer)) as LineRenderer;
+                        AdjustLineRenderer(lineRenderer,other.gameObject.transform.position,previousPart.transform.position);
+                        Destroy(trail);
+                        previousPart = null;
+                        isDrawing = false;
+                        interactable = null; 
+                    }
                 }
             }
         }

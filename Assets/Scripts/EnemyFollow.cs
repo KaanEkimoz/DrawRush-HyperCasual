@@ -1,9 +1,5 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
-
 public class EnemyFollow : MonoBehaviour
 {
     private NavMeshAgent _enemyNavMeshAgent;
@@ -19,6 +15,10 @@ public class EnemyFollow : MonoBehaviour
         if (_playerTransform)
         {
             _enemyNavMeshAgent.SetDestination(_playerTransform.position);
+        }
+        if (GameManager.isGameWon)
+        {
+            gameObject.GetComponent<NavMeshAgent>().isStopped = true;
         }
         
     }

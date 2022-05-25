@@ -43,8 +43,8 @@ public class GameManager : MonoBehaviour
     {
         if (!_player)
         {
-                Time.timeScale = 0.0f;
-                losePanel.SetActive(true);
+            losePanel.SetActive(true);
+            Time.timeScale = 0.0f;
         }
         if (isGameWon)
         {
@@ -66,11 +66,6 @@ public class GameManager : MonoBehaviour
             }
             _particles.SetActive(true);
             Invoke(nameof(GameWon),3.0f);
-        }
-        else
-        {
-            winPanel.SetActive(false);
-            losePanel.SetActive(false);
         }
     }
 
@@ -103,12 +98,11 @@ public class GameManager : MonoBehaviour
     public void LoadRandomLevel()
     {
         PlayerPrefs.SetInt("Level", PlayerPrefs.GetInt("Level") + 1);
-        int randomInt = Random.Range(2, 5);
+        int randomInt = Random.Range(0, randomLevelList.Count);
         while (randomInt == SceneManager.GetActiveScene().buildIndex)
         {
-            randomInt = Random.Range(2, 5);
+            randomInt = Random.Range(0, randomLevelList.Count);
         }
-
         if (randomLevelList.Count != 0)
         {
             randomLevelList.Remove(randomInt);
@@ -119,7 +113,7 @@ public class GameManager : MonoBehaviour
             randomLevelList.Add(3);
             randomLevelList.Add(4);
         }
-        SceneManager.LoadScene(randomInt);
+        SceneManager.LoadScene(randomLevelList[randomInt]);
     }
     #endregion
 }

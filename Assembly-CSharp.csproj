@@ -100,6 +100,7 @@
      <Compile Include="Assets\!OtherAssets\GameAnalytics\Plugins\Playmaker\SendErrorEvent.cs" />
      <Compile Include="Assets\!OtherAssets\GameAnalytics\Plugins\Scripts\ILRD\TopOn\GATopOnIntegration.cs" />
      <Compile Include="Assets\Scripts\WallManager.cs" />
+     <Compile Include="Assets\Scripts\RandomMaterial.cs" />
      <Compile Include="Assets\Scripts\Interfaces\IInteractable.cs" />
      <Compile Include="Assets\!OtherAssets\GameAnalytics\Plugins\Scripts\Events\GA_Setup.cs" />
      <Compile Include="Assets\!OtherAssets\CodeMonkey\Utils\UI_TextComplex.cs" />
@@ -153,7 +154,6 @@
      <Compile Include="Assets\!OtherAssets\CodeMonkey\CMDebug.cs" />
      <Compile Include="Assets\!OtherAssets\CodeMonkey\Utils\FunctionPeriodic.cs" />
      <Compile Include="Assets\!OtherAssets\FacebookSDK\Examples\Scripts\SubMenus\AppEvents.cs" />
-     <Compile Include="Assets\Scripts\RandomMaterial.cs" />
      <None Include="Assets\!OtherAssets\GameAnalytics\Readme.txt" />
      <None Include="Assets\Sprites\TextMesh Pro\Shaders\TMPro.cginc" />
      <None Include="Assets\Sprites\TextMesh Pro\Shaders\TMP_SDF-Mobile Overlay.shader" />

@@ -24,12 +24,11 @@ public class EnemyCombat : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.gameObject.CompareTag("Player"))
+        if (other.gameObject.CompareTag("Player") && !GameManager.isGameWon)
         {
             _playerCombat.TakeDamage(damage);
         }
     }
-
     private void Attack()
     {
         _playerCombat.TakeDamage(damage);
