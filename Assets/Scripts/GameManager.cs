@@ -22,7 +22,7 @@ public class GameManager : MonoBehaviour
     private GameObject _player;
     private int _level = 1;
     private bool waitEnds;
-    private static List<int> randomLevelList = new List<int>{1,2,3};
+    private static List<int> randomLevelList = new List<int>{2,3,4};
 
     private void Awake()
     {
@@ -103,10 +103,10 @@ public class GameManager : MonoBehaviour
     public void LoadRandomLevel()
     {
         PlayerPrefs.SetInt("Level", PlayerPrefs.GetInt("Level") + 1);
-        int randomInt = Random.Range(1, 5);
+        int randomInt = Random.Range(2, 5);
         while (randomInt == SceneManager.GetActiveScene().buildIndex)
         {
-            randomInt = Random.Range(1, 5);
+            randomInt = Random.Range(2, 5);
         }
 
         if (randomLevelList.Count != 0)
@@ -115,9 +115,9 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            randomLevelList.Add(1);
             randomLevelList.Add(2);
             randomLevelList.Add(3);
+            randomLevelList.Add(4);
         }
         SceneManager.LoadScene(randomInt);
     }

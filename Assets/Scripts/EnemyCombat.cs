@@ -21,12 +21,12 @@ public class EnemyCombat : MonoBehaviour
             _playerCombat = FindObjectOfType<PlayerCombat>();
         }
     }
+
     private void OnTriggerEnter(Collider other)
     {
-        Debug.Log("EnemyTriggerEnter");
         if (other.gameObject.CompareTag("Player"))
         {
-            Attack();
+            _playerCombat.TakeDamage(damage);
         }
     }
 

@@ -79,5 +79,11 @@ public class PlayerInteract : MonoBehaviour
         lineRenderer.endWidth = 0.4f;
         lineRenderer.SetPosition(0, startPosition);
         lineRenderer.SetPosition(1, endPosition);
+        StartCoroutine(DestroyTheLine(lineRenderer));
+    }
+    private IEnumerator DestroyTheLine(LineRenderer lineRenderer)
+    {
+        yield return new WaitForSeconds(2.0f);
+        Destroy(lineRenderer);
     }
 }
