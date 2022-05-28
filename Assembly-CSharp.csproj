@@ -92,6 +92,7 @@
      <Compile Include="Assets\!OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Scripts\TCP2_GetPosOnWater.cs" />
      <Compile Include="Assets\!OtherAssets\GameAnalytics\Plugins\Scripts\Events\GA_SpecialEvents.cs" />
      <Compile Include="Assets\!OtherAssets\CodeMonkey\Utils\UI_Sprite.cs" />
+     <Compile Include="Assets\CreateJoystick.cs" />
      <Compile Include="Assets\!OtherAssets\GameAnalytics\Plugins\Playmaker\GAInitialize.cs" />
      <Compile Include="Assets\!OtherAssets\GameAnalytics\Plugins\Scripts\ILRD\Fyber\GAFyberIntegration.cs" />
      <Compile Include="Assets\!OtherAssets\GameAnalytics\Plugins\Playmaker\SendBusinessEvent.cs" />

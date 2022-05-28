@@ -98,21 +98,19 @@ public class GameManager : MonoBehaviour
     public void LoadRandomLevel()
     {
         PlayerPrefs.SetInt("Level", PlayerPrefs.GetInt("Level") + 1);
-        int randomInt = Random.Range(0, randomLevelList.Count);
-        while (randomInt == SceneManager.GetActiveScene().buildIndex)
-        {
-            randomInt = Random.Range(0, randomLevelList.Count);
-        }
-        if (randomLevelList.Count != 0)
-        {
-            randomLevelList.Remove(randomInt);
-        }
-        else
+
+        if (randomLevelList.Count == 0)
         {
             randomLevelList.Add(2);
             randomLevelList.Add(3);
             randomLevelList.Add(4);
         }
+        int randomInt = Random.Range(0, randomLevelList.Count);
+        while (randomLevelList[randomInt] == SceneManager.GetActiveScene().buildIndex)
+        {
+            randomInt = Random.Range(0, randomLevelList.Count);
+        }
+        randomLevelList.Remove(randomInt);
         SceneManager.LoadScene(randomLevelList[randomInt]);
     }
     #endregion

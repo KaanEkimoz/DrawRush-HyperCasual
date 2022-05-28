@@ -1,26 +1,22 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using Object = System.Object;
 
+//Script for attach to the DontDestroyOnLoad Objects
 public class DontDestroyOnLoad : MonoBehaviour
 {
     [HideInInspector] public string objectID;
-    private DontDestroyOnLoad[] dontDestroyObjects;
+    private DontDestroyOnLoad[] _dontDestroyObjects;
     private void Awake()
     {
         objectID = name + transform.position.ToString() + transform.eulerAngles.ToString();
-        dontDestroyObjects = FindObjectsOfType<DontDestroyOnLoad>();
+        _dontDestroyObjects = FindObjectsOfType<DontDestroyOnLoad>();
     }
-
     private void Start()
     {
-        for (int i = 0; i < dontDestroyObjects.Length; i++)
+        for (int i = 0; i < _dontDestroyObjects.Length; i++)
         {
-            if (dontDestroyObjects[i] != this)
+            if (_dontDestroyObjects[i] != this)
             {
-                if (dontDestroyObjects[i].objectID == objectID)
+                if (_dontDestroyObjects[i].objectID == objectID)
                 {
                     Destroy(gameObject);
                 }

@@ -7,7 +7,7 @@ using UnityEngine;
 public class PlayerCombat : MonoBehaviour
 {
     private int healthPoint = 3;
-    [SerializeField] private TextMeshProUGUI playerHP;
+    [SerializeField] private TextMeshProUGUI playerHp;
 
     private void Start()
     {
@@ -25,6 +25,6 @@ public class PlayerCombat : MonoBehaviour
     public void TakeDamage(int damage)
     {
         healthPoint += damage;
-        playerHP.text = healthPoint.ToString();
+        playerHp.text = healthPoint.ToString();
     }
 }

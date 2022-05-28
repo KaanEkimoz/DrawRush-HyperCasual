@@ -5,47 +5,47 @@ using UnityEngine;
 
 public class PlayerInteract : MonoBehaviour
 {
-    [HideInInspector] private GameObject previousPart;
-     public GameObject trail;
+    [Header("Line Variables")]
+    [SerializeField] private float destroyAfterSeconds = 2.0f;
+    
+    [SerializeField] private Material lineMaterial;
     [HideInInspector] public bool isDrawing;
-    [SerializeField] private Material _lineMaterial;
-    private bool canDraw;
-
+    [HideInInspector] public GameObject trail = null;
+    private GameObject _previousPart = null;
+    private bool _canDraw;
     private void Awake()
     {
         isDrawing = false;
-        previousPart = null;
+        _previousPart = null;
     }
     private void OnTriggerEnter(Collider other)
     {
         
         if (other.CompareTag("DrawArea"))
         {
-            canDraw = true;
-            Debug.Log("Player DrawArea Trigger Enter");
+            _canDraw = true;
         }
         else
         {
-            Debug.Log("Player DrawPart Trigger Enter");
             var interactable = other.GetComponent<IInteractable>();
-            if (interactable != null && canDraw)
+            if (interactable != null && _canDraw)
             {
-                if (previousPart == null)
+                if (_previousPart == null)
                 {
                     interactable.Interact();
-                    previousPart = other.gameObject;
+                    _previousPart = other.gameObject;
                 }
                 else if(isDrawing)
                 {
-                    if (previousPart.gameObject != other.gameObject)
+                    if (_previousPart.gameObject != other.gameObject)
                     {
                         interactable.Interact();
-                        previousPart.GetComponent<DrawPart>().isDrawCompleted = true;
+                        _previousPart.GetComponent<DrawPart>().isDrawCompleted = true;
                         other.gameObject.GetComponent<DrawPart>().isDrawCompleted = true;
-                        LineRenderer lineRenderer = previousPart.AddComponent(typeof(LineRenderer)) as LineRenderer;
-                        AdjustLineRenderer(lineRenderer,other.gameObject.transform.position,previousPart.transform.position);
+                        LineRenderer lineRenderer = _previousPart.AddComponent(typeof(LineRenderer)) as LineRenderer;
+                        AdjustLineRenderer(lineRenderer,other.gameObject.transform.position,_previousPart.transform.position);
                         Destroy(trail);
-                        previousPart = null;
+                        _previousPart = null;
                         isDrawing = false;
                         interactable = null; 
                     }
@@ -62,22 +62,24 @@ public class PlayerInteract : MonoBehaviour
             Destroy(trail);
             //When it leaves the DrawableArea
             //Can't draw
-            canDraw = false;
+            _canDraw = false;
             //Currently not drawing
             isDrawing = false;
-            if (previousPart)
+            if (_previousPart)
             {
                 //Previous and Current DrawPart Resetted
-                previousPart.GetComponent<DrawPart>().isPlayerEntered = false;
-                previousPart = null;
+                _previousPart.GetComponent<DrawPart>().isPlayerEntered = false;
+                _previousPart = null;
             }
         }
     }
+    
+    //Changing given lineRenderer's variables
     private void AdjustLineRenderer(LineRenderer lineRenderer,Vector3 startPosition, Vector3 endPosition)
     {
         startPosition.y = 0f;
         endPosition.y = 0f;
-        lineRenderer.material = _lineMaterial;
+        lineRenderer.material = lineMaterial;
         lineRenderer.startWidth = 0.4f;
         lineRenderer.endWidth = 0.4f;
         lineRenderer.SetPosition(0, startPosition);
@@ -86,7 +88,7 @@ public class PlayerInteract : MonoBehaviour
     }
     private IEnumerator DestroyTheLine(LineRenderer lineRenderer)
     {
-        yield return new WaitForSeconds(2.0f);
+        yield return new WaitForSeconds(destroyAfterSeconds);
         Destroy(lineRenderer);
     }
 }

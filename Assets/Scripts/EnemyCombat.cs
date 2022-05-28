@@ -1,6 +1,3 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class EnemyCombat : MonoBehaviour
@@ -21,16 +18,11 @@ public class EnemyCombat : MonoBehaviour
             _playerCombat = FindObjectOfType<PlayerCombat>();
         }
     }
-
     private void OnTriggerEnter(Collider other)
     {
         if (other.gameObject.CompareTag("Player") && !GameManager.isGameWon)
         {
             _playerCombat.TakeDamage(damage);
         }
-    }
-    private void Attack()
-    {
-        _playerCombat.TakeDamage(damage);
     }
 }
