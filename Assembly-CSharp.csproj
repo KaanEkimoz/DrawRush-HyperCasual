@@ -66,7 +66,6 @@
      <Compile Include="Assets\!OtherAssets\PackageAsset\JMO Assets\Toony Colors Pro\Scripts\TCP2_PlanarReflection.cs" />
      <Compile Include="Assets\!OtherAssets\CodeMonkey\MonoBehaviours\CameraFollow.cs" />
      <Compile Include="Assets\!OtherAssets\GameAnalytics\Plugins\Scripts\Wrapper\GA_AndroidWrapper.cs" />
-     <Compile Include="Assets\Scripts\PlayerTrapCreater.cs" />
      <Compile Include="Assets\!OtherAssets\FacebookSDK\Examples\Scripts\SubMenus\AppRequests.cs" />
      <Compile Include="Assets\!OtherAssets\GameAnalytics\Plugins\Scripts\Events\GA_Debug.cs" />
      <Compile Include="Assets\!OtherAssets\GameAnalytics\Plugins\Scripts\ILRD\AdMob\GAAdMobIntegration.cs" />
