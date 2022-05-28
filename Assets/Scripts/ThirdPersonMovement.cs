@@ -3,36 +3,23 @@ using UnityEngine;
 [RequireComponent(typeof(CharacterController))]
 public class ThirdPersonMovement : MonoBehaviour
 {
-    [SerializeField] private Transform camTransform;
+    [Header("Movement"), Space]
     [SerializeField] private float playerSpeed = 1.5f;
     [SerializeField] private float turnSmoothTime = 0.1f;
+    [Header("Components"), Space]
+    [SerializeField] private Animator playerAnim;
     
-    //InputActions for Player from New Input System
-    private PlayerControls _controls;
-    //Vector2 Input
-    private Vector2 _move;
-    private static bool isMoving;
-    
-    private CharacterController _playerCharController;
-    private float _turnSmoothVelocity;
-
+    private PlayerControls _controls; //controls for player (New Input System)
+    private Vector2 _move; // Vector2 Input for character movement
+    private float _turnSmoothVelocity; // The time for smoothing character turn
     //Gravity variables
-    private const float Gravity = -9.81f;
-    private Vector3 _velocity = Vector3.zero;
+    private const float Gravity = -9.81f; // Gravity const 
+    private Vector3 _velocity = Vector3.zero; // Velocity for gravity
+    private Transform _camTransform; // Cam Transform for smooth turn
+    private CharacterController _playerCharController; // CharacterController for movement functions
     
-    //Speed
-    public float Speed
-    {
-        get => playerSpeed;
-        set => playerSpeed = value;
-    }
-
-    public static bool Moving
-    {
-        get => isMoving;
-    }
-
-    [SerializeField] private Animator _playerAnim;
+    
+    private static readonly int BIsDancing = Animator.StringToHash("b_isDancing");
 
     private void OnEnable()
     {
@@ -45,31 +32,29 @@ public class ThirdPersonMovement : MonoBehaviour
     private void Awake()
     {
         _controls = new PlayerControls();
-        //Add Walk Animations
         _controls.Player.Move.performed += ctx =>
         {
             _move = ctx.ReadValue<Vector2>();
-            isMoving = true;
         };
-        //Cancel walk Animations
         _controls.Player.Move.canceled += ctx => 
         {
             _move = Vector2.zero;
-            isMoving = false;
         };
-    }
-    void Start()
-    {
         if(_playerCharController == null)
         {
-           _playerCharController = GetComponent<CharacterController>();
+            _playerCharController = GetComponent<CharacterController>();
         }
-        if(camTransform == null)
+        if(_camTransform == null)
         {
-            camTransform = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<Transform>();
+            _camTransform = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<Transform>();
+        }
+
+        if (playerAnim == null)
+        {
+            playerAnim = GetComponentInChildren<Animator>();
         }
     }
-    void FixedUpdate()
+    private void FixedUpdate()
     {
         if (!GameManager.isGameWon)
         {
@@ -78,7 +63,7 @@ public class ThirdPersonMovement : MonoBehaviour
         }
         else
         {
-            _playerAnim.SetBool("b_isDancing",true);
+            playerAnim.SetBool(BIsDancing,true);
         }
     }
     private void Move()
@@ -87,7 +72,7 @@ public class ThirdPersonMovement : MonoBehaviour
         Vector3 direction = new Vector3(_move.x, 0f, _move.y).normalized;
         if (direction.magnitude >= 0.1f)
         {
-            float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + camTransform.eulerAngles.y;
+            float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + _camTransform.eulerAngles.y;
             float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref _turnSmoothVelocity, turnSmoothTime);
             transform.rotation = Quaternion.Euler(0f, angle, 0f);
 
