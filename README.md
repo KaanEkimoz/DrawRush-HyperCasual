@@ -1,5 +1,7 @@
 # Draw Rush
-208 Studios Hyper-Casual Drawing Puzzle Game
+# 208 Studios Hyper-Casual Drawing Puzzle Game
+
+Unity Version: 2020.3.34f1
 
 Packages in the Project:
 -Input System
