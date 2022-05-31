@@ -12,7 +12,7 @@ Packages in the Project:
 
 What I've Learned from this Project
 
--Play Testing with device simulator and real devices
+-Play Testing with device simulator and real devices \n
 -Adding SplashScreen to Unity
 -Unity TrailRenderer and LineRenderer Components
 -Complicated Boolean Mechanics
