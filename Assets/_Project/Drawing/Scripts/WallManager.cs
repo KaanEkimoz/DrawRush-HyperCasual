@@ -1,33 +1,48 @@
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
+using Studios208.DrawRush.Core;
 
-public class WallManager : MonoBehaviour
+namespace Studios208.DrawRush.Drawing
 {
-    private List<DrawPart> _drawParts;
-    void Start()
+    /// <summary>
+    /// Watches every DrawPart in the scene and flips GameState.IsGameWon when all of
+    /// them complete. Event-driven and decoupled from any specific PartManager — works
+    /// when parts are spread across multiple manager groups.
+    /// </summary>
+    public sealed class WallManager : MonoBehaviour
     {
-        _drawParts = new List<DrawPart>();
-        _drawParts = FindObjectsOfType<DrawPart>().ToList();
-    }
-    void Update()
-    {
-        int trueCounter = 0;
-        foreach (var part in _drawParts)
+        private readonly HashSet<DrawPart> _completed = new();
+        private DrawPart[] _parts;
+
+        private void Awake()
         {
-            if (part.isDrawCompleted)
+            _parts = Object.FindObjectsByType<DrawPart>(FindObjectsSortMode.None);
+        }
+
+        private void OnEnable()
+        {
+            for (int i = 0; i < _parts.Length; i++)
             {
-                trueCounter++;
-                if (trueCounter == _drawParts.Count)
-                {
-                    GameManager.isGameWon = true;
-                }
+                _parts[i].Completed += OnPartCompleted;
             }
         }
-    }
-    IEnumerator WaitForAnim()
-    {
-        yield return new WaitForSeconds(1.5f);
+
+        private void OnDisable()
+        {
+            for (int i = 0; i < _parts.Length; i++)
+            {
+                _parts[i].Completed -= OnPartCompleted;
+            }
+        }
+
+        private void OnPartCompleted(DrawPart part)
+        {
+            _completed.Add(part);
+            if (_completed.Count < _parts.Length) return;
+            if (GameServices.State != null)
+            {
+                GameServices.State.IsGameWon = true;
+            }
+        }
     }
 }

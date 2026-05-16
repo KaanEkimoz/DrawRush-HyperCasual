@@ -1,28 +1,49 @@
 using UnityEngine;
+using Studios208.DrawRush.Core;
+using Studios208.DrawRush.Player;
 
-public class EnemyCombat : MonoBehaviour
+namespace Studios208.DrawRush.Enemy
 {
-    [SerializeField] private int damage = -1;
-    public Animator enemyAnim;
-    private PlayerCombat _playerCombat;
-
-    private void Awake()
+    /// <summary>
+    /// Damages the player on touch. Player ref is taken from <see cref="GameServices.Player"/>
+    /// at first contact instead of FindObjectOfType at Awake — works in additive scene loads.
+    /// </summary>
+    public sealed class EnemyCombat : MonoBehaviour
     {
-        if (enemyAnim == null)
+        [SerializeField] private Animator enemyAnim;
+        [SerializeField] private string playerTag = "Player";
+
+        [Tooltip("Damage applied on touch (signed). Negative reduces HP. If 0, uses GameConfig.enemyTouchDamage.")]
+        [SerializeField] private int damageOverride;
+
+        private PlayerCombat _playerCombat;
+
+        public Animator EnemyAnim => enemyAnim;
+
+        private void Awake()
         {
-            enemyAnim = GetComponentInChildren<Animator>();
+            if (enemyAnim == null)
+            {
+                enemyAnim = GetComponentInChildren<Animator>();
+            }
         }
 
-        if (_playerCombat == null)
+        private void OnTriggerEnter(Collider other)
         {
-            _playerCombat = FindObjectOfType<PlayerCombat>();
-        }
-    }
-    private void OnTriggerEnter(Collider other)
-    {
-        if (other.gameObject.CompareTag("Player") && !GameManager.isGameWon)
-        {
-            _playerCombat.TakeDamage(damage);
+            if (!other.CompareTag(playerTag)) return;
+            var state = GameServices.State;
+            if (state != null && state.IsGameWon) return;
+
+            if (_playerCombat == null)
+            {
+                _playerCombat = other.GetComponent<PlayerCombat>();
+            }
+            if (_playerCombat == null) return;
+
+            int dmg = damageOverride != 0
+                ? damageOverride
+                : (GameServices.Config != null ? GameServices.Config.enemyTouchDamage : -1);
+            _playerCombat.TakeDamage(dmg);
         }
     }
 }

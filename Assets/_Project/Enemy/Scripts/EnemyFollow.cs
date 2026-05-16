@@ -1,25 +1,42 @@
 using UnityEngine;
 using UnityEngine.AI;
-public class EnemyFollow : MonoBehaviour
-{
-    private NavMeshAgent _enemyNavMeshAgent;
-    private Transform _playerTransform;
-    private void Start()
-    {
-        _enemyNavMeshAgent = GetComponent<NavMeshAgent>();
-        _playerTransform = GameObject.FindWithTag("Player").GetComponent<Transform>();
-    }
+using Studios208.DrawRush.Core;
 
-    private void Update()
+namespace Studios208.DrawRush.Enemy
+{
+    /// <summary>
+    /// Chases the player using NavMeshAgent. Player position is read from
+    /// <see cref="GameServices.Player"/> every frame — survives scene-additive load
+    /// where the legacy FindWithTag at Start() would have missed the player.
+    /// Stops chasing once <see cref="GameState.IsGameWon"/> flips true.
+    /// </summary>
+    [RequireComponent(typeof(NavMeshAgent))]
+    public sealed class EnemyFollow : MonoBehaviour
     {
-        if (_playerTransform)
+        private NavMeshAgent _agent;
+        private bool _haltedOnWin;
+
+        private void Awake()
         {
-            _enemyNavMeshAgent.SetDestination(_playerTransform.position);
+            _agent = GetComponent<NavMeshAgent>();
         }
-        if (GameManager.isGameWon)
+
+        private void Update()
         {
-            gameObject.GetComponent<NavMeshAgent>().isStopped = true;
+            var state = GameServices.State;
+            if (state != null && state.IsGameWon)
+            {
+                if (!_haltedOnWin)
+                {
+                    _agent.isStopped = true;
+                    _haltedOnWin = true;
+                }
+                return;
+            }
+
+            var player = GameServices.Player;
+            if (player == null) return;
+            _agent.SetDestination(player.position);
         }
-        
     }
 }

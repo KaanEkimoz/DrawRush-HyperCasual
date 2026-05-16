@@ -1,13 +1,17 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class RandomMaterial : MonoBehaviour
+namespace Studios208.DrawRush.Utilities
 {
-    public Material[] randomMaterials;
-    void Start ()  
+    [RequireComponent(typeof(Renderer))]
+    public sealed class RandomMaterial : MonoBehaviour
     {
-        
-            gameObject.GetComponent<Renderer>().material = randomMaterials[Random.Range(0, randomMaterials.Length)];
+        [SerializeField] private Material[] randomMaterials;
+
+        private void Start()
+        {
+            if (randomMaterials == null || randomMaterials.Length == 0) return;
+            var renderer = GetComponent<Renderer>();
+            renderer.material = randomMaterials[Random.Range(0, randomMaterials.Length)];
+        }
     }
 }

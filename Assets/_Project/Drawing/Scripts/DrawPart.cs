@@ -1,116 +1,167 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using Studios208.DrawRush.Common;
+using Studios208.DrawRush.Core;
+using Studios208.DrawRush.Player;
 
-public class DrawPart : MonoBehaviour, IInteractable
+namespace Studios208.DrawRush.Drawing
 {
-    [HideInInspector] public bool isPlayerEntered;
-    [SerializeField] private GameObject _trailPrefab;
-    private GameObject _playerRef;
-    private PlayerInteract _playerInteract;
-    private GameObject _currTrail;
-    private Transform _trailPoint;
-    public bool isDrawCompleted;
+    /// <summary>
+    /// A single connectable part. Implements <see cref="IInteractable"/> so PlayerInteract
+    /// can drive it generically. Raises <see cref="Completed"/> when this part finishes —
+    /// PartManager / WallManager listen instead of polling Update.
+    /// </summary>
+    public sealed class DrawPart : MonoBehaviour, IInteractable
+    {
+        public event Action<DrawPart> Completed;
 
-    private bool isGoingToPlayer;
-    private bool isReachedToPlayer;
+        [HideInInspector] public bool isPlayerEntered;
+        [SerializeField] private GameObject trailPrefab;
+        [SerializeField] private Vector3 trailEulerAngles = new(91f, 40f, 38f);
+        [SerializeField] private Vector3 trailOffset = new(0f, 0.25f, 0f);
 
-    private void ResetDrawPart()
-    {
-        isPlayerEntered = false;
-        isDrawCompleted = false;
-        isGoingToPlayer = false;
-        isReachedToPlayer = false;
-    }
-    private void Awake()
-    {
-        ResetDrawPart();
-        if (_currTrail == null)
+        private bool _isDrawCompleted;
+        private GameObject _currTrail;
+        private Transform _trailPoint;
+        private PlayerInteract _playerInteract;
+        private bool _isGoingToPlayer;
+        private bool _isReachedToPlayer;
+
+        public bool IsDrawCompleted => _isDrawCompleted;
+
+        private void Awake()
         {
-            CreateTrail();
+            ResetState();
+            EnsureTrail();
         }
-        if (_playerRef == null)
+
+        private void Start()
         {
-            _playerRef = GameObject.FindWithTag("Player");
+            ResolvePlayerRefs();
         }
-        _playerInteract = _playerRef.GetComponent<PlayerInteract>();
-        _trailPoint = _playerRef.transform.GetChild(0).transform;
-    }
-    private void Update()
-    {
-        if (!isDrawCompleted)
+
+        private void Update()
         {
-            if (_currTrail == null)
+            if (_isDrawCompleted) return;
+
+            EnsureTrail();
+            if (_trailPoint == null)
             {
-                CreateTrail();
+                ResolvePlayerRefs();
+                if (_trailPoint == null) return;
             }
-            if (Math.Abs(_currTrail.transform.position.z - _trailPoint.transform.position.z) > 0.001 && isGoingToPlayer)
+
+            if (Mathf.Abs(_currTrail.transform.position.z - _trailPoint.position.z) > 0.001f && _isGoingToPlayer)
             {
-                Debug.Log("Completing the Border Line");
-                GoToPlayer();
+                LerpTrailTowardsPlayer();
+                return;
             }
-            else if (isGoingToPlayer)
+
+            if (_isGoingToPlayer)
             {
-                isReachedToPlayer = true;
-                isGoingToPlayer = false;
+                _isReachedToPlayer = true;
+                _isGoingToPlayer = false;
                 Interact();
             }
         }
-    }
-    public void Interact()
-    {
-        if (_currTrail == null)
+
+        public void Interact()
         {
-            CreateTrail();
-        }
-        if (!isDrawCompleted && !isPlayerEntered)
-        {
-            if (isReachedToPlayer)
+            EnsureTrail();
+            if (_isDrawCompleted || isPlayerEntered) return;
+            if (!_isReachedToPlayer)
             {
-                if (!(_playerInteract.isDrawing))
-                {
-                    Debug.Log("Started to Drawing");
-                    isPlayerEntered = true;
-                    _currTrail.transform.parent = _trailPoint;
-                    _currTrail.transform.position = _trailPoint.position;
-                    _currTrail.SetActive(true);
-                    _playerInteract.trail = _currTrail;
-                    _playerInteract.isDrawing = true;
-                }
-                else
-                {
-                    CompleteDraw();
-                }
+                _isGoingToPlayer = true;
+                return;
             }
-            else
+
+            if (_playerInteract == null) ResolvePlayerRefs();
+            if (_playerInteract == null) return;
+
+            if (!_playerInteract.isDrawing)
             {
-                isGoingToPlayer = true;
+                isPlayerEntered = true;
+                _currTrail.transform.SetParent(_trailPoint, worldPositionStays: false);
+                _currTrail.transform.localPosition = Vector3.zero;
+                _currTrail.SetActive(true);
+                _playerInteract.trail = _currTrail;
+                _playerInteract.isDrawing = true;
+                return;
+            }
+
+            CompleteDraw();
+        }
+
+        /// <summary>
+        /// Marks this part as drawn — invoked externally by PlayerInteract when the
+        /// connecting line is finalized between two parts. Idempotent.
+        /// </summary>
+        public void MarkCompleted()
+        {
+            if (_isDrawCompleted) return;
+            _isDrawCompleted = true;
+            Completed?.Invoke(this);
+        }
+
+        private void CompleteDraw()
+        {
+            if (_playerInteract == null) return;
+            _playerInteract.isDrawing = false;
+            if (_playerInteract.trail != null)
+            {
+                _playerInteract.trail.transform.SetParent(transform, worldPositionStays: false);
+            }
+            foreach (Transform child in transform)
+            {
+                Destroy(child.gameObject);
+            }
+            _playerInteract.trail = null;
+            isPlayerEntered = false;
+            MarkCompleted();
+        }
+
+        private void EnsureTrail()
+        {
+            if (_currTrail != null || trailPrefab == null) return;
+            _currTrail = Instantiate(
+                trailPrefab,
+                transform.position - new Vector3(0f, -trailOffset.y, 0f),
+                Quaternion.Euler(trailEulerAngles),
+                transform);
+            _currTrail.SetActive(true);
+        }
+
+        private void LerpTrailTowardsPlayer()
+        {
+            if (_currTrail == null || _trailPoint == null) return;
+            float lerp = GameServices.Config != null ? GameServices.Config.trailCatchUpLerp : 100f;
+            var current = _currTrail.transform.position;
+            var target = _trailPoint.position;
+            float t = lerp * Time.deltaTime;
+            _currTrail.transform.position = new Vector3(
+                Mathf.Lerp(current.x, target.x, t),
+                Mathf.Lerp(current.y, target.y, t),
+                Mathf.Lerp(current.z, target.z, t));
+        }
+
+        private void ResolvePlayerRefs()
+        {
+            if (GameServices.Player == null) return;
+            _trailPoint = GameServices.TrailPoint != null
+                ? GameServices.TrailPoint
+                : GameServices.Player.childCount > 0 ? GameServices.Player.GetChild(0) : null;
+            if (_playerInteract == null)
+            {
+                _playerInteract = GameServices.Player.GetComponent<PlayerInteract>();
             }
         }
-    }
-    private void CompleteDraw()
-    {
-        _playerInteract.isDrawing = false;
-        _playerInteract.trail.transform.parent = gameObject.transform;
-        foreach (Transform child in gameObject.transform)
+
+        private void ResetState()
         {
-            Destroy(child.gameObject);
+            isPlayerEntered = false;
+            _isDrawCompleted = false;
+            _isGoingToPlayer = false;
+            _isReachedToPlayer = false;
         }
-        _playerInteract.trail = null;
-        isDrawCompleted = true;
-        isPlayerEntered = false;
-    }
-    private void CreateTrail()
-    {
-        _currTrail = Instantiate(_trailPrefab,gameObject.transform.position - new Vector3(0,-0.25f,0),Quaternion.Euler(91,40,38), gameObject.transform);
-        _currTrail.SetActive(true);
-    }
-    
-    private void GoToPlayer()
-    {
-        _currTrail.transform.position = new Vector3(Mathf.Lerp(_currTrail.transform.position.x, _trailPoint.position.x, 100* Time.deltaTime),
-            Mathf.Lerp(_currTrail.transform.position.y, _trailPoint.position.y, 100 * Time.deltaTime), 
-            Mathf.Lerp(_currTrail.transform.position.z, _trailPoint.position.z, 100 * Time.deltaTime));
     }
 }

@@ -1,34 +1,48 @@
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
-public class PartManager : MonoBehaviour
+namespace Studios208.DrawRush.Drawing
 {
-    [SerializeField] private GameObject wall;
-    private List<DrawPart> _childParts;
-    private int _trueCounter = 0;
-    void Start()
+    /// <summary>
+    /// Watches a group of DrawPart children and reveals a wall when all of them
+    /// fire <see cref="DrawPart.Completed"/>. Event-driven: no Update() polling
+    /// and no double-counting bugs from the previous foreach implementation.
+    /// </summary>
+    public sealed class PartManager : MonoBehaviour
     {
-        _childParts = GetComponentsInChildren<DrawPart>().ToList();
-    }
-    void Update()
-    {
-        foreach (var part in _childParts)
+        [SerializeField] private GameObject wall;
+
+        private readonly HashSet<DrawPart> _completed = new();
+        private DrawPart[] _parts;
+
+        private void Awake()
         {
-            if (part.isDrawCompleted)
+            _parts = GetComponentsInChildren<DrawPart>(includeInactive: true);
+        }
+
+        private void OnEnable()
+        {
+            for (int i = 0; i < _parts.Length; i++)
             {
-                _trueCounter++;
-                if (_trueCounter == _childParts.Count)
-                {
-                    CreateTheWall();
-                }
+                _parts[i].Completed += OnPartCompleted;
             }
         }
-    }
 
-    private void CreateTheWall()
-    {
-        wall.SetActive(true);
+        private void OnDisable()
+        {
+            for (int i = 0; i < _parts.Length; i++)
+            {
+                _parts[i].Completed -= OnPartCompleted;
+            }
+        }
+
+        private void OnPartCompleted(DrawPart part)
+        {
+            _completed.Add(part);
+            if (_completed.Count >= _parts.Length)
+            {
+                if (wall != null) wall.SetActive(true);
+            }
+        }
     }
 }

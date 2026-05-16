@@ -1,94 +1,108 @@
-using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using Studios208.DrawRush.Common;
+using Studios208.DrawRush.Core;
+using Studios208.DrawRush.Drawing;
 
-public class PlayerInteract : MonoBehaviour
+namespace Studios208.DrawRush.Player
 {
-    [Header("Line Variables")]
-    [SerializeField] private float destroyAfterSeconds = 2.0f;
-    
-    [SerializeField] private Material lineMaterial;
-    [HideInInspector] public bool isDrawing;
-    [HideInInspector] public GameObject trail = null;
-    private GameObject _previousPart = null;
-    private bool _canDraw;
-    private void Awake()
+    /// <summary>
+    /// Detects when the player enters the drawable area / a DrawPart and triggers
+    /// the connecting LineRenderer between two parts. LineRenderer width / destroy
+    /// delay come from <see cref="GameConfig"/>.
+    /// </summary>
+    [RequireComponent(typeof(Collider))]
+    public sealed class PlayerInteract : MonoBehaviour
     {
-        isDrawing = false;
-        _previousPart = null;
-    }
-    private void OnTriggerEnter(Collider other)
-    {
-        
-        if (other.CompareTag("DrawArea"))
+        [Header("Refs"), Space]
+        [SerializeField] private Material lineMaterial;
+
+        [Header("Tags"), Space]
+        [SerializeField] private string drawAreaTag = "DrawArea";
+
+        [HideInInspector] public bool isDrawing;
+        [HideInInspector] public GameObject trail;
+
+        private GameObject _previousPart;
+        private bool _canDraw;
+
+        private void Awake()
         {
-            _canDraw = true;
-        }
-        else
-        {
-            var interactable = other.GetComponent<IInteractable>();
-            if (interactable != null && _canDraw)
-            {
-                if (_previousPart == null)
-                {
-                    interactable.Interact();
-                    _previousPart = other.gameObject;
-                }
-                else if(isDrawing)
-                {
-                    if (_previousPart.gameObject != other.gameObject)
-                    {
-                        interactable.Interact();
-                        _previousPart.GetComponent<DrawPart>().isDrawCompleted = true;
-                        other.gameObject.GetComponent<DrawPart>().isDrawCompleted = true;
-                        LineRenderer lineRenderer = _previousPart.AddComponent(typeof(LineRenderer)) as LineRenderer;
-                        AdjustLineRenderer(lineRenderer,other.gameObject.transform.position,_previousPart.transform.position);
-                        Destroy(trail);
-                        _previousPart = null;
-                        isDrawing = false;
-                        interactable = null; 
-                    }
-                }
-            }
-        }
-        
-    }
-    private void OnTriggerExit(Collider other)
-    {
-        if (other.CompareTag("DrawArea"))
-        {
-            Debug.Log("Exit from DrawArea");
-            Destroy(trail);
-            //When it leaves the DrawableArea
-            //Can't draw
-            _canDraw = false;
-            //Currently not drawing
             isDrawing = false;
-            if (_previousPart)
+            _previousPart = null;
+        }
+
+        private void OnTriggerEnter(Collider other)
+        {
+            if (other.CompareTag(drawAreaTag))
             {
-                //Previous and Current DrawPart Resetted
-                _previousPart.GetComponent<DrawPart>().isPlayerEntered = false;
+                _canDraw = true;
+                return;
+            }
+
+            var interactable = other.GetComponent<IInteractable>();
+            if (interactable == null || !_canDraw) return;
+
+            if (_previousPart == null)
+            {
+                interactable.Interact();
+                _previousPart = other.gameObject;
+                return;
+            }
+
+            if (!isDrawing || _previousPart == other.gameObject) return;
+
+            interactable.Interact();
+            var previousDrawPart = _previousPart.GetComponent<DrawPart>();
+            var currentDrawPart = other.gameObject.GetComponent<DrawPart>();
+            if (previousDrawPart != null) previousDrawPart.MarkCompleted();
+            if (currentDrawPart != null) currentDrawPart.MarkCompleted();
+
+            var lineRenderer = _previousPart.AddComponent<LineRenderer>();
+            AdjustLineRenderer(lineRenderer, other.transform.position, _previousPart.transform.position);
+
+            if (trail != null) Destroy(trail);
+            _previousPart = null;
+            isDrawing = false;
+        }
+
+        private void OnTriggerExit(Collider other)
+        {
+            if (!other.CompareTag(drawAreaTag)) return;
+
+            if (trail != null) Destroy(trail);
+            _canDraw = false;
+            isDrawing = false;
+
+            if (_previousPart != null)
+            {
+                var drawPart = _previousPart.GetComponent<DrawPart>();
+                if (drawPart != null) drawPart.isPlayerEntered = false;
                 _previousPart = null;
             }
         }
-    }
-    
-    //Changing given lineRenderer's variables
-    private void AdjustLineRenderer(LineRenderer lineRenderer,Vector3 startPosition, Vector3 endPosition)
-    {
-        startPosition.y = 0f;
-        endPosition.y = 0f;
-        lineRenderer.material = lineMaterial;
-        lineRenderer.startWidth = 0.4f;
-        lineRenderer.endWidth = 0.4f;
-        lineRenderer.SetPosition(0, startPosition);
-        lineRenderer.SetPosition(1, endPosition);
-        StartCoroutine(DestroyTheLine(lineRenderer));
-    }
-    private IEnumerator DestroyTheLine(LineRenderer lineRenderer)
-    {
-        yield return new WaitForSeconds(destroyAfterSeconds);
-        Destroy(lineRenderer);
+
+        private void AdjustLineRenderer(LineRenderer lineRenderer, Vector3 startPosition, Vector3 endPosition)
+        {
+            startPosition.y = 0f;
+            endPosition.y = 0f;
+
+            float width = GameServices.Config != null ? GameServices.Config.lineWidth : 0.4f;
+            float destroyDelay = GameServices.Config != null ? GameServices.Config.lineDestroyDelay : 2.0f;
+
+            lineRenderer.material = lineMaterial;
+            lineRenderer.startWidth = width;
+            lineRenderer.endWidth = width;
+            lineRenderer.SetPosition(0, startPosition);
+            lineRenderer.SetPosition(1, endPosition);
+
+            StartCoroutine(DestroyLineAfter(lineRenderer, destroyDelay));
+        }
+
+        private static IEnumerator DestroyLineAfter(LineRenderer lineRenderer, float delay)
+        {
+            yield return new WaitForSeconds(delay);
+            if (lineRenderer != null) Destroy(lineRenderer);
+        }
     }
 }

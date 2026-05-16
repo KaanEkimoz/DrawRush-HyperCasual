@@ -1,88 +1,93 @@
 using UnityEngine;
+using Studios208.DrawRush.Core;
 
-[RequireComponent(typeof(CharacterController))]
-public class ThirdPersonMovement : MonoBehaviour
+namespace Studios208.DrawRush.Player
 {
-    [Header("Movement"), Space]
-    [SerializeField] private float playerSpeed = 1.5f;
-    [SerializeField] private float turnSmoothTime = 0.1f;
-    [Header("Components"), Space]
-    [SerializeField] private Animator playerAnim;
-    
-    private PlayerControls _controls; //controls for player (New Input System)
-    private Vector2 _move; // Vector2 Input for character movement
-    private float _turnSmoothVelocity; // The time for smoothing character turn
-    //Gravity variables
-    private const float Gravity = -9.81f; // Gravity const 
-    private Vector3 _velocity = Vector3.zero; // Velocity for gravity
-    private Transform _camTransform; // Cam Transform for smooth turn
-    private CharacterController _playerCharController; // CharacterController for movement functions
-    
-    
-    private static readonly int BIsDancing = Animator.StringToHash("b_isDancing");
+    /// <summary>
+    /// CharacterController-based third-person movement. Camera-relative direction
+    /// is computed from <see cref="GameServices.MainCamera"/> — no GameObject.Find calls.
+    /// Speed / turn / gravity come from <see cref="GameConfig"/> so they tune without
+    /// recompile.
+    /// </summary>
+    [RequireComponent(typeof(CharacterController))]
+    public sealed class ThirdPersonMovement : MonoBehaviour
+    {
+        [Header("Components"), Space]
+        [SerializeField] private Animator playerAnim;
 
-    private void OnEnable()
-    {
-        _controls.Player.Enable();
-    }
-    private void OnDisable()
-    {
-        _controls.Player.Disable();
-    }
-    private void Awake()
-    {
-        _controls = new PlayerControls();
-        _controls.Player.Move.performed += ctx =>
+        [Header("Movement Overrides"), Space]
+        [Tooltip("If true, ignore GameConfig and use the per-instance values below.")]
+        [SerializeField] private bool useLocalValues;
+        [SerializeField] private float localPlayerSpeed = 1.5f;
+        [SerializeField] private float localTurnSmoothTime = 0.1f;
+
+        private static readonly int BIsDancing = Animator.StringToHash("b_isDancing");
+
+        private PlayerControls _controls;
+        private Vector2 _move;
+        private float _turnSmoothVelocity;
+        private Vector3 _velocity = Vector3.zero;
+        private CharacterController _characterController;
+
+        private void Awake()
         {
-            _move = ctx.ReadValue<Vector2>();
-        };
-        _controls.Player.Move.canceled += ctx => 
-        {
-            _move = Vector2.zero;
-        };
-        if(_playerCharController == null)
-        {
-            _playerCharController = GetComponent<CharacterController>();
-        }
-        if(_camTransform == null)
-        {
-            _camTransform = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<Transform>();
+            _controls = new PlayerControls();
+            _controls.Player.Move.performed += ctx => _move = ctx.ReadValue<Vector2>();
+            _controls.Player.Move.canceled += _ => _move = Vector2.zero;
+
+            _characterController = GetComponent<CharacterController>();
+
+            if (playerAnim == null)
+            {
+                playerAnim = GetComponentInChildren<Animator>();
+            }
         }
 
-        if (playerAnim == null)
+        private void OnEnable() => _controls.Player.Enable();
+        private void OnDisable() => _controls.Player.Disable();
+
+        private void FixedUpdate()
         {
-            playerAnim = GetComponentInChildren<Animator>();
-        }
-    }
-    private void FixedUpdate()
-    {
-        if (!GameManager.isGameWon)
-        {
+            var state = GameServices.State;
+            if (state != null && state.IsGameWon)
+            {
+                if (playerAnim != null) playerAnim.SetBool(BIsDancing, true);
+                return;
+            }
+
             Move();
-            AddGravity();
+            ApplyGravity();
         }
-        else
+
+        private void Move()
         {
-            playerAnim.SetBool(BIsDancing,true);
-        }
-    }
-    private void Move()
-    {
-        
-        Vector3 direction = new Vector3(_move.x, 0f, _move.y).normalized;
-        if (direction.magnitude >= 0.1f)
-        {
-            float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + _camTransform.eulerAngles.y;
-            float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref _turnSmoothVelocity, turnSmoothTime);
+            var direction = new Vector3(_move.x, 0f, _move.y).normalized;
+            if (direction.magnitude < 0.1f) return;
+
+            var camera = GameServices.MainCamera;
+            float cameraY = camera != null ? camera.eulerAngles.y : 0f;
+            float speed = ResolveSpeed();
+            float turn = ResolveTurnSmoothTime();
+
+            float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cameraY;
+            float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref _turnSmoothVelocity, turn);
             transform.rotation = Quaternion.Euler(0f, angle, 0f);
 
-            Vector3 moveDirection = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
-            _playerCharController.Move(moveDirection.normalized * (playerSpeed * Time.deltaTime));  
+            var moveDirection = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
+            _characterController.Move(moveDirection.normalized * (speed * Time.deltaTime));
         }
-    }
-    private void AddGravity()
-    {
-        _velocity.y += Gravity * Time.deltaTime;
-        _playerCharController.Move(_velocity * Time.deltaTime);
+
+        private void ApplyGravity()
+        {
+            float gravity = GameServices.Config != null ? GameServices.Config.gravity : -9.81f;
+            _velocity.y += gravity * Time.deltaTime;
+            _characterController.Move(_velocity * Time.deltaTime);
+        }
+
+        private float ResolveSpeed()
+            => useLocalValues || GameServices.Config == null ? localPlayerSpeed : GameServices.Config.playerSpeed;
+
+        private float ResolveTurnSmoothTime()
+            => useLocalValues || GameServices.Config == null ? localTurnSmoothTime : GameServices.Config.turnSmoothTime;
     }
 }

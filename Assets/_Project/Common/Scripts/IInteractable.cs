@@ -1,8 +1,7 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-public interface IInteractable
+namespace Studios208.DrawRush.Common
 {
-    void Interact();
+    public interface IInteractable
+    {
+        void Interact();
+    }
 }
