@@ -5,46 +5,97 @@
 
 ---
 
-## 🎯 Mevcut Durum — 2026-05-16 (senior-review refactor sonrası)
+## 🎯 Mevcut Durum — 2026-05-16 (chain-drawing milestone)
 
-**Tek satır:** Faz 0-12 tamam — Unity 6 baseline, repo hijyen, feature folder migration, clean architecture, asmdef, build settings, README rebuild, 39 EditMode test green, Unity MCP entegre, **senior Unity dev + senior software eng paralel review uygulandı** (PlayerHealth API split / IDrawPart / DrawingPhase FSM / DrawPartCompletionWatcher / GameManager 3'e bölündü / PersistentObject rename / GameConfig property encapsulation / dead code purge).
+**Tek satır:** Çizim mekaniği baştan aşağı yeniden yazıldı — eski "DrawPart trail spawn'lar + uçar" modeli atıldı, player'da yere yatık (XZ düzleminde) persistent `TrailRenderer` ile **chain-anchor** modeli yapıldı, iki anchor arası `LineRenderer` ile **kalıcı kenar** çiziliyor ve trail her kenar tamamlandığında temizlenip sıradaki kenar için sıfırdan başlıyor. Closed-loop puzzle: 1 → 2 → 3 → … → 1.
 
-**Repo state:** `claude-dev` branch origin'e push'lu, master 22 commit önde. Working tree clean. LFS aktif. Backup branch `backup-pre-claude-cleanup-1778895100` korunuyor.
+**Repo state:** `master` HEAD = `3d5cd386` ("Merge claude-dev: ground-aligned trail + edge-by-edge clear"), tag `v0.24-chain-drawing` master'da, origin'e push edildi. `claude-dev` master'la merge edildi, 2 commit önde olduğu görünüyor sadece merge-base divergence sebebiyle (içerik aynı). Working tree clean. LFS aktif. Backup branch `backup-pre-claude-cleanup-1778895100` korunuyor.
 
-**Test:** EditMode 39/39 PASS (PlayerHealth 11 + GameState 4 + GameServices 4 + EventChannel 3 + TrailMath 4 + DrawPartStateMachine 8 + DrawPartCompletionWatcher 5).
+**Test:** EditMode 35/35 PASS (PlayerHealth 11 + GameState 4 + GameServices 4 + EventChannel 3 + DrawPartStateMachine 8 + DrawPartCompletionWatcher 5). `TrailMath` testleri silindi (trail-lerp logic'i ile birlikte gitti).
 
-**Aktif fazlar / blocker'lar:**
-- ✅ Bizim koddan 0 compile error, 0 deprecation warning (MCP read_console doğrulaması).
-- ⚠️ 3rd-party warning'leri sürüyor (CodeMonkey, GameAnalytics deprecated API'ler) — scope dışı, dokunulmadı.
-- ⚠️ ProjectSettings/ProjectSettings.asset commit'lendi ama `applicationIdentifier` Android için artık `com.Studios208.DrawAndRush2` (önce boştu).
-- ⛔ Henüz hiç EditMode/PlayMode test yok — Faz 8 hedefi.
-- ⛔ Sahnelerdeki Prefab/GameObject component referansları kontrol edilmedi — Unity Editor'da Play tuşuna basıp gerçek doğrulama lazım.
-- ⛔ Yeni GameBootstrap MonoBehaviour'u sahnelere eklenmiş değil — manuel sahne kurulumu / prefab güncellemesi gerekiyor.
+**Unity bağlantısı:** MCP for Unity bridge v9.6.6 (CoplayDev) `Packages/manifest.json`'da kurulu, port 6401, instance `DrawRush@4ff3b85c`, Unity 6000.3.12f1, 66-80 paket (kullanıcı ProBuilder + VFX Graph eklemiş).
+
+---
+
+## ✅ Tamamlanan Fazlar
+
+| Faz | İçerik | Commit (master HEAD'inden ucu) |
+|---|---|---|
+| 0 | Safety baseline (backup branch, claude-dev oluşturma) | `d46bb015` chore: bootstrap Claude memory system |
+| 1 | Repo hijyen — Unity-standard `.gitignore`, Git LFS `.gitattributes`, Library/obj/Logs/csproj untrack | dahil `d46bb015` |
+| 2 | Dead code — `OldVersion/` 3 script, ekstra `.sln`'ler, Scenes/Test silindi | dahil |
+| 3 | Feature folder migration — 14 script `Assets/_Project/<Feature>/Scripts/` altına .meta'larla taşındı (GUID korundu) | dahil |
+| 4 | Code refactor — `Studios208.DrawRush.*` namespace, `GameServices` static locator, `GameConfig`/`GameState`/`PlayerHealth` SO'lar, `AnimatorIds`, event-driven win | dahil |
+| 5 | asmdef — tek `Studios208.DrawRush.asmdef` (+ Tests asmdef) | dahil |
+| 6 | Build settings — `applicationIdentifier=com.Studios208.DrawAndRush2`, AndroidTargetSdk 34, IL2CPP | dahil |
+| 7 | README rebuild — Unity 6 + mimari diyagram + mekanik | dahil |
+| 8 | Sahne entegrasyonu — Level 1'e `__Bootstrap` GO eklendi, GameConfig/GameState/PlayerHealth bağlandı | dahil |
+| 9 | Prefab adaptasyonu — `Player.prefab` + `GameManager` SerializeField yeniden bind | dahil |
+| 10 | EditMode test setup — Tests/EditMode/ + asmdef, 22 başlangıç test | dahil |
+| 11 | Senior dev review (Unity + general SE) → uygulandı | `f2e96413` ve öncesi |
+| 12 | Player speed +%80 (`GameConfig.playerSpeed` 1.5 → 2.7) | dahil |
+| 13 | EDM4U temizliği — eski 1.2.135 + 1.2.144 silindi, modern 1.2.169 kaldı | dahil |
+| 14 | **Chain-drawing mekaniği** — Trail prefab uçuş atıldı, persistent player trail, closed-loop chain | `0691eddd` |
+| 15 | Combat-puzzle ayrımı — DrawArea içindeyken `EnemyCombat` damage yok, `EnemyFollow.ResetPath` win'de | dahil |
+| 16 | `LevelFlow.NextLevel` out-of-bounds → `LoadRandomLevel` fallback | dahil |
+| 17 | Player Trail prefab eklendi (cyan gradient TrailRenderer) + line material fallback | `4c6e3771` |
+| 18 | Trail yerde + edge-by-edge clear — `alignment=TransformZ`, parent X=90°, Y=0.05, time=4s, `Clear()` her anchor temasında | `0ef06683` |
 
 ---
 
 ## 🚀 Sıradaki Adım
 
-**Şimdi başlanabilecek:**
-- [ ] `git stash` veya WIP commit ile working tree'yi temizle, `claude-dev` branch'ini master'dan oluştur (kuralı uygula).
-- [ ] Unity-standard `.gitignore` + `.gitattributes` (LFS) ekle — `Library/`, `Logs/`, `Temp/`, `obj/`, `UserSettings/`, `*.csproj`, `*.sln` exclude.
-- [ ] README.md güncel değil (Unity 2020.3.34f1 yazıyor; gerçek 6000.3.12f1) — versiyonu, paketleri, ekran görüntüsünü güncelle.
-- [ ] 16 script'i `Assets/Scripts/*.cs` flat layout'tan `Assets/_Project/<Feature>/Scripts/` feature-bazlı yapıya migrate et (Combat / Drawing / Player / Enemy / Level / Core).
-- [ ] `OldVersion/Pathfinding.cs` (12 satır, boş constructor) ve `OldVersion/Grid.cs` ölü kod — silinmeli (artık NavMeshAgent kullanılıyor).
+**Manuel iş (Kaan, Unity Editor'da yapacak):**
+- [ ] Level 1'de Play tuşuna basıp yeni chain-drawing mekaniğini test et — golden path:
+  - DrawArea'ya gir → cyan trail yerde görünüyor mu?
+  - 1. nokta'ya değ → glow / trail Clear → trail sıfırdan başlıyor mu?
+  - 2., 3., … noktaya sırayla → her birinde aralarına kalıcı çizgi spawn, trail clear?
+  - Son nokta → 1. nokta'ya geri dön → closed loop kapanışı + wall reveal + win sequence?
+  - DrawArea'dan çık → trail görünmez, geri gir → chain progress duruyor mu?
+- [ ] Mevcut DrawPart instance'larını (Levels/Wall*.prefab içindeki köşe parçaları) yeni `Assets/_Project/Drawing/Prefabs/DrawPoint.prefab` ile değiştir — yere düz nokta görselleri. Test 1: tek bir Level'da swap, beğenirse yay.
+- [ ] Cinemachine 2 → 3 upgrade'inden sonra Player prefab'ındaki CMVcam2 hâlâ doğru framing'de mi kontrol et.
 
-**Manuel iş (Kaan):**
-- [ ] AppsFlyer / GameAnalytics / FacebookSDK key'lerinin commit'lenmemiş olduğunu Editor'da doğrula (`Settings.asset` Resources altında, key boş olmalı).
-- [ ] Android `applicationIdentifier` boş — bundle ID atanmalı (com.Studios208.DrawAndRush2).
-- [ ] `AndroidTargetSdkVersion: 0` (Auto) — Play Store 2024+ için sabit 34/35 set edilmeli.
-
-**Sıradaki büyük kalan:**
-- Singleton/Find-tag anti-pattern temizliği: `GameObject.FindWithTag("Player")`, `GameObject.FindObjectsOfType<LineRenderer>()` kullanımı → `GameServices` locator + ScriptableObject ref.
-- DrawPart `Update()` her frame `foreach` ile counter sayıyor — event-driven yapılmalı.
+**Kod tarafı (sonraki sessions):**
+- [ ] Tutorial overlay (TutorialLevel.unity'ye "swipe to move + touch points to connect" UI hint).
+- [ ] `LevelConfig` ScriptableObject — per-level enemy count/speed/HP/spawn positions (difficulty curve).
+- [ ] On-Screen Stick component (mobile virtual joystick) — Player Canvas'a ekle, PlayerControls'a bind.
+- [ ] `AudioCue` SO + `AudioService` locator — death / win / connection / enemy-touch SFX. Hâlihazırda audio hiç yok.
+- [ ] `LevelProgressState` SO — `GameManager.RandomLevelList` static mutable list'i SO'ya taşı.
+- [ ] `WallManager` rename → `WinCondition` (notlar dosyada, scene-ref koruma için ertelendi).
 
 **Sonraki faza ertelenen:**
-- Addressables migrasyonu (Resources/ altında sadece GameAnalytics Settings var, küçük).
-- Unit test'ler (henüz yok).
+- Addressables migrasyonu (Resources/ minimal, prematüre).
 - VContainer DI (scope büyürse).
+- PlayMode test'leri (gerçek physics + scene loading davranışı için).
+
+---
+
+## ⚙️ Yeni Çizim Mekaniği Spec
+
+```
+1. Player DrawArea trigger'ına girer  →  TrailRenderer.emitting = true
+2. 1. DrawPoint'e değer
+   ├─ DrawPart.OnPlayerEntered() + Interact() → DrawingPhase.Armed
+   ├─ _firstPart = _previousPart = this
+   └─ TrailRenderer.Clear()  (kenar başlangıcı temiz)
+3. Player yürür → TrailRenderer yere cyan iz bırakır (4s time, ground-aligned)
+4. 2. DrawPoint'e değer
+   ├─ SpawnConnectionLine(prev → current)  → KALICI LineRenderer GameObject
+   ├─ prev.Complete() → Done phase, Completed event raise
+   ├─ current.OnPlayerEntered() + Interact() → Armed
+   ├─ _previousPart = current  (chain devam)
+   └─ TrailRenderer.Clear()  (sıradaki kenar için sıfırdan)
+5. ... N noktaya kadar tekrar
+6. Son nokta → 1. nokta (closed-loop closure)
+   ├─ SpawnConnectionLine(prev → _firstPart)
+   ├─ prev.Complete() + _firstPart.Complete()
+   ├─ TrailRenderer.Clear()
+   └─ Tüm parçalar Done → WallManager → GameState.IsGameWon = true
+7. DrawArea'dan çıkış  →  TrailRenderer.emitting = false (chain progress KORUNUR)
+   `resetProgressOnAreaExit` flag açılırsa legacy davranış (progress wipe).
+```
+
+**Mimari prensip:** TrailRenderer = "şu an çizilen kenarın geçici göstergesi", LineRenderer GameObject'leri = "kalıcı puzzle çizgileri". Bunlar farklı yaşam döngülerine sahip.
 
 ---
 
@@ -52,194 +103,52 @@
 
 | Özellik | Değer |
 |---|---|
-| **İsim** | DrawRush (productName: DrawAndRush2) |
-| **Tür** | Hyper-casual mobile drawing puzzle + chase/combat |
-| **İlham / referans** | Voodoo "Draw Joust", Lion Studios "Pokey Ball" benzeri çiz-tamamla mekaniği |
-| **Hedef Platform** | Android öncelik (mobile portrait), PC fallback |
-| **Hedef kitle** | Hyper-casual mobile oyuncu (kısa session, basit kontrol) |
+| **İsim** | DrawRush (productName: `DrawAndRush2`) |
+| **Tür** | Hyper-casual mobile drawing puzzle + chase combat |
+| **Platform** | Android öncelik (mobile portrait), PC fallback |
 | **Engine / Stack** | Unity 6000.3.12f1 LTS + URP 17.3.0 |
-| **Başlangıç** | 2022-04-29 (GitHub createdAt) |
 | **Stüdyo** | Studios208 |
-| **Mevcut version** | 0.23 |
-
----
-
-## ⚙️ Sabit Parametreler / Tasarım Kararları
-
-> Mevcut kod tabanından çıkarılan parametreler. Magic number temizliği yapılırken buradan referansla ScriptableObject `GameConfig.asset`'e taşınmalı.
-
-| Parametre | Değer | Kaynak / Bağlam |
-|---|---|---|
-| Player speed | 1.5f | `ThirdPersonMovement.playerSpeed` |
-| Turn smooth time | 0.1f | `ThirdPersonMovement.turnSmoothTime` |
-| Gravity | -9.81f | `ThirdPersonMovement.Gravity` |
-| Enemy damage | -1 | `EnemyCombat.damage` |
-| GameWon delay | 3.0f | `DrawPart.Invoke(nameof(GameWon), 3.0f)` |
-| Android Min SDK | 25 | `ProjectSettings.asset` |
-| Default orientation | Portrait | `defaultScreenOrientation: 4` |
+| **Mevcut version** | 0.24 (`v0.24-chain-drawing` tag) |
+| **Repo** | https://github.com/KaanEkimoz/DrawRush-HyperCasual (public, 39★, 6 fork) |
+| **Default branch** | `master` |
+| **Claude branch** | `claude-dev` |
 
 ---
 
 ## 🛠️ Teknik Stack
 
-- **Engine / Framework:** Unity 6000.3.12f1 LTS
-- **Render Pipeline:** URP 17.3.0 (Universal RP)
+- **Render Pipeline:** URP 17.3.0
 - **Input:** Input System 1.19.0 (`PlayerControls` C# class, New Input System)
-- **Test framework:** Unity Test Framework 1.6.0 — kurulu ama hiç test yok (Tests/ klasörü yok)
-- **Paketler / Bağımlılıklar (önemliler):**
-  - `com.unity.ai.navigation` 2.0.11 (NavMeshAgent — EnemyFollow.cs)
-  - `com.unity.cinemachine` 2.10.7 (kamera — CMCamera.prefab)
-  - `com.unity.render-pipelines.universal` 17.3.0
-  - `com.unity.recorder` 5.1.5 (video kayıt — Recorder)
-  - `com.unity.timeline` 1.8.11
-- **External servisler (SDK'lar `Assets/!OtherAssets/`):**
-  - AppsFlyer (attribution)
-  - GameAnalytics (analytics, en büyük SDK — 29 MB)
-  - FacebookSDK (social)
-  - ExternalDependencyManager + PlayServicesResolver (Google Play services)
-- **Asset / data kaynakları:**
-  - Epic Toon FX (particle library, ~748 KB)
-  - CodeMonkey (referans script kitleri, ~340 KB)
-  - Toony Colors Pro (cel-shader, `PackageAsset/JMO Assets/`)
-  - "beach" pack (39 MB — proje toplamının %33'ü)
-  - TutorialInfo (Unity sample assets)
-- **Git:** https://github.com/KaanEkimoz/DrawRush-HyperCasual (public, 39 star, 6 fork, MIT yok — license yok)
-- **Branch:** `claude-dev` (Claude — henüz oluşturulmadı), `master` (default)
+- **Camera:** Cinemachine **3.1.6** (Kaan upgrade etti — 2.10.7 → 3.1.6, scene tarafı henüz validate edilmedi)
+- **AI:** AI Navigation 2.0.11 (NavMeshAgent — `EnemyFollow.cs`)
+- **Test:** Unity Test Framework 1.6.0 (EditMode 35 test green)
+- **VFX:** Visual Effect Graph 17.3.0 (Kaan ekledi, kullanım örneği henüz yok)
+- **Geometry:** ProBuilder 6.0.9 (Kaan ekledi, kullanım örneği henüz yok)
+- **MCP:** com.coplaydev.unity-mcp (GitHub URL, MCPForUnity#main) — bridge v9.6.6, port 6401
+- **External servisler (`Assets/!OtherAssets/`):** AppsFlyer, GameAnalytics, FacebookSDK, ExternalDependencyManager 1.2.169 (eski 1.2.135 + 1.2.144 purge edildi).
 
 ---
 
-## 🗓️ Roadmap
+## 📦 Asset Envanteri
 
-| Faz | Süre | Task Sayısı | Acceptance Criteria | Durum |
-|---|---|---|---|---|
-| 0. Inventory + Memory bootstrap | <1 gün | 4 | Bu dosya doldu, CLAUDE.md root'ta, working tree durumu raporlandı | ✅ |
-| 1. Repo hijyen | <1 gün | 5 | `.gitignore`/`.gitattributes`+LFS, claude-dev branch açık, untrack csproj/sln/Logs/obj | ✅ |
-| 2. Ölü kod temizliği | <1 gün | 3 | OldVersion/, Scenes/Test/, legacy .sln dosyaları silindi (43k satır) | ✅ |
-| 3. Klasör migrasyonu | <1 gün | 1 | 14 script flat layout → `_Project/<Feature>/Scripts/`, .meta korundu | ✅ |
-| 4. Clean architecture refactor | 1 gün | 14 | Namespace, GameServices, SO state (GameConfig/GameState/PlayerHealth), event-driven | ✅ |
-| 5. asmdef | <1 gün | 1 | `Studios208.DrawRush.asmdef` Assets/_Project/ root, PlayerControls scope içine taşındı | ✅ |
-| 6. Build settings | <1 gün | 1 | applicationIdentifier, AndroidTargetSdk 34, IL2CPP, ARMv7+ARM64 (MCP execute_code ile) | ✅ |
-| 7. README rebuild | <1 gün | 1 | Modern README — badges, mimari diyagram, build settings tablosu | ✅ |
-| 8. EditMode test | 1 gün | 3 | DrawPart.Completed firing, PlayerHealth.Apply edges, PartManager event subscription | ⬜ |
-| 9. Sahne / prefab refactor doğrulama | 1 gün | 5 | GameBootstrap her sahnede, GameManager prefab'ı yeni Inspector field'larına bağlı, EnemyCombat damage override kontrol | ⬜ |
-| 10. Signed Android build | 0.5 gün | 2 | Keystore config (repo dışı), signed APK output | ⬜ |
-| 11. Addressables | 1 gün | 2 | Resources/ → Addressables, GameAnalytics Settings hariç | ⬜ |
+- **Scripts:** 22 first-party (`Assets/_Project/<Feature>/Scripts/`) + `PlayerControls.cs` (auto-generated)
+- **Tests:** 35 EditMode tests in `Assets/_Project/Tests/EditMode/`
+- **Asmdef:** `Studios208.DrawRush` + `Studios208.DrawRush.Tests.EditMode`
+- **ScriptableObject asset'ler:**
+  - `Assets/_Project/Core/Data/GameConfig.asset` — playerSpeed=2.7, enemyTouchDamage=1, lineWidth=0.4, etc.
+  - `Assets/_Project/Core/Data/GameState.asset` — IsGameWon flag
+  - `Assets/_Project/Player/Data/PlayerHealth.asset` — startingValue=3
+  - Event channels: `Assets/_Project/Core/Events/` (VoidEventChannel, IntEventChannel — test'lerde kullanılıyor, scene'de henüz wire edilmedi)
+- **Yeni prefab:** `Assets/_Project/Drawing/Prefabs/DrawPoint.prefab` (yere düz nokta, cylinder + emissive cyan, DrawPart component)
+- **Sahneler:** 5 build'de (SplashScreen, TutorialLevel, Level 1-3); 5 test sahnesi silindi.
 
 ---
 
-## 📦 Mevcut Asset / Data Envanteri
+## 🗒️ Notlar
 
-| Tip | Sayı | Konum | Not |
-|---|---|---|---|
-| C# Script | 16 | `Assets/Scripts/` | Flat layout — feature klasörlemesi yok (`OldVersion/` 3, `Interfaces/` 1) |
-| Sahne | 10 | `Assets/Scenes/` | 5'i Build'de aktif (Splash + Tutorial + Level 1-3), 5'i `Scenes/Test/` altında |
-| Prefab | 20+ | `Assets/Prefabs/` | Objects/, DontDestroyOnLoads/, New/ (geometric parts), Levels/, Edges/ |
-| Materyal | 47 | `Assets/Materials/` | URP upgrade ile çoğu modified, hepsinin shader path'i refresh edilmiş |
-| Resources | 2 | `Assets/Resources/GameAnalytics/`, `PerformanceTest*.json` | Hot anti-pattern; Addressables'a geçirilebilir |
-| 3rd-party SDK | 5 | `Assets/!OtherAssets/` | AppsFlyer, GameAnalytics, FacebookSDK, EDM, PlayServicesResolver |
-| 3rd-party Asset | 5+ | `Assets/!OtherAssets/` | Epic Toon FX, CodeMonkey, Toony Colors Pro, beach (39MB), LevelAssets |
-
-**Disk:**
-- `Assets/` toplam: 116 MB
-- `Library/`: 2.1 GB (git'te olmamalı, git'e dahil mi diye bakılmalı)
-- Proje root: 2.7 GB
-- GitHub diskUsage: 442 MB (Library dahil pushlanmış olabilir)
-
----
-
-## 🎮 Sahne / Sayfa / Modül Listesi
-
-| # | Ad | İşlev | Build'de | Durum |
-|---|---|---|---|---|
-| 0 | SplashScreen | Açılış / studio logo | ✅ index 0 | Stable |
-| 1 | TutorialLevel | Mekanik öğretici | ✅ index 1 | Stable |
-| 2 | Level 1 | İlk gerçek level | ✅ index 2 | Stable |
-| 3 | Level 2 | 2. level | ✅ index 3 | Stable |
-| 4 | Level 3 | 3. level | ✅ index 4 | Bug fix yapılmış (`19bd7cb7 Level 3 Bug Fixes`) |
-| — | Scenes/Test/GidenLevel | Eski deneme | ❌ | Silinebilir |
-| — | Scenes/Test/Level 4 | Yarım kalmış | ❌ | Revize / sil |
-| — | Scenes/Test/TestScene_01/02/03 | Eski test sahneleri | ❌ | Silinebilir |
-
----
-
-## 🧩 Kod Mimarisi (Mevcut Snapshot)
-
-**Domain:** Drawing puzzle + chase combat hybrid.
-
-**Aktif Script'ler (16 adet, `Assets/Scripts/` flat):**
-
-| Script | Görev | Mimari notları |
-|---|---|---|
-| `ThirdPersonMovement.cs` | Player hareketi, CharacterController + NavMesh agent için cam-relative turn | New Input System (`PlayerControls`), gravity manual |
-| `PlayerInteract.cs` | DrawArea trigger detection, çizim başlat/durdur | Trail prefab spawn, `_canDraw` flag |
-| `DrawPart.cs` | Tek bir parça (DrawPart) — Interactable, çizilince LineRenderer ekler | `IInteractable` impl, `isDrawCompleted` flag, GameWon Invoke |
-| `PartManager.cs` | Bir grup DrawPart'ı izler, hepsi tamamlanınca wall'u aktive eder | `Update()` her frame foreach — event-driven yapılabilir |
-| `WallManager.cs` | Wall lifecycle | Minimal |
-| `PlayerCombat.cs` | Player HP / damage handling | `[SerializeField]` HP |
-| `EnemyCombat.cs` | Enemy damage uygulayıcı | Magic damage `-1` |
-| `EnemyFollow.cs` | NavMeshAgent ile player'a chase | `GameObject.FindWithTag("Player")` ❌ anti-pattern |
-| `GameManager.cs` | Sahne yönetimi, level transition, UI | `SceneManagement`, TMPro, 117 satır — God class riski |
-| `DontDestroyOnLoad.cs` | Persistent objeler | Singleton-lite |
-| `RandomMaterial.cs` | Rastgele materyal atayan helper | OK |
-| `VideoEnd.cs` | VideoPlayer end callback | OK |
-| `CreateJoystick.cs` (`Assets/CreateJoystick.cs`) | Joystick spawn | Yanlış konumda — flat root'ta |
-| `Interfaces/IInteractable.cs` | Interact contract | Tek interface |
-| `OldVersion/Grid.cs` | Eski grid pathfinding | ❌ Ölü kod |
-| `OldVersion/PathNode.cs` | Eski path node | ❌ Ölü kod |
-| `OldVersion/Pathfinding.cs` | Eski A* (12 satır, boş constructor) | ❌ Ölü kod |
-
-**Pattern gözlemleri:**
-- Field naming: `_camelCase` private ✅ (kurala uygun)
-- Public property/field: `playerSpeed` camelCase ✅
-- `[Header]` + `[SerializeField]` kullanımı tutarlı ✅
-- `Singleton<T>` pattern yok — ama `FindWithTag`/`FindObjectsOfType` var ❌ (rules: Service Locator + ScriptableObject)
-- Coroutine yerine `Invoke(nameof(...), float)` kullanılmış — `Awaitable` ile değiştirilebilir
-- Hiç namespace yok ❌ (rules: file-scoped namespace bekleniyor)
-- Hiç asmdef yok ❌ (rules: feature-bazlı bölme bekleniyor)
-
----
-
-## 🚫 Bilinen Sorunlar / Blocker'lar
-
-- **Working tree çok kirli**: 100+ modified file (URP shader migration sonrası `.mat` dosyaları, `.csproj`, Assembly file'lar). Commit veya stash kararı verilmeli.
-- **`.gitignore` minimal**: sadece `Temp/UnityLockfile`. Library/obj/Logs git'te olabilir (GitHub diskUsage 442 MB bunu doğruluyor) — temizleme gerekli.
-- **Hiç asmdef** → her kod değişikliğinde tam recompile.
-- **README outdated**: Unity 2020.3.34f1 yazıyor, gerçek 6000.3.12f1.
-- **3 ölü script** `OldVersion/` altında, üretimde kullanılmıyor.
-- **`applicationIdentifier` boş** → Android build başlamaz.
-- **License yok** → repo public ama lisans belirtilmemiş.
-
----
-
-## 📜 Önemli Kararlar (ADR — Architecture Decision Records)
-
-| Tarih | Karar | Bağlam | Tradeoff / Alternatif |
-|---|---|---|---|
-| 2022-04-29 | Hyper-casual drawing puzzle yap | İlk repo, prototip | Voodoo/Lion Studios pazarına uygun, scope dar |
-| 2022-Q3 | Unity 2020.3.34f1 + Cinemachine + Input System (yeni) | İlk versiyon | Built-in RP kullanıldı, URP'ye sonra geçildi |
-| 2022 | A* pathfinding bırakıldı, NavMeshAgent'a geçildi | `OldVersion/Pathfinding.cs` boş kaldı | NavMesh + Cinemachine basit; A* mobile için overkill |
-| 2022 | AppsFlyer + GameAnalytics + Facebook SDK eklendi (`14c6c11d SDK's Added`) | Hyper-casual yayın için attribution + analytics gerekli | Repo size +30 MB |
-| 2026-05-08 | Claude-Project-Memory-Template kuruldu | MFD pattern projeye aktarıldı | Manuel kuralları her seferinde anlatmaktansa dosyaya bağla |
-| 2026-05-16 | Unity 6 LTS + URP 17.3'e upgrade | Modernize, mobile performans, Awaitable native | Materyaller modified, csproj regenerated, refactor gerekli |
-| 2026-05-16 | Singleton/Find pattern → GameServices locator + ScriptableObject state | EnemyFollow/DrawPart/Movement Awake'inde FindWithTag, GameManager.isGameWon static — test edilemez, additive sahne load'larda kırılır | VContainer overkill 14 script için; static locator yeterli, scope büyürse VContainer'a geçilir |
-| 2026-05-16 | `Studios208.DrawRush.asmdef` tek asmdef (feature başına değil) | Per-feature asmdef Core↔Enemy circular dep yaratıyordu | Namespace seviyesinde isolation; ~50+ script'te split |
-| 2026-05-16 | PlayerControls (Input System auto-gen) `_Project/Player/Input/`'a taşındı | Assets/Inputs/ asmdef kapsamı dışındaydı — `error CS0246: PlayerControls bulunamadı` | Feature-owned input; asmdef scope içinde |
-| 2026-05-16 | IL2CPP + ARMv7\|ARM64 Android scripting backend | Play Store 64-bit zorunluluğu, performans | Mono'dan daha uzun build süresi kabul edildi |
-| 2026-05-16 | applicationIdentifier `com.Studios208.DrawAndRush2` | Boştu — Android build başlayamıyordu | DrawAndRush2 ismi productName ile tutarlı; rebrand olursa migration script gerekir |
-| 2026-05-16 | git-lfs initialized + .gitattributes binary track | FBX/PNG/WAV repo'yu şişiriyordu | LFS quota kullanır (1 GB free); büyürse self-host |
-
----
-
-## 📚 Faz Özetleri
-
-**Faz 0 — Prototype (2022-04 → 2022-Q3):** Çekirdek drawing/draw-and-fill mekaniği, 3 level + tutorial + splash. Trail/LineRenderer combo ile çizim, NavMeshAgent'lı enemy chase, CharacterController-based player. `4f6b4c88 Bug Fixes` ... `424a9981 Particles Added. Level Tutorial,1,2,3,4 Added` ile prototype kapsamı tamamlandı.
-
-**Faz 1 — Release Candidate (2022 sonu):** SDK entegrasyonu (`14c6c11d SDK's Added`), refactor (`50e672ff Refactored` + `refactor` branch merge), Release Version (`fde24632`). Yayına hazırlık.
-
-**Faz 2 — Unity 6 Upgrade (2026-05):** Repo 4 yıl atıl kaldıktan sonra Unity 6000.3.12f1'e taşındı (`0a7c367e build: latest files`, `7877f08d build: deleted aab files`). URP migration material/.csproj regenerate'leri working tree'de henüz commit edilmedi.
-
-**Faz 3 — Modernization (planned, 2026-Q2+):** Feature folder migrasyonu, ServiceLocator + ScriptableObject mimari, asmdef bölümlemesi, EditMode test, signed Android build.
-
----
-
-_Bu dosya her önemli ilerleme sonrası güncellenir. ADR'ye yeni karar düşer, "Mevcut Durum" tarih + tek satır olarak revize edilir._
+- `GameManager` legacy facade olarak korundu (UI Button OnClick bindings) — gerçek iş `LevelFlow` + `HudPanels` + `WinSequenceDirector` sub-component'lerinde.
+- `DontDestroyOnLoad` → `PersistentObject` rename edildi (`MovedFrom` attribute ile scene refs intact).
+- `GameConfig` public field → `[field: SerializeField]` read-only property pattern'i uygulandı.
+- `[Obsolete] DrawPart.isPlayerEntered` getter sahneler/prefab'lar için bırakıldı; yeni kod `OnPlayerEntered/OnPlayerExited` kullansın.
+- Architecture review raporu: `Claude-Project-Memory-Template/reviews/2026-05-16-architecture-review.md` (senior software eng) — uygulanan kararların kaynağı.
+- "DrawArea içinde enemy damage yok" safe zone kuralı `EnemyCombat.OnTriggerEnter`'da `PlayerInteract.IsInDrawArea` check ile.
