@@ -1589,8 +1589,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7545617510679778163}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.1, z: 0}
+  m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
+  m_LocalPosition: {x: 0, y: 0.05, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1645,7 +1645,7 @@ TrailRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Time: 1.2
+  m_Time: 4
   m_PreviewTimeScale: 1
   m_Parameters:
     serializedVersion: 3
@@ -1655,7 +1655,7 @@ TrailRenderer:
       m_Curve:
       - serializedVersion: 3
         time: 0
-        value: 0.45
+        value: 0.35
         inSlope: 0
         outSlope: 0
         tangentMode: 0
@@ -1664,7 +1664,7 @@ TrailRenderer:
         outWeight: 0.33333334
       - serializedVersion: 3
         time: 1
-        value: 0.05
+        value: 0.3
         inSlope: 0
         outSlope: 0
         tangentMode: 0
@@ -1677,7 +1677,7 @@ TrailRenderer:
     colorGradient:
       serializedVersion: 2
       key0: {r: 0.2, g: 0.85, b: 1, a: 1}
-      key1: {r: 0, g: 0.6, b: 1, a: 0}
+      key1: {r: 0, g: 0.6, b: 1, a: 1}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -1693,8 +1693,8 @@ TrailRenderer:
       ctime6: 0
       ctime7: 0
       atime0: 0
-      atime1: 65535
-      atime2: 0
+      atime1: 55705
+      atime2: 65535
       atime3: 0
       atime4: 0
       atime5: 0
@@ -1703,15 +1703,15 @@ TrailRenderer:
       m_Mode: 0
       m_ColorSpace: -1
       m_NumColorKeys: 2
-      m_NumAlphaKeys: 2
-    numCornerVertices: 4
-    numCapVertices: 4
-    alignment: 0
+      m_NumAlphaKeys: 3
+    numCornerVertices: 6
+    numCapVertices: 6
+    alignment: 1
     textureMode: 0
     textureScale: {x: 1, y: 1}
     shadowBias: 0.5
     generateLightingData: 0
-  m_MinVertexDistance: 0.08
+  m_MinVertexDistance: 0.02
   m_Autodestruct: 0
   m_Emitting: 0
   m_ApplyActiveColorSpace: 1
