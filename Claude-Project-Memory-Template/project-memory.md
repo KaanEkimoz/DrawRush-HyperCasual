@@ -5,13 +5,13 @@
 
 ---
 
-## 🎯 Mevcut Durum — 2026-05-16 (anchor visual swap)
+## 🎯 Mevcut Durum — 2026-05-16 (anchor swap + dedup + neighbor graph)
 
-**Tek satır:** Chain-drawing mekaniğinin üzerine **anchor görsel swap** geldi — 4 sahnedeki kompozit "şekil parçaları" (Level 1 SquarePart×4, Level 2 TrianglePart×3, Level 3 AltigenPart×6, TutorialLevel SquarePart×1) görselleri temizlenip yerlerine **transparan cyan küre** anchor'lar (`DrawPoint.prefab`, sphere mesh, alpha 0.45) konuldu. Toplam 28 sphere instance. EndWallParts (Animator win reveal) + DrawableArea trigger her container'da korundu, gameplay/chain length aynı.
+**Tek satır:** Anchor görsel swap → dedup → neighbor-restricted chain ardışık 3 fazda gitti. 4 sahnenin her şekil parçası (square/triangle/hex) görselleri silindi, yerlerine **transparan cyan küre** anchor'lar konuldu (her köşede TEK küre, paylaşılan köşeler birleşti). Sphere sayıları: L1=4, L2=3, L3=6, Tut=2 → mega-poligon köşeleri. **Chain artık köşegen kabul etmiyor** — `DrawPart.IsNeighborOf` ile sadece poligon kenar komşularına bağlanır, auto-wire en yakın 2 komşu üzerinden.
 
-**Repo state:** `claude-dev` HEAD = `d9a9ab17` (anchor swap son commit). Master HEAD hâlâ `236d83c9` (v0.24 handoff merge). claude-dev master'dan 6 commit önde, push edilmedi, main'e merge Kaan onayı bekler. Working tree clean (Level 2 Lighting bake artifact'ları untracked, gitignore'a koymak ayrı iş). LFS aktif. Backup branch `backup-pre-claude-cleanup-1778895100` korunuyor.
+**Repo state:** `claude-dev` HEAD = `f19450f0` (neighbor graph commit). Master HEAD hâlâ `236d83c9` (v0.24 handoff). claude-dev master'dan **12 commit önde**, push edilmedi, main'e merge Kaan onayı bekler. Working tree clean (Level 2 LightingData/ReflectionProbe artifact'ları untracked, gitignore'a koymak ayrı iş). LFS aktif. Backup branch `backup-pre-claude-cleanup-1778895100` korunuyor.
 
-**Test:** EditMode 37/37 PASS (önceki 35 + 2 yeni). Bu refactor data-only (sahne + prefab + material), kod yok → mevcut suite aynen geçer.
+**Test:** EditMode 42/42 PASS (önceki 37 + 5 yeni `DrawPartNeighborGraphTests` — single/pair/triangle/square/hexagon; square test diagonal exclusion'ı garantiliyor).
 
 **Unity bağlantısı:** MCP for Unity bridge v9.6.6 (CoplayDev) `Packages/manifest.json`'da kurulu, port 6401, instance `DrawRush@4ff3b85c`, Unity 6000.3.12f1, 66-80 paket (kullanıcı ProBuilder + VFX Graph eklemiş).
 
@@ -41,21 +41,23 @@
 | 17 | Player Trail prefab eklendi (cyan gradient TrailRenderer) + line material fallback | `4c6e3771` |
 | 18 | Trail yerde + edge-by-edge clear — `alignment=TransformZ`, parent X=90°, Y=0.05, time=4s, `Clear()` her anchor temasında | `0ef06683` |
 | 19 | **Anchor görsel swap** — DrawPoint cylinder→sphere + transparent material, 4 sahnede 28 hex/şekil görseli temizlenip sphere instance'ları konuldu. EndWallParts + DrawableArea korundu, anchor sayısı invariant (8/6/12/2). | `4ab852b3..d9a9ab17` |
+| 20 | **Anchor dedup** — paylaşılan köşelerde çakışan kürelerin clustering (threshold 2.0u) ile teke indirilmesi, küre y'si 0.35 (yere oturur). Sphere sayıları yarıya indi: L1 8→4, L2 6→3, L3 12→6, Tut 2→2. | `870d89a6..136b8537` |
+| 21 | **Neighbor-restricted chain** — `DrawPartNeighborGraph` pure helper + `DrawPart.IsNeighborOf` API; `PlayerInteract` mid-chain ve closure check'leri eklendi; auto-wire en yakın 2 komşu (Awake). Köşegen jump'lar reject. 5 EditMode test eklendi. | `f19450f0` |
 
 ---
 
 ## 🚀 Sıradaki Adım
 
 **Manuel iş (Kaan, Unity Editor'da yapacak):**
-- [ ] **Yeni sphere anchor'lı 4 sahneyi Play'le test et** (Level 1 → 2 → 3 → Tutorial sırasıyla):
-  - DrawArea'ya gir → cyan trail yerde görünüyor mu?
-  - 1. küreye değ → glow halo (ArmedHighlight) aktif + trail Clear?
-  - Sıradaki kürelere → her arada kalıcı LineRenderer çizgi + trail per-kenar clear?
-  - Closed loop kapanışı → EndWallParts Animator reveal tetikleniyor mu? (asıl risk noktası)
-  - Win sequence + IsGameWon flag?
-  - Tutorial 2-anchor loop (1→2→1) çalışıyor mu? (minimum chain)
-- [ ] Küre boyutu/transparency tatmin edici mi? Scale 0.70 + alpha 0.45 → değişiklik istersen DrawPoint.prefab edit + DrawPointMat alpha.
-- [ ] Cinemachine 2 → 3 upgrade'inden sonra Player prefab'ındaki CMVcam2 hâlâ doğru framing'de mi kontrol et (küre yüksekliği değişti, framing kayabilir).
+- [ ] **Yeni dedup+neighbor-restricted 4 sahneyi Play'le test et** (Level 1 → 2 → 3 → Tutorial):
+  - Her köşede TEK küre görüyor musun? (paylaşılan köşeler artık tek nokta)
+  - 1. küreye değ → glow halo + trail Clear?
+  - Köşegen denemesi: bir köşeye değ, sonra **karşı** köşeye git → bağlantı olmamalı (silent reject). Sadece komşu köşeye değince çizgi spawn olmalı.
+  - Sırayla poligon kenarlarından dolaş → her arada kalıcı LineRenderer + trail per-kenar clear?
+  - Closed loop kapanışı → EndWallParts Animator reveal (asıl risk noktası — sweep sırasında kardeş GameObject'ler silindi)?
+  - Tutorial 2-anchor loop (1→2→1) çalışıyor mu?
+- [ ] Küre boyutu/transparency tatmin edici mi? Scale 0.70 + alpha 0.45 → değişiklik DrawPoint.prefab + DrawPointMat tek edit.
+- [ ] Cinemachine 2→3 upgrade sonrası Player prefab CMVcam2 framing kontrolü (küre yüksekliği değişti).
 
 **Kod tarafı (sonraki sessions):**
 - [ ] Tutorial overlay (TutorialLevel.unity'ye "swipe to move + touch points to connect" UI hint).
