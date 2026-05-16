@@ -22,11 +22,25 @@ namespace Studios208.DrawRush.Drawing
         [Tooltip("Optional child GameObject toggled on while this part is the active anchor.")]
         [SerializeField] private GameObject armedHighlight;
 
+        [Header("Chain topology")]
+        [Tooltip("Anchors that this part can connect to (polygon-edge neighbors). " +
+                 "Leave empty to auto-wire to the two nearest sibling DrawParts at scene load.")]
+        [SerializeField] private DrawPart[] neighbors;
+
         private readonly DrawPartStateMachine _fsm = new();
 
         public bool IsCompleted => _fsm.IsCompleted;
         public Transform Transform => transform;
         public DrawingPhase Phase => _fsm.Phase;
+
+        /// <summary>True if <paramref name="other"/> is in this part's neighbor set.</summary>
+        public bool IsNeighborOf(DrawPart other)
+        {
+            if (other == null || neighbors == null) return false;
+            for (int i = 0; i < neighbors.Length; i++)
+                if (neighbors[i] == other) return true;
+            return false;
+        }
 
         [Obsolete("Use OnPlayerEntered / OnPlayerExited instead. Retained for prefab/scene backwards-compat only.")]
         public bool isPlayerEntered
@@ -39,6 +53,24 @@ namespace Studios208.DrawRush.Drawing
         {
             _fsm.ResetToIdle();
             SetHighlight(false);
+            if (neighbors == null || neighbors.Length == 0) AutoWireNeighbors();
+        }
+
+        private void AutoWireNeighbors()
+        {
+            var all = UnityEngine.Object.FindObjectsByType<DrawPart>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            if (all.Length < 2) return;
+
+            int myIndex = Array.IndexOf(all, this);
+            if (myIndex < 0) return;
+
+            var positions = new Vector3[all.Length];
+            for (int i = 0; i < all.Length; i++) positions[i] = all[i].transform.position;
+
+            var graph = DrawPartNeighborGraph.ComputeNearestNeighbors(positions, k: 2);
+            var indices = graph[myIndex];
+            neighbors = new DrawPart[indices.Length];
+            for (int i = 0; i < indices.Length; i++) neighbors[i] = all[indices[i]];
         }
 
         /// <inheritdoc />

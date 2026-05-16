@@ -76,6 +76,9 @@ namespace Studios208.DrawRush.Player
             // Closed-loop closure: returning to the first part finalizes the puzzle.
             if (_firstPart != null && other.gameObject == _firstPart && _previousPart != null && _previousPart != _firstPart)
             {
+                // Closure only valid if last anchor and first anchor are polygon-edge neighbors.
+                if (!AreNeighbors(_previousPart, _firstPart)) return;
+
                 SpawnConnectionLine(_previousPart.transform.position, _firstPart.transform.position);
                 _previousPart.GetComponent<IDrawPart>()?.Complete();
                 drawPart.Complete();
@@ -100,8 +103,13 @@ namespace Studios208.DrawRush.Player
                 return;
             }
 
-            // Mid-chain step — finalize the previous edge, advance, then wipe the trail
-            // so the next edge starts visually from the just-touched anchor.
+            // Mid-chain step — only valid if the touched anchor is a polygon-edge
+            // neighbor of the previous one. Diagonal jumps are silently rejected
+            // (the player walks through but the chain doesn't advance).
+            if (!AreNeighbors(_previousPart, other.gameObject)) return;
+
+            // Finalize the previous edge, advance, then wipe the trail so the next
+            // edge starts visually from the just-touched anchor.
             var previousDrawPart = _previousPart.GetComponent<IDrawPart>();
             SpawnConnectionLine(_previousPart.transform.position, other.transform.position);
             previousDrawPart?.Complete();
@@ -109,6 +117,18 @@ namespace Studios208.DrawRush.Player
             drawPart.Interact();
             _previousPart = other.gameObject;
             ResetTrailForNextEdge();
+        }
+
+        private static bool AreNeighbors(GameObject a, GameObject b)
+        {
+            if (a == null || b == null) return false;
+            var da = a.GetComponent<DrawPart>();
+            var db = b.GetComponent<DrawPart>();
+            // If either side isn't a concrete DrawPart (e.g. a test mock IDrawPart),
+            // skip the check rather than block — concrete neighbor data is the
+            // gating signal here.
+            if (da == null || db == null) return true;
+            return da.IsNeighborOf(db);
         }
 
         /// <summary>Clears the active trail so the next edge starts from a clean state,
