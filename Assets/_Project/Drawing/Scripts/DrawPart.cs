@@ -8,9 +8,9 @@ namespace Studios208.DrawRush.Drawing
 {
     /// <summary>
     /// A single connectable part. Implements <see cref="IDrawPart"/> so PlayerInteract
-    /// can drive it without seeing the internal state machine.
-    /// Raises <see cref="Completed"/> once when the part is finalised; PartManager /
-    /// WallManager listen instead of polling.
+    /// drives it through the interface. Internal state is held in a
+    /// <see cref="DrawPartStateMachine"/> — a single <see cref="DrawingPhase"/> field
+    /// instead of four collateral booleans.
     /// </summary>
     public sealed class DrawPart : MonoBehaviour, IDrawPart
     {
@@ -21,30 +21,25 @@ namespace Studios208.DrawRush.Drawing
         [SerializeField] private Vector3 trailEulerAngles = new(91f, 40f, 38f);
         [SerializeField] private Vector3 trailOffset = new(0f, 0.25f, 0f);
 
-        private bool _isCompleted;
-        private bool _isArmed;
-        private bool _isGoingToPlayer;
-        private bool _isReachedToPlayer;
+        private readonly DrawPartStateMachine _fsm = new();
         private GameObject _currTrail;
         private Transform _trailPoint;
         private PlayerInteract _playerInteract;
 
-        public bool IsCompleted => _isCompleted;
+        public bool IsCompleted => _fsm.IsCompleted;
         public Transform Transform => transform;
+        public DrawingPhase Phase => _fsm.Phase;
 
-        // Kept temporarily for backwards-compat with any prefab inspector script that
-        // pokes the field. Reads route to the internal _isArmed value; writes are
-        // ignored — callers must use OnPlayerEntered/OnPlayerExited.
         [Obsolete("Use OnPlayerEntered / OnPlayerExited instead.")]
         public bool isPlayerEntered
         {
-            get => _isArmed;
+            get => _fsm.Phase is DrawingPhase.Armed or DrawingPhase.Drawing;
             set { /* intentional no-op; encapsulation enforcement */ }
         }
 
         private void Awake()
         {
-            ResetState();
+            _fsm.ResetToIdle();
             EnsureTrail();
         }
 
@@ -55,7 +50,7 @@ namespace Studios208.DrawRush.Drawing
 
         private void Update()
         {
-            if (_isCompleted) return;
+            if (_fsm.IsCompleted) return;
 
             EnsureTrail();
             if (_trailPoint == null)
@@ -63,19 +58,17 @@ namespace Studios208.DrawRush.Drawing
                 ResolvePlayerRefs();
                 if (_trailPoint == null) return;
             }
-
             if (_currTrail == null) return;
 
-            if (Mathf.Abs(_currTrail.transform.position.z - _trailPoint.position.z) > 0.001f && _isGoingToPlayer)
+            // While Returning: lerp toward the player; flip to Armed when close enough.
+            if (_fsm.Phase == DrawingPhase.Returning)
             {
-                LerpTrailTowardsPlayer();
-                return;
-            }
-
-            if (_isGoingToPlayer)
-            {
-                _isReachedToPlayer = true;
-                _isGoingToPlayer = false;
+                if (Mathf.Abs(_currTrail.transform.position.z - _trailPoint.position.z) > 0.001f)
+                {
+                    LerpTrailTowardsPlayer();
+                    return;
+                }
+                _fsm.TryTransition(DrawingPhase.Armed);
                 Interact();
             }
         }
@@ -83,19 +76,23 @@ namespace Studios208.DrawRush.Drawing
         public void Interact()
         {
             EnsureTrail();
-            if (_isCompleted || _isArmed) return;
-            if (!_isReachedToPlayer)
+            if (_fsm.IsCompleted) return;
+
+            // Idle → Returning: schedule trail catch-up on next Update.
+            if (_fsm.Phase == DrawingPhase.Idle)
             {
-                _isGoingToPlayer = true;
+                _fsm.TryTransition(DrawingPhase.Returning);
                 return;
             }
 
+            if (_fsm.Phase != DrawingPhase.Armed) return;
             if (_playerInteract == null) ResolvePlayerRefs();
             if (_playerInteract == null) return;
 
+            // Armed → Drawing: anchor trail to player.
             if (!_playerInteract.IsDrawing)
             {
-                _isArmed = true;
+                _fsm.TryTransition(DrawingPhase.Drawing);
                 _currTrail.transform.SetParent(_trailPoint, worldPositionStays: false);
                 _currTrail.transform.localPosition = Vector3.zero;
                 _currTrail.SetActive(true);
@@ -103,23 +100,30 @@ namespace Studios208.DrawRush.Drawing
                 return;
             }
 
+            // Armed → Done: finalize the connection.
             CompleteDraw();
         }
 
         public void OnPlayerEntered()
         {
-            _isArmed = true;
+            if (_fsm.Phase == DrawingPhase.Idle)
+            {
+                _fsm.TryTransition(DrawingPhase.Armed);
+            }
         }
 
         public void OnPlayerExited()
         {
-            _isArmed = false;
+            if (_fsm.Phase is DrawingPhase.Armed or DrawingPhase.Returning)
+            {
+                _fsm.TryTransition(DrawingPhase.Idle);
+            }
         }
 
         public void Complete()
         {
-            if (_isCompleted) return;
-            _isCompleted = true;
+            if (_fsm.IsCompleted) return;
+            _fsm.TryTransition(DrawingPhase.Done);
             Completed?.Invoke(this);
         }
 
@@ -131,7 +135,6 @@ namespace Studios208.DrawRush.Drawing
             {
                 Destroy(child.gameObject);
             }
-            _isArmed = false;
             Complete();
         }
 
@@ -150,7 +153,8 @@ namespace Studios208.DrawRush.Drawing
         {
             if (_currTrail == null || _trailPoint == null) return;
             float lerp = GameServices.Config != null ? GameServices.Config.trailCatchUpLerp : 100f;
-            _currTrail.transform.position = TrailMath.Lerp(_currTrail.transform.position, _trailPoint.position, lerp, Time.deltaTime);
+            _currTrail.transform.position = TrailMath.Lerp(
+                _currTrail.transform.position, _trailPoint.position, lerp, Time.deltaTime);
         }
 
         private void ResolvePlayerRefs()
@@ -163,14 +167,6 @@ namespace Studios208.DrawRush.Drawing
             {
                 _playerInteract = GameServices.Player.GetComponent<PlayerInteract>();
             }
-        }
-
-        private void ResetState()
-        {
-            _isArmed = false;
-            _isCompleted = false;
-            _isGoingToPlayer = false;
-            _isReachedToPlayer = false;
         }
     }
 }
