@@ -1,137 +1,98 @@
-using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.Serialization;
 using Studios208.DrawRush.Player;
-using Random = UnityEngine.Random;
 
 namespace Studios208.DrawRush.Core
 {
     /// <summary>
-    /// Scene-level UI panels + level flow.
+    /// Thin facade kept for backwards-compatibility with UI Button OnClick references
+    /// in existing prefabs/scenes. Delegates each concern to a dedicated component:
+    ///   - <see cref="LevelFlow"/>          for scene navigation
+    ///   - <see cref="HudPanels"/>          for panel visibility + level label
+    ///   - <see cref="WinSequenceDirector"/> for game-won presentation
     ///
-    /// No longer reaches into Enemy / Drawing layers — it just listens to
-    /// <see cref="GameState.GameWonChanged"/> and <see cref="PlayerHealth.Died"/>
-    /// and toggles its own panels. Trail / line / enemy-anim cleanup is now owned
-    /// by those features themselves.
+    /// All three components are auto-resolved on Awake from the same GameObject
+    /// (and added with sensible defaults if missing — zero-config migration path).
+    /// Legacy serialized fields are forwarded into the sub-components at runtime
+    /// via their public Bind() methods so existing scene/prefab refs keep working.
     /// </summary>
+    [DisallowMultipleComponent]
     public sealed class GameManager : MonoBehaviour
     {
-        [Header("UI Panel Elements"), Space]
-        [SerializeField] private GameObject winPanel;
-        [SerializeField] private GameObject losePanel;
-        [SerializeField] private GameObject gameUI;
+        [Header("Sub-components (auto-resolved)")]
+        [SerializeField] private LevelFlow levelFlow;
+        [SerializeField] private HudPanels hudPanels;
+        [SerializeField] private WinSequenceDirector winSequence;
 
-        [Header("Refs"), Space]
-        [FormerlySerializedAs("_levelText")]
-        [SerializeField] private TextMeshProUGUI levelText;
-        [FormerlySerializedAs("_particles")]
-        [SerializeField] private GameObject winParticles;
+        [Header("State Refs")]
         [SerializeField] private GameState state;
         [SerializeField] private PlayerHealth playerHealth;
 
-        private static readonly List<int> RandomLevelList = new() { 2, 3, 4 };
-        private int _level = 1;
+        // Legacy serialized fields preserved so existing prefab/scene bindings keep
+        // resolving — values are forwarded into the new sub-components on Awake.
+        [FormerlySerializedAs("winPanel")] [SerializeField] private GameObject legacyWinPanel;
+        [FormerlySerializedAs("losePanel")] [SerializeField] private GameObject legacyLosePanel;
+        [FormerlySerializedAs("gameUI")] [SerializeField] private GameObject legacyGameUi;
+        [FormerlySerializedAs("_levelText")] [SerializeField] private TMPro.TextMeshProUGUI legacyLevelText;
+        [FormerlySerializedAs("_particles")] [SerializeField] private GameObject legacyParticles;
 
         private void Awake()
         {
             Time.timeScale = 0f;
+            ResolveOrAttachSubComponents();
+            ForwardLegacyFields();
         }
 
         private void OnEnable()
         {
-            if (state != null) state.GameWonChanged += OnGameWonChanged;
             if (playerHealth != null) playerHealth.Died += OnPlayerDied;
         }
 
         private void OnDisable()
         {
-            if (state != null) state.GameWonChanged -= OnGameWonChanged;
             if (playerHealth != null) playerHealth.Died -= OnPlayerDied;
         }
 
         private void Start()
         {
-            if (gameUI != null) gameUI.SetActive(true);
-            if (winPanel != null) winPanel.SetActive(false);
-            if (losePanel != null) losePanel.SetActive(false);
-
-            _level = PlayerPrefs.GetInt("Level", 1);
-            if (levelText != null) levelText.text = $"Level {_level}";
-        }
-
-        private async void OnGameWonChanged(bool won)
-        {
-            if (!won) return;
-
-            if (winParticles != null) winParticles.SetActive(true);
-
-            float delay = GameServices.Config != null ? GameServices.Config.gameWonDelay : 3.0f;
-            try
-            {
-                await Awaitable.WaitForSecondsAsync(delay, destroyCancellationToken);
-            }
-            catch (System.OperationCanceledException)
-            {
-                return;
-            }
-            if (winPanel != null) winPanel.SetActive(true);
+            if (hudPanels != null && levelFlow != null) hudPanels.SetLevelLabel(levelFlow.CurrentLevel);
         }
 
         private void OnPlayerDied()
         {
-            if (losePanel != null) losePanel.SetActive(true);
+            if (hudPanels != null) hudPanels.ShowLosePanel();
             Time.timeScale = 0f;
         }
 
-        public void StartTheGame()
-        {
-            Time.timeScale = 1.0f;
-        }
+        #region Legacy facade (UI button bindings)
 
-        public void ResetTheGame()
-        {
-            if (winPanel != null) winPanel.SetActive(false);
-            if (losePanel != null) losePanel.SetActive(false);
-        }
-
-        #region SceneManagement
-
-        public void RestartLevel()
-        {
-            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-        }
-
-        public void NextLevel()
-        {
-            PlayerPrefs.SetInt("Level", PlayerPrefs.GetInt("Level") + 1);
-            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
-        }
-
-        public void LoadRandomLevel()
-        {
-            PlayerPrefs.SetInt("Level", PlayerPrefs.GetInt("Level") + 1);
-
-            if (RandomLevelList.Count == 0)
-            {
-                RandomLevelList.Add(2);
-                RandomLevelList.Add(3);
-                RandomLevelList.Add(4);
-            }
-
-            int currentBuildIndex = SceneManager.GetActiveScene().buildIndex;
-            int pickIndex = Random.Range(0, RandomLevelList.Count);
-            while (RandomLevelList[pickIndex] == currentBuildIndex && RandomLevelList.Count > 1)
-            {
-                pickIndex = Random.Range(0, RandomLevelList.Count);
-            }
-
-            int chosenScene = RandomLevelList[pickIndex];
-            RandomLevelList.RemoveAt(pickIndex);
-            SceneManager.LoadScene(chosenScene);
-        }
+        public void StartTheGame() => levelFlow?.StartTheGame();
+        public void RestartLevel() => levelFlow?.RestartLevel();
+        public void NextLevel() => levelFlow?.NextLevel();
+        public void LoadRandomLevel() => levelFlow?.LoadRandomLevel();
+        public void ResetTheGame() => hudPanels?.HideAllPanels();
 
         #endregion
+
+        private void ResolveOrAttachSubComponents()
+        {
+            if (levelFlow == null && !TryGetComponent(out levelFlow))   levelFlow = gameObject.AddComponent<LevelFlow>();
+            if (hudPanels == null && !TryGetComponent(out hudPanels))   hudPanels = gameObject.AddComponent<HudPanels>();
+            if (winSequence == null && !TryGetComponent(out winSequence)) winSequence = gameObject.AddComponent<WinSequenceDirector>();
+        }
+
+        private void ForwardLegacyFields()
+        {
+            hudPanels?.Bind(
+                winPanel: legacyWinPanel,
+                losePanel: legacyLosePanel,
+                gameUI: legacyGameUi,
+                levelText: legacyLevelText);
+
+            winSequence?.Bind(
+                state: state,
+                hudPanels: hudPanels,
+                winParticles: legacyParticles);
+        }
     }
 }
