@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.Serialization;
 using Studios208.DrawRush.Common;
 using Studios208.DrawRush.Core;
 using Studios208.DrawRush.Player;
@@ -16,6 +17,7 @@ namespace Studios208.DrawRush.Drawing
         public event Action<DrawPart> Completed;
 
         [HideInInspector] public bool isPlayerEntered;
+        [FormerlySerializedAs("_trailPrefab")]
         [SerializeField] private GameObject trailPrefab;
         [SerializeField] private Vector3 trailEulerAngles = new(91f, 40f, 38f);
         [SerializeField] private Vector3 trailOffset = new(0f, 0.25f, 0f);

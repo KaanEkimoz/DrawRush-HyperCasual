@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 using Studios208.DrawRush.Core;
 using Studios208.DrawRush.Player;
 
@@ -14,6 +15,7 @@ namespace Studios208.DrawRush.Enemy
         [SerializeField] private string playerTag = "Player";
 
         [Tooltip("Damage applied on touch (signed). Negative reduces HP. If 0, uses GameConfig.enemyTouchDamage.")]
+        [FormerlySerializedAs("damage")]
         [SerializeField] private int damageOverride;
 
         private PlayerCombat _playerCombat;

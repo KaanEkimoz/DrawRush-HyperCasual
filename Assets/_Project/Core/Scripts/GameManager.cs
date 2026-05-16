@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.Serialization;
 using Studios208.DrawRush.Enemy;
 using Random = UnityEngine.Random;
 
@@ -19,7 +20,9 @@ namespace Studios208.DrawRush.Core
         [SerializeField] private GameObject gameUI;
 
         [Header("Refs"), Space]
+        [FormerlySerializedAs("_levelText")]
         [SerializeField] private TextMeshProUGUI levelText;
+        [FormerlySerializedAs("_particles")]
         [SerializeField] private GameObject winParticles;
         [SerializeField] private GameState state;
 

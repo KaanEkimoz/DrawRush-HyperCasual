@@ -1,5 +1,6 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Studios208.DrawRush.Player
 {
@@ -11,6 +12,7 @@ namespace Studios208.DrawRush.Player
     public sealed class PlayerCombat : MonoBehaviour
     {
         [SerializeField] private PlayerHealth health;
+        [FormerlySerializedAs("playerHp")]
         [SerializeField] private TextMeshProUGUI healthLabel;
 
         private void OnEnable()
