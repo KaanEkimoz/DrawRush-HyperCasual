@@ -16,12 +16,22 @@
 
 - **Argümanlı öneri bekler:** "Sen ne önerirsin?" diye sorar — körü körüne onaylama yerine alternatifler + tradeoff ister.
 - **Plan onaylanınca uygula, izin sorma:** Plan netse → uygula → özet ver. Scope dışı / destructive op'ta dur.
+- **"Tam yetki" çalışma modu:** Büyük scope tasarım refactor'ları için "tam yetki" verir → plan + 8-15 commit'lik kesintisiz seri (her commit ayrı conventional commit), her büyük adım sonunda test green confirm.
 - **"Bensiz karar al" yetkisi:** Gerçekten kendi başına karar ver, cevabın sonunda **"bensiz alınan kararlar"** listesi ile transparent ol.
 - **Detay + görsellik isteyen doküman sever:** PDF, mermaid diyagramları, multi-agent review pattern.
+- **Senior-review pattern:** Büyük refactor öncesi 2 paralel agent (senior Unity dev + senior software eng) ile review yap, raporları konsolide et, plan sun, sonra uygula.
 - **Erken karar yerine erteleme:** "Şimdilik X yapalım, sonra karar veririz" sık kullanır.
 - **Scope discipline:** Yan iş / scope creep yapılmaz.
-- **Context dolunca yeni oturum:** `project-memory.md` yeni oturumun "nerede kaldık" cevabı — daima güncel tut.
+- **Context dolunca yeni oturum:** `project-memory.md` yeni oturumun "nerede kaldık" cevabı — daima güncel tut. Session geçişinde Kaan açıkça "her şeyi düzenleyip maine iletip kalıcı dosyalarımızı bilgileri düzenler misin detay atlama" der → memory dosyaları + master merge + tag + push mecburi.
 - **Güvenlik tercihi:** API key'leri sohbette paylaşmayı problem etmiyor — uyarıyı bir kez söyle, ısrar etme. **Ama dosyaya / commit'e koymak yasak** (bkz. rules.md → Secrets).
+
+## Mekanik Tasarım Tercihleri (DrawRush'tan öğrenildi)
+
+- **Player → "doğrudan çizen", asset → "uçan/teleport eden" değil.** Yere yatık (TransformZ aligned) persistent TrailRenderer player'da yaşar, asset spawn'lı uçuş efektleri kabul edilmez.
+- **Kenar-kenar trail temizliği:** Trail her anchor temasında `Clear()` ile sıfırlanır → "şu an çizilen kenarın geçici göstergesi" semantiği. Kalıcı çizgiler (LineRenderer) bağımsız GameObject'te yaşar.
+- **Closed-loop puzzle:** 1 → 2 → … → N → 1 (geri başlangıca). Açık-uçlu chain değil.
+- **DrawArea exit progress'i korur** (default). Frustration kaynağı olan "elini drawArea dışına çıkardın → herşey sıfır" davranışı `resetProgressOnAreaExit` flag'iyle opt-in.
+- **Combat-puzzle ayrımı:** DrawArea içindeyken enemy damage YOK. Drawing safe zone.
 
 ---
 
