@@ -79,6 +79,7 @@ namespace Studios208.DrawRush.Player
                 SpawnConnectionLine(_previousPart.transform.position, _firstPart.transform.position);
                 _previousPart.GetComponent<IDrawPart>()?.Complete();
                 drawPart.Complete();
+                ResetTrailForNextEdge();
                 _firstPart = null;
                 _previousPart = null;
                 return;
@@ -88,23 +89,36 @@ namespace Studios208.DrawRush.Player
             if (drawPart.IsCompleted) return;
             if (_previousPart == other.gameObject) return;
 
-            // First anchor in the chain — record start and arm.
+            // First anchor in the chain — record start, arm, and start with a clean trail.
             if (_previousPart == null)
             {
                 drawPart.OnPlayerEntered();
                 drawPart.Interact();
                 _firstPart = other.gameObject;
                 _previousPart = other.gameObject;
+                ResetTrailForNextEdge();
                 return;
             }
 
-            // Mid-chain step — finalize previous, advance.
+            // Mid-chain step — finalize the previous edge, advance, then wipe the trail
+            // so the next edge starts visually from the just-touched anchor.
             var previousDrawPart = _previousPart.GetComponent<IDrawPart>();
             SpawnConnectionLine(_previousPart.transform.position, other.transform.position);
             previousDrawPart?.Complete();
             drawPart.OnPlayerEntered();
             drawPart.Interact();
             _previousPart = other.gameObject;
+            ResetTrailForNextEdge();
+        }
+
+        /// <summary>Clears the active trail so the next edge starts from a clean state,
+        /// keeping emission on while the player is still inside the DrawArea.</summary>
+        private void ResetTrailForNextEdge()
+        {
+            if (playerTrail == null) return;
+            playerTrail.Clear();
+            // Re-arm emission in case it was paused by SetTrailEmitting(false) earlier.
+            if (_isInDrawArea) playerTrail.emitting = true;
         }
 
         private void OnTriggerExit(Collider other)
