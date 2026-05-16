@@ -4,7 +4,9 @@ namespace Studios208.DrawRush.Drawing
 {
     /// <summary>
     /// Tiny whitelist-driven state machine for <see cref="DrawingPhase"/>. Pure C#,
-    /// no Unity types — fully unit-testable.
+    /// no Unity types — fully unit-testable. Chain-anchor model (post 2026-05-16):
+    /// Idle → Armed → Drawing → Done. Exit back to Idle is allowed from Armed/Drawing
+    /// to support cancel-on-DrawArea-exit gameplay rules.
     /// </summary>
     public sealed class DrawPartStateMachine
     {
@@ -35,16 +37,13 @@ namespace Studios208.DrawRush.Drawing
         /// <summary>Pure whitelist function — exposed for tests.</summary>
         public static bool CanTransition(DrawingPhase from, DrawingPhase to)
         {
-            // Re-entrancy: same-state transitions are a no-op (returns false).
             if (from == to) return false;
-            // Terminal: once Done, no further transitions.
             if (from == DrawingPhase.Done) return false;
 
             return from switch
             {
-                DrawingPhase.Idle => to is DrawingPhase.Returning or DrawingPhase.Armed,
-                DrawingPhase.Returning => to is DrawingPhase.Armed or DrawingPhase.Idle,
-                DrawingPhase.Armed => to is DrawingPhase.Drawing or DrawingPhase.Done or DrawingPhase.Idle,
+                DrawingPhase.Idle    => to is DrawingPhase.Armed,
+                DrawingPhase.Armed   => to is DrawingPhase.Drawing or DrawingPhase.Done or DrawingPhase.Idle,
                 DrawingPhase.Drawing => to is DrawingPhase.Done or DrawingPhase.Idle,
                 _ => false,
             };

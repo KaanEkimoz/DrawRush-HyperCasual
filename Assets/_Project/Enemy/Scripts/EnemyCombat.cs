@@ -46,6 +46,11 @@ namespace Studios208.DrawRush.Enemy
             if (!other.CompareTag(playerTag)) return;
             if (_state != null && _state.IsGameWon) return;
 
+            // Drawing-puzzle safe zone: while the player is inside a DrawArea, enemies
+            // cannot damage. Combat resumes the instant the player steps outside.
+            var interact = other.GetComponent<PlayerInteract>();
+            if (interact != null && interact.IsInDrawArea) return;
+
             if (_playerCombat == null)
             {
                 _playerCombat = other.GetComponent<PlayerCombat>();
