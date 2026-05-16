@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d7a31886b23ae447fa547d8793ff690e, type: 3}
   m_Name: GameConfig
   m_EditorClassIdentifier: Studios208.DrawRush::Studios208.DrawRush.Core.GameConfig
-  playerSpeed: 1.5
+  playerSpeed: 2.7
   turnSmoothTime: 0.1
   gravity: -9.81
   playerStartingHealth: 3
