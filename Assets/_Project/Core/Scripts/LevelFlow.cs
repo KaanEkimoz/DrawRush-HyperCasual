@@ -34,8 +34,16 @@ namespace Studios208.DrawRush.Core
 
         public void NextLevel()
         {
+            int next = SceneManager.GetActiveScene().buildIndex + 1;
+            if (next >= SceneManager.sceneCountInBuildSettings)
+            {
+                // Past the final scene — fall back to the random-pool cycler so the player
+                // never hits an out-of-bounds LoadScene exception after finishing the campaign.
+                LoadRandomLevel();
+                return;
+            }
             PlayerPrefs.SetInt(playerPrefsKey, CurrentLevel + 1);
-            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+            SceneManager.LoadScene(next);
         }
 
         public void LoadRandomLevel()

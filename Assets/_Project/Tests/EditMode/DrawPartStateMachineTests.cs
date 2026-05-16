@@ -15,12 +15,42 @@ namespace Studios208.DrawRush.Tests.EditMode
         }
 
         [Test]
-        public void HappyPath_Idle_Returning_Armed_Drawing_Done()
+        public void HappyPath_Idle_Armed_Drawing_Done()
         {
             var fsm = new DrawPartStateMachine();
-            Assert.IsTrue(fsm.TryTransition(DrawingPhase.Returning));
             Assert.IsTrue(fsm.TryTransition(DrawingPhase.Armed));
             Assert.IsTrue(fsm.TryTransition(DrawingPhase.Drawing));
+            Assert.IsTrue(fsm.TryTransition(DrawingPhase.Done));
+            Assert.IsTrue(fsm.IsCompleted);
+        }
+
+        [Test]
+        public void Idle_CanArm_DirectlyOnAnchor()
+        {
+            Assert.IsTrue(DrawPartStateMachine.CanTransition(DrawingPhase.Idle, DrawingPhase.Armed));
+        }
+
+        [Test]
+        public void Idle_CannotJumpPastArmed()
+        {
+            Assert.IsFalse(DrawPartStateMachine.CanTransition(DrawingPhase.Idle, DrawingPhase.Drawing));
+            Assert.IsFalse(DrawPartStateMachine.CanTransition(DrawingPhase.Idle, DrawingPhase.Done));
+        }
+
+        [Test]
+        public void Armed_CanCancelToIdle_OnAreaExit()
+        {
+            var fsm = new DrawPartStateMachine();
+            fsm.TryTransition(DrawingPhase.Armed);
+            Assert.IsTrue(fsm.TryTransition(DrawingPhase.Idle));
+            Assert.AreEqual(DrawingPhase.Idle, fsm.Phase);
+        }
+
+        [Test]
+        public void Armed_CanShortcutToDone_OnChainAdvance()
+        {
+            var fsm = new DrawPartStateMachine();
+            fsm.TryTransition(DrawingPhase.Armed);
             Assert.IsTrue(fsm.TryTransition(DrawingPhase.Done));
             Assert.IsTrue(fsm.IsCompleted);
         }
@@ -42,22 +72,6 @@ namespace Studios208.DrawRush.Tests.EditMode
         {
             var fsm = new DrawPartStateMachine();
             Assert.IsFalse(fsm.TryTransition(DrawingPhase.Idle));
-        }
-
-        [Test]
-        public void Idle_CannotJumpToDrawingOrDone()
-        {
-            Assert.IsFalse(DrawPartStateMachine.CanTransition(DrawingPhase.Idle, DrawingPhase.Drawing));
-            Assert.IsFalse(DrawPartStateMachine.CanTransition(DrawingPhase.Idle, DrawingPhase.Done));
-        }
-
-        [Test]
-        public void Armed_CanCancelToIdle()
-        {
-            var fsm = new DrawPartStateMachine();
-            fsm.TryTransition(DrawingPhase.Armed);
-            Assert.IsTrue(fsm.TryTransition(DrawingPhase.Idle));
-            Assert.AreEqual(DrawingPhase.Idle, fsm.Phase);
         }
 
         [Test]

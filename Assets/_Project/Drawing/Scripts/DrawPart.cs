@@ -1,36 +1,34 @@
 using System;
 using UnityEngine;
-using UnityEngine.Serialization;
-using Studios208.DrawRush.Core;
-using Studios208.DrawRush.Player;
 
 namespace Studios208.DrawRush.Drawing
 {
     /// <summary>
-    /// A single connectable part. Implements <see cref="IDrawPart"/> so PlayerInteract
-    /// drives it through the interface. Internal state is held in a
-    /// <see cref="DrawPartStateMachine"/> — a single <see cref="DrawingPhase"/> field
-    /// instead of four collateral booleans.
+    /// A single anchor in the chain-drawing puzzle. The player walks to each anchor in
+    /// sequence and a connecting line is spawned by <c>PlayerInteract</c> between consecutive
+    /// anchors. The part no longer owns a trail prefab — the player carries a persistent
+    /// TrailRenderer that does the actual drawing. DrawPart's only runtime job is to expose
+    /// an interaction surface, track its lifecycle phase, and fire <see cref="Completed"/>
+    /// when the chain has moved past it.
+    ///
+    /// Optional visual feedback: assign <see cref="armedHighlight"/> to a child GameObject
+    /// (glow / ring) that the part should toggle on when it becomes the active anchor.
     /// </summary>
     public sealed class DrawPart : MonoBehaviour, IDrawPart
     {
         public event Action<IDrawPart> Completed;
 
-        [FormerlySerializedAs("_trailPrefab")]
-        [SerializeField] private GameObject trailPrefab;
-        [SerializeField] private Vector3 trailEulerAngles = new(91f, 40f, 38f);
-        [SerializeField] private Vector3 trailOffset = new(0f, 0.25f, 0f);
+        [Header("Visuals (optional)")]
+        [Tooltip("Optional child GameObject toggled on while this part is the active anchor.")]
+        [SerializeField] private GameObject armedHighlight;
 
         private readonly DrawPartStateMachine _fsm = new();
-        private GameObject _currTrail;
-        private Transform _trailPoint;
-        private PlayerInteract _playerInteract;
 
         public bool IsCompleted => _fsm.IsCompleted;
         public Transform Transform => transform;
         public DrawingPhase Phase => _fsm.Phase;
 
-        [Obsolete("Use OnPlayerEntered / OnPlayerExited instead.")]
+        [Obsolete("Use OnPlayerEntered / OnPlayerExited instead. Retained for prefab/scene backwards-compat only.")]
         public bool isPlayerEntered
         {
             get => _fsm.Phase is DrawingPhase.Armed or DrawingPhase.Drawing;
@@ -40,132 +38,59 @@ namespace Studios208.DrawRush.Drawing
         private void Awake()
         {
             _fsm.ResetToIdle();
-            EnsureTrail();
+            SetHighlight(false);
         }
 
-        private void Start()
-        {
-            ResolvePlayerRefs();
-        }
-
-        private void Update()
-        {
-            if (_fsm.IsCompleted) return;
-
-            EnsureTrail();
-            if (_trailPoint == null)
-            {
-                ResolvePlayerRefs();
-                if (_trailPoint == null) return;
-            }
-            if (_currTrail == null) return;
-
-            // While Returning: lerp toward the player; flip to Armed when close enough.
-            if (_fsm.Phase == DrawingPhase.Returning)
-            {
-                if (Mathf.Abs(_currTrail.transform.position.z - _trailPoint.position.z) > 0.001f)
-                {
-                    LerpTrailTowardsPlayer();
-                    return;
-                }
-                _fsm.TryTransition(DrawingPhase.Armed);
-                Interact();
-            }
-        }
-
+        /// <inheritdoc />
         public void Interact()
         {
-            EnsureTrail();
-            if (_fsm.IsCompleted) return;
-
-            // Idle → Returning: schedule trail catch-up on next Update.
+            // Chain step. Idle/Done → Armed becomes the active anchor.
             if (_fsm.Phase == DrawingPhase.Idle)
             {
-                _fsm.TryTransition(DrawingPhase.Returning);
-                return;
+                if (_fsm.TryTransition(DrawingPhase.Armed)) SetHighlight(true);
             }
-
-            if (_fsm.Phase != DrawingPhase.Armed) return;
-            if (_playerInteract == null) ResolvePlayerRefs();
-            if (_playerInteract == null) return;
-
-            // Armed → Drawing: anchor trail to player.
-            if (!_playerInteract.IsDrawing)
-            {
-                _fsm.TryTransition(DrawingPhase.Drawing);
-                _currTrail.transform.SetParent(_trailPoint, worldPositionStays: false);
-                _currTrail.transform.localPosition = Vector3.zero;
-                _currTrail.SetActive(true);
-                _playerInteract.BeginDrawing(_currTrail);
-                return;
-            }
-
-            // Armed → Done: finalize the connection.
-            CompleteDraw();
         }
 
+        /// <inheritdoc />
         public void OnPlayerEntered()
         {
-            if (_fsm.Phase == DrawingPhase.Idle)
+            if (_fsm.Phase == DrawingPhase.Idle && _fsm.TryTransition(DrawingPhase.Armed))
             {
-                _fsm.TryTransition(DrawingPhase.Armed);
+                SetHighlight(true);
             }
         }
 
+        /// <inheritdoc />
         public void OnPlayerExited()
         {
-            if (_fsm.Phase is DrawingPhase.Armed or DrawingPhase.Returning)
+            // Chain-preserving: only un-arm if we never advanced past the visit.
+            if (_fsm.Phase == DrawingPhase.Armed)
             {
                 _fsm.TryTransition(DrawingPhase.Idle);
+                SetHighlight(false);
             }
         }
 
+        /// <inheritdoc />
         public void Complete()
         {
             if (_fsm.IsCompleted) return;
+
+            // Move from Armed (anchor) or Drawing (chain mid-step) to Done.
+            if (_fsm.Phase == DrawingPhase.Armed)
+            {
+                _fsm.TryTransition(DrawingPhase.Drawing);
+            }
             _fsm.TryTransition(DrawingPhase.Done);
+            SetHighlight(false);
             Completed?.Invoke(this);
         }
 
-        private void CompleteDraw()
+        private void SetHighlight(bool on)
         {
-            if (_playerInteract == null) return;
-            _playerInteract.EndDrawing(reparentTrailTo: transform);
-            foreach (Transform child in transform)
+            if (armedHighlight != null && armedHighlight.activeSelf != on)
             {
-                Destroy(child.gameObject);
-            }
-            Complete();
-        }
-
-        private void EnsureTrail()
-        {
-            if (_currTrail != null || trailPrefab == null) return;
-            _currTrail = Instantiate(
-                trailPrefab,
-                transform.position - new Vector3(0f, -trailOffset.y, 0f),
-                Quaternion.Euler(trailEulerAngles),
-                transform);
-            _currTrail.SetActive(true);
-        }
-
-        private void LerpTrailTowardsPlayer()
-        {
-            if (_currTrail == null || _trailPoint == null) return;
-            float lerp = GameServices.Config != null ? GameServices.Config.trailCatchUpLerp : 100f;
-            _currTrail.transform.position = TrailMath.Lerp(
-                _currTrail.transform.position, _trailPoint.position, lerp, Time.deltaTime);
-        }
-
-        private void ResolvePlayerRefs()
-        {
-            if (GameServices.Player == null) return;
-            _trailPoint = GameServices.TrailPoint != null
-                ? GameServices.TrailPoint
-                : GameServices.Player.childCount > 0 ? GameServices.Player.GetChild(0) : null;
-            if (_playerInteract == null)
-            {
-                _playerInteract = GameServices.Player.GetComponent<PlayerInteract>();
+                armedHighlight.SetActive(on);
             }
         }
     }

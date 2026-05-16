@@ -42,8 +42,13 @@ namespace Studios208.DrawRush.Enemy
         private void OnGameWonChanged(bool won)
         {
             if (!won) return;
-            _agent.isStopped = true;
             _halted = true;
+            if (_agent != null && _agent.isOnNavMesh)
+            {
+                _agent.isStopped = true;
+                _agent.ResetPath();
+                _agent.velocity = Vector3.zero;
+            }
         }
     }
 }
