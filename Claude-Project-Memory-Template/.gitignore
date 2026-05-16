@@ -1,0 +1,57 @@
+# Unity
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Mm]emoryCaptures/
+[Uu]serSettings/
+
+# Visual Studio / Rider / VS Code
+.vs/
+.idea/
+.vscode/
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Unity build artifacts
+sysinfo.txt
+*.apk
+*.aab
+*.unitypackage
+*.app
+crashlytics-build.properties
+.gradle/
+
+# Asset cache backups (filter-repo / BFG)
+.git.bak/
+
+# Secrets — NEVER commit
+Secrets.cs
+Secrets.cs.meta
+Assets/**/Secrets.asset
+Assets/**/Secrets.asset.meta
+.env
+.env.local
+*.pem
+*.key
+
+# Screenshot scratch
+Assets/Screenshots/
