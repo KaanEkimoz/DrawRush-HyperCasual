@@ -3,14 +3,18 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.Serialization;
-using Studios208.DrawRush.Enemy;
+using Studios208.DrawRush.Player;
 using Random = UnityEngine.Random;
 
 namespace Studios208.DrawRush.Core
 {
     /// <summary>
-    /// Scene-level UI + level-flow controller. Listens to GameState.GameWonChanged
-    /// instead of polling a static flag every Update.
+    /// Scene-level UI panels + level flow.
+    ///
+    /// No longer reaches into Enemy / Drawing layers — it just listens to
+    /// <see cref="GameState.GameWonChanged"/> and <see cref="PlayerHealth.Died"/>
+    /// and toggles its own panels. Trail / line / enemy-anim cleanup is now owned
+    /// by those features themselves.
     /// </summary>
     public sealed class GameManager : MonoBehaviour
     {
@@ -25,10 +29,10 @@ namespace Studios208.DrawRush.Core
         [FormerlySerializedAs("_particles")]
         [SerializeField] private GameObject winParticles;
         [SerializeField] private GameState state;
+        [SerializeField] private PlayerHealth playerHealth;
 
         private static readonly List<int> RandomLevelList = new() { 2, 3, 4 };
         private int _level = 1;
-        private bool _lossShown;
 
         private void Awake()
         {
@@ -38,11 +42,13 @@ namespace Studios208.DrawRush.Core
         private void OnEnable()
         {
             if (state != null) state.GameWonChanged += OnGameWonChanged;
+            if (playerHealth != null) playerHealth.Died += OnPlayerDied;
         }
 
         private void OnDisable()
         {
             if (state != null) state.GameWonChanged -= OnGameWonChanged;
+            if (playerHealth != null) playerHealth.Died -= OnPlayerDied;
         }
 
         private void Start()
@@ -55,43 +61,28 @@ namespace Studios208.DrawRush.Core
             if (levelText != null) levelText.text = $"Level {_level}";
         }
 
-        private void Update()
-        {
-            if (_lossShown) return;
-            if (GameServices.Player == null)
-            {
-                _lossShown = true;
-                if (losePanel != null) losePanel.SetActive(true);
-                Time.timeScale = 0f;
-            }
-        }
-
-        private void OnGameWonChanged(bool won)
+        private async void OnGameWonChanged(bool won)
         {
             if (!won) return;
 
-            foreach (var enemy in Object.FindObjectsByType<EnemyCombat>(FindObjectsSortMode.None))
-            {
-                if (enemy.EnemyAnim != null) enemy.EnemyAnim.SetTrigger("t_die");
-            }
-
-            foreach (var trail in Object.FindObjectsByType<TrailRenderer>(FindObjectsSortMode.None))
-            {
-                Destroy(trail);
-            }
-
-            foreach (var line in Object.FindObjectsByType<LineRenderer>(FindObjectsSortMode.None))
-            {
-                Destroy(line);
-            }
-
             if (winParticles != null) winParticles.SetActive(true);
-            Invoke(nameof(ShowWinPanel), 3.0f);
+
+            float delay = GameServices.Config != null ? GameServices.Config.gameWonDelay : 3.0f;
+            try
+            {
+                await Awaitable.WaitForSecondsAsync(delay, destroyCancellationToken);
+            }
+            catch (System.OperationCanceledException)
+            {
+                return;
+            }
+            if (winPanel != null) winPanel.SetActive(true);
         }
 
-        private void ShowWinPanel()
+        private void OnPlayerDied()
         {
-            if (winPanel != null) winPanel.SetActive(true);
+            if (losePanel != null) losePanel.SetActive(true);
+            Time.timeScale = 0f;
         }
 
         public void StartTheGame()

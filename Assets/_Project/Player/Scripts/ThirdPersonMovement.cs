@@ -7,7 +7,7 @@ namespace Studios208.DrawRush.Player
     /// CharacterController-based third-person movement. Camera-relative direction
     /// is computed from <see cref="GameServices.MainCamera"/> — no GameObject.Find calls.
     /// Speed / turn / gravity come from <see cref="GameConfig"/> so they tune without
-    /// recompile.
+    /// recompile. Switches to the dance pose by subscribing to GameState.GameWonChanged.
     /// </summary>
     [RequireComponent(typeof(CharacterController))]
     public sealed class ThirdPersonMovement : MonoBehaviour
@@ -21,13 +21,13 @@ namespace Studios208.DrawRush.Player
         [SerializeField] private float localPlayerSpeed = 1.5f;
         [SerializeField] private float localTurnSmoothTime = 0.1f;
 
-        private static readonly int BIsDancing = Animator.StringToHash("b_isDancing");
-
         private PlayerControls _controls;
         private Vector2 _move;
         private float _turnSmoothVelocity;
         private Vector3 _velocity = Vector3.zero;
         private CharacterController _characterController;
+        private GameState _state;
+        private bool _hasWon;
 
         private void Awake()
         {
@@ -43,18 +43,22 @@ namespace Studios208.DrawRush.Player
             }
         }
 
-        private void OnEnable() => _controls.Player.Enable();
-        private void OnDisable() => _controls.Player.Disable();
+        private void OnEnable()
+        {
+            _controls.Player.Enable();
+            _state = GameServices.State;
+            if (_state != null) _state.GameWonChanged += OnGameWonChanged;
+        }
+
+        private void OnDisable()
+        {
+            _controls.Player.Disable();
+            if (_state != null) _state.GameWonChanged -= OnGameWonChanged;
+        }
 
         private void FixedUpdate()
         {
-            var state = GameServices.State;
-            if (state != null && state.IsGameWon)
-            {
-                if (playerAnim != null) playerAnim.SetBool(BIsDancing, true);
-                return;
-            }
-
+            if (_hasWon) return;
             Move();
             ApplyGravity();
         }
@@ -82,6 +86,13 @@ namespace Studios208.DrawRush.Player
             float gravity = GameServices.Config != null ? GameServices.Config.gravity : -9.81f;
             _velocity.y += gravity * Time.deltaTime;
             _characterController.Move(_velocity * Time.deltaTime);
+        }
+
+        private void OnGameWonChanged(bool won)
+        {
+            if (!won) return;
+            _hasWon = true;
+            if (playerAnim != null) playerAnim.SetBool(AnimatorIds.IsDancing, true);
         }
 
         private float ResolveSpeed()

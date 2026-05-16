@@ -5,38 +5,45 @@ using Studios208.DrawRush.Core;
 namespace Studios208.DrawRush.Enemy
 {
     /// <summary>
-    /// Chases the player using NavMeshAgent. Player position is read from
-    /// <see cref="GameServices.Player"/> every frame — survives scene-additive load
-    /// where the legacy FindWithTag at Start() would have missed the player.
-    /// Stops chasing once <see cref="GameState.IsGameWon"/> flips true.
+    /// Chases the player via NavMeshAgent. Subscribes to GameState.GameWonChanged
+    /// to halt cleanly instead of polling IsGameWon every frame.
     /// </summary>
     [RequireComponent(typeof(NavMeshAgent))]
     public sealed class EnemyFollow : MonoBehaviour
     {
         private NavMeshAgent _agent;
-        private bool _haltedOnWin;
+        private GameState _state;
+        private bool _halted;
 
         private void Awake()
         {
             _agent = GetComponent<NavMeshAgent>();
         }
 
+        private void OnEnable()
+        {
+            _state = GameServices.State;
+            if (_state != null) _state.GameWonChanged += OnGameWonChanged;
+        }
+
+        private void OnDisable()
+        {
+            if (_state != null) _state.GameWonChanged -= OnGameWonChanged;
+        }
+
         private void Update()
         {
-            var state = GameServices.State;
-            if (state != null && state.IsGameWon)
-            {
-                if (!_haltedOnWin)
-                {
-                    _agent.isStopped = true;
-                    _haltedOnWin = true;
-                }
-                return;
-            }
-
+            if (_halted) return;
             var player = GameServices.Player;
             if (player == null) return;
             _agent.SetDestination(player.position);
+        }
+
+        private void OnGameWonChanged(bool won)
+        {
+            if (!won) return;
+            _agent.isStopped = true;
+            _halted = true;
         }
     }
 }
