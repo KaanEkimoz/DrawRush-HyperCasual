@@ -33,57 +33,103 @@ namespace Studios208.DrawRush.Tests.EditMode
         }
 
         [Test]
-        public void Apply_NegativeDelta_ReducesCurrent()
+        public void TakeDamage_PositiveAmount_ReducesCurrent()
         {
-            _health.Apply(-1);
+            _health.TakeDamage(1);
             Assert.AreEqual(2, _health.Current);
             Assert.IsTrue(_health.IsAlive);
         }
 
         [Test]
-        public void Apply_DownToZero_RaisesDiedEvent()
+        public void TakeDamage_NegativeOrZero_IsNoOp()
+        {
+            _health.TakeDamage(0);
+            _health.TakeDamage(-5);
+            Assert.AreEqual(3, _health.Current);
+        }
+
+        [Test]
+        public void TakeDamage_DownToZero_RaisesDiedExactlyOnce()
         {
             int deathRaised = 0;
             _health.Died += () => deathRaised++;
 
-            _health.Apply(-1);
-            _health.Apply(-1);
-            _health.Apply(-1);
+            _health.TakeDamage(1);
+            _health.TakeDamage(1);
+            _health.TakeDamage(1);
 
             Assert.AreEqual(0, _health.Current);
             Assert.IsFalse(_health.IsAlive);
-            Assert.AreEqual(1, deathRaised, "Died should fire exactly once when hp crosses to zero.");
+            Assert.AreEqual(1, deathRaised);
         }
 
         [Test]
-        public void Apply_AfterDeath_IsNoOp()
+        public void TakeDamage_AfterDeath_IsNoOp_AndDoesNotRefireDied()
         {
-            _health.Apply(-10);
+            _health.TakeDamage(10);
             int deathRaised = 0;
             _health.Died += () => deathRaised++;
 
-            _health.Apply(-5);
+            _health.TakeDamage(5);
 
-            Assert.AreEqual(0, _health.Current, "Health must stay at zero after death.");
-            Assert.AreEqual(0, deathRaised, "Died must not re-fire after first death.");
+            Assert.AreEqual(0, _health.Current);
+            Assert.AreEqual(0, deathRaised);
         }
 
         [Test]
-        public void Apply_FiresChangedEvent_WithNewValue()
+        public void TakeDamage_FiresChangedWithNewValue()
         {
             int? lastChanged = null;
             _health.Changed += v => lastChanged = v;
 
-            _health.Apply(-1);
+            _health.TakeDamage(1);
 
             Assert.AreEqual(2, lastChanged);
         }
 
         [Test]
-        public void Apply_NeverGoesNegative()
+        public void TakeDamage_NeverGoesNegative()
         {
-            _health.Apply(-100);
+            _health.TakeDamage(100);
             Assert.AreEqual(0, _health.Current);
+        }
+
+        [Test]
+        public void Heal_PositiveAmount_IncreasesCurrent()
+        {
+            _health.TakeDamage(2);
+            Assert.AreEqual(1, _health.Current);
+
+            _health.Heal(1);
+
+            Assert.AreEqual(2, _health.Current);
+        }
+
+        [Test]
+        public void Heal_CapsAtStartingValue()
+        {
+            _health.Heal(100);
+            Assert.AreEqual(3, _health.Current);
+        }
+
+        [Test]
+        public void Heal_AfterDeath_IsNoOp()
+        {
+            _health.TakeDamage(10);
+
+            _health.Heal(2);
+
+            Assert.AreEqual(0, _health.Current);
+            Assert.IsFalse(_health.IsAlive);
+        }
+
+        [Test]
+        public void Heal_NegativeOrZero_IsNoOp()
+        {
+            _health.TakeDamage(1); // Current = 2
+            _health.Heal(0);
+            _health.Heal(-5);
+            Assert.AreEqual(2, _health.Current);
         }
     }
 }

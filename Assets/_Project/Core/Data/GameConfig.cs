@@ -19,8 +19,8 @@ namespace Studios208.DrawRush.Core
         [Tooltip("Starting health for the player.")]
         public int playerStartingHealth = 3;
 
-        [Tooltip("Damage dealt by an enemy on touch (signed). Negative reduces HP.")]
-        public int enemyTouchDamage = -1;
+        [Tooltip("Damage dealt by an enemy on touch (positive magnitude).")]
+        public int enemyTouchDamage = 1;
 
         [Header("Drawing")]
         [Tooltip("Seconds to wait before destroying the connecting LineRenderer.")]

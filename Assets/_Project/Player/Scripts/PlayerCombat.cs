@@ -5,13 +5,15 @@ using UnityEngine.Serialization;
 namespace Studios208.DrawRush.Player
 {
     /// <summary>
-    /// Hooks PlayerHealth (ScriptableObject) up to UI and self-destruction.
-    /// Health value lives on the asset, not in the MonoBehaviour, so other systems
-    /// (enemies, UI, save/load) can read it without referencing this component.
+    /// Wires <see cref="PlayerHealth"/> (ScriptableObject) to the HUD label and to
+    /// self-destruction. Health state lives on the asset, not in the MonoBehaviour,
+    /// so other systems (enemies, UI, save/load) can read it without referencing
+    /// this component.
     /// </summary>
     public sealed class PlayerCombat : MonoBehaviour
     {
         [SerializeField] private PlayerHealth health;
+
         [FormerlySerializedAs("playerHp")]
         [SerializeField] private TextMeshProUGUI healthLabel;
 
@@ -30,9 +32,16 @@ namespace Studios208.DrawRush.Player
             health.Died -= OnDied;
         }
 
-        public void TakeDamage(int delta)
+        /// <summary>Applies positive damage to the bound PlayerHealth asset.</summary>
+        public void TakeDamage(int amount)
         {
-            if (health != null) health.Apply(delta);
+            if (health != null) health.TakeDamage(amount);
+        }
+
+        /// <summary>Applies positive healing to the bound PlayerHealth asset.</summary>
+        public void Heal(int amount)
+        {
+            if (health != null) health.Heal(amount);
         }
 
         private void OnHealthChanged(int value)
