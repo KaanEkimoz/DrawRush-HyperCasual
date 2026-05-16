@@ -1,35 +1,46 @@
 using System;
 using UnityEngine;
 using UnityEngine.Serialization;
-using Studios208.DrawRush.Common;
 using Studios208.DrawRush.Core;
 using Studios208.DrawRush.Player;
 
 namespace Studios208.DrawRush.Drawing
 {
     /// <summary>
-    /// A single connectable part. Implements <see cref="IInteractable"/> so PlayerInteract
-    /// can drive it generically. Raises <see cref="Completed"/> when this part finishes —
-    /// PartManager / WallManager listen instead of polling Update.
+    /// A single connectable part. Implements <see cref="IDrawPart"/> so PlayerInteract
+    /// can drive it without seeing the internal state machine.
+    /// Raises <see cref="Completed"/> once when the part is finalised; PartManager /
+    /// WallManager listen instead of polling.
     /// </summary>
-    public sealed class DrawPart : MonoBehaviour, IInteractable
+    public sealed class DrawPart : MonoBehaviour, IDrawPart
     {
-        public event Action<DrawPart> Completed;
+        public event Action<IDrawPart> Completed;
 
-        [HideInInspector] public bool isPlayerEntered;
         [FormerlySerializedAs("_trailPrefab")]
         [SerializeField] private GameObject trailPrefab;
         [SerializeField] private Vector3 trailEulerAngles = new(91f, 40f, 38f);
         [SerializeField] private Vector3 trailOffset = new(0f, 0.25f, 0f);
 
-        private bool _isDrawCompleted;
+        private bool _isCompleted;
+        private bool _isArmed;
+        private bool _isGoingToPlayer;
+        private bool _isReachedToPlayer;
         private GameObject _currTrail;
         private Transform _trailPoint;
         private PlayerInteract _playerInteract;
-        private bool _isGoingToPlayer;
-        private bool _isReachedToPlayer;
 
-        public bool IsDrawCompleted => _isDrawCompleted;
+        public bool IsCompleted => _isCompleted;
+        public Transform Transform => transform;
+
+        // Kept temporarily for backwards-compat with any prefab inspector script that
+        // pokes the field. Reads route to the internal _isArmed value; writes are
+        // ignored — callers must use OnPlayerEntered/OnPlayerExited.
+        [Obsolete("Use OnPlayerEntered / OnPlayerExited instead.")]
+        public bool isPlayerEntered
+        {
+            get => _isArmed;
+            set { /* intentional no-op; encapsulation enforcement */ }
+        }
 
         private void Awake()
         {
@@ -44,7 +55,7 @@ namespace Studios208.DrawRush.Drawing
 
         private void Update()
         {
-            if (_isDrawCompleted) return;
+            if (_isCompleted) return;
 
             EnsureTrail();
             if (_trailPoint == null)
@@ -52,6 +63,8 @@ namespace Studios208.DrawRush.Drawing
                 ResolvePlayerRefs();
                 if (_trailPoint == null) return;
             }
+
+            if (_currTrail == null) return;
 
             if (Mathf.Abs(_currTrail.transform.position.z - _trailPoint.position.z) > 0.001f && _isGoingToPlayer)
             {
@@ -70,7 +83,7 @@ namespace Studios208.DrawRush.Drawing
         public void Interact()
         {
             EnsureTrail();
-            if (_isDrawCompleted || isPlayerEntered) return;
+            if (_isCompleted || _isArmed) return;
             if (!_isReachedToPlayer)
             {
                 _isGoingToPlayer = true;
@@ -80,46 +93,46 @@ namespace Studios208.DrawRush.Drawing
             if (_playerInteract == null) ResolvePlayerRefs();
             if (_playerInteract == null) return;
 
-            if (!_playerInteract.isDrawing)
+            if (!_playerInteract.IsDrawing)
             {
-                isPlayerEntered = true;
+                _isArmed = true;
                 _currTrail.transform.SetParent(_trailPoint, worldPositionStays: false);
                 _currTrail.transform.localPosition = Vector3.zero;
                 _currTrail.SetActive(true);
-                _playerInteract.trail = _currTrail;
-                _playerInteract.isDrawing = true;
+                _playerInteract.BeginDrawing(_currTrail);
                 return;
             }
 
             CompleteDraw();
         }
 
-        /// <summary>
-        /// Marks this part as drawn — invoked externally by PlayerInteract when the
-        /// connecting line is finalized between two parts. Idempotent.
-        /// </summary>
-        public void MarkCompleted()
+        public void OnPlayerEntered()
         {
-            if (_isDrawCompleted) return;
-            _isDrawCompleted = true;
+            _isArmed = true;
+        }
+
+        public void OnPlayerExited()
+        {
+            _isArmed = false;
+        }
+
+        public void Complete()
+        {
+            if (_isCompleted) return;
+            _isCompleted = true;
             Completed?.Invoke(this);
         }
 
         private void CompleteDraw()
         {
             if (_playerInteract == null) return;
-            _playerInteract.isDrawing = false;
-            if (_playerInteract.trail != null)
-            {
-                _playerInteract.trail.transform.SetParent(transform, worldPositionStays: false);
-            }
+            _playerInteract.EndDrawing(reparentTrailTo: transform);
             foreach (Transform child in transform)
             {
                 Destroy(child.gameObject);
             }
-            _playerInteract.trail = null;
-            isPlayerEntered = false;
-            MarkCompleted();
+            _isArmed = false;
+            Complete();
         }
 
         private void EnsureTrail()
@@ -137,13 +150,7 @@ namespace Studios208.DrawRush.Drawing
         {
             if (_currTrail == null || _trailPoint == null) return;
             float lerp = GameServices.Config != null ? GameServices.Config.trailCatchUpLerp : 100f;
-            var current = _currTrail.transform.position;
-            var target = _trailPoint.position;
-            float t = lerp * Time.deltaTime;
-            _currTrail.transform.position = new Vector3(
-                Mathf.Lerp(current.x, target.x, t),
-                Mathf.Lerp(current.y, target.y, t),
-                Mathf.Lerp(current.z, target.z, t));
+            _currTrail.transform.position = TrailMath.Lerp(_currTrail.transform.position, _trailPoint.position, lerp, Time.deltaTime);
         }
 
         private void ResolvePlayerRefs()
@@ -160,8 +167,8 @@ namespace Studios208.DrawRush.Drawing
 
         private void ResetState()
         {
-            isPlayerEntered = false;
-            _isDrawCompleted = false;
+            _isArmed = false;
+            _isCompleted = false;
             _isGoingToPlayer = false;
             _isReachedToPlayer = false;
         }

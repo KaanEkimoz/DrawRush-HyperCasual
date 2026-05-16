@@ -4,44 +4,39 @@ using UnityEngine;
 namespace Studios208.DrawRush.Drawing
 {
     /// <summary>
-    /// Watches a group of DrawPart children and reveals a wall when all of them
-    /// fire <see cref="DrawPart.Completed"/>. Event-driven: no Update() polling
-    /// and no double-counting bugs from the previous foreach implementation.
+    /// Reveals a wall when all child DrawParts complete. Subscribes to
+    /// <see cref="IDrawPart.Completed"/> instead of polling.
     /// </summary>
     public sealed class PartManager : MonoBehaviour
     {
         [SerializeField] private GameObject wall;
 
-        private readonly HashSet<DrawPart> _completed = new();
-        private DrawPart[] _parts;
+        private readonly HashSet<IDrawPart> _completed = new();
+        private IDrawPart[] _parts;
 
         private void Awake()
         {
-            _parts = GetComponentsInChildren<DrawPart>(includeInactive: true);
+            var components = GetComponentsInChildren<DrawPart>(includeInactive: true);
+            _parts = new IDrawPart[components.Length];
+            for (int i = 0; i < components.Length; i++) _parts[i] = components[i];
         }
 
         private void OnEnable()
         {
-            for (int i = 0; i < _parts.Length; i++)
-            {
-                _parts[i].Completed += OnPartCompleted;
-            }
+            for (int i = 0; i < _parts.Length; i++) _parts[i].Completed += OnPartCompleted;
         }
 
         private void OnDisable()
         {
-            for (int i = 0; i < _parts.Length; i++)
-            {
-                _parts[i].Completed -= OnPartCompleted;
-            }
+            for (int i = 0; i < _parts.Length; i++) _parts[i].Completed -= OnPartCompleted;
         }
 
-        private void OnPartCompleted(DrawPart part)
+        private void OnPartCompleted(IDrawPart part)
         {
             _completed.Add(part);
-            if (_completed.Count >= _parts.Length)
+            if (_completed.Count >= _parts.Length && wall != null)
             {
-                if (wall != null) wall.SetActive(true);
+                wall.SetActive(true);
             }
         }
     }

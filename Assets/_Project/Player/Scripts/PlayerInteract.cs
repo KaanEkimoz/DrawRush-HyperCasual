@@ -7,9 +7,10 @@ using Studios208.DrawRush.Drawing;
 namespace Studios208.DrawRush.Player
 {
     /// <summary>
-    /// Detects when the player enters the drawable area / a DrawPart and triggers
-    /// the connecting LineRenderer between two parts. LineRenderer width / destroy
-    /// delay come from <see cref="GameConfig"/>.
+    /// Owns the drawing session state (current trail + previous-part pointer) and
+    /// translates trigger events into IDrawPart calls. Width / destroy delay come
+    /// from <see cref="GameConfig"/>. Connecting LineRenderer is added to the
+    /// previous part on completion (visual artefact of the connection).
     /// </summary>
     [RequireComponent(typeof(Collider))]
     public sealed class PlayerInteract : MonoBehaviour
@@ -20,15 +21,36 @@ namespace Studios208.DrawRush.Player
         [Header("Tags"), Space]
         [SerializeField] private string drawAreaTag = "DrawArea";
 
-        [HideInInspector] public bool isDrawing;
-        [HideInInspector] public GameObject trail;
-
+        private bool _isDrawing;
+        private GameObject _activeTrail;
         private GameObject _previousPart;
         private bool _canDraw;
 
+        /// <summary>True while a trail is currently anchored to the player.</summary>
+        public bool IsDrawing => _isDrawing;
+
+        /// <summary>Called by DrawPart.Interact when it attaches its trail to the player.</summary>
+        public void BeginDrawing(GameObject trail)
+        {
+            _isDrawing = true;
+            _activeTrail = trail;
+        }
+
+        /// <summary>Called by DrawPart.CompleteDraw when the connection finalizes.
+        /// Reparents the active trail under <paramref name="reparentTrailTo"/>.</summary>
+        public void EndDrawing(Transform reparentTrailTo)
+        {
+            _isDrawing = false;
+            if (_activeTrail != null && reparentTrailTo != null)
+            {
+                _activeTrail.transform.SetParent(reparentTrailTo, worldPositionStays: false);
+            }
+            _activeTrail = null;
+        }
+
         private void Awake()
         {
-            isDrawing = false;
+            _isDrawing = false;
             _previousPart = null;
         }
 
@@ -40,49 +62,65 @@ namespace Studios208.DrawRush.Player
                 return;
             }
 
-            var interactable = other.GetComponent<IInteractable>();
-            if (interactable == null || !_canDraw) return;
+            if (!_canDraw) return;
 
+            var interactable = other.GetComponent<IInteractable>();
+            if (interactable == null) return;
+            var drawPart = other.GetComponent<IDrawPart>();
+            if (drawPart == null) return;
+
+            // First anchor — arm the part and remember it as the previous.
             if (_previousPart == null)
             {
-                interactable.Interact();
+                drawPart.OnPlayerEntered();
+                drawPart.Interact();
                 _previousPart = other.gameObject;
                 return;
             }
 
-            if (!isDrawing || _previousPart == other.gameObject) return;
+            // Already armed but not yet drawing, or hit the same part again — bail.
+            if (!_isDrawing || _previousPart == other.gameObject) return;
 
-            interactable.Interact();
-            var previousDrawPart = _previousPart.GetComponent<DrawPart>();
-            var currentDrawPart = other.gameObject.GetComponent<DrawPart>();
-            if (previousDrawPart != null) previousDrawPart.MarkCompleted();
-            if (currentDrawPart != null) currentDrawPart.MarkCompleted();
+            // Second anchor while drawing — finalize the connection.
+            drawPart.Interact();
 
-            var lineRenderer = _previousPart.AddComponent<LineRenderer>();
-            AdjustLineRenderer(lineRenderer, other.transform.position, _previousPart.transform.position);
+            var previousDrawPart = _previousPart.GetComponent<IDrawPart>();
+            previousDrawPart?.Complete();
+            drawPart.Complete();
 
-            if (trail != null) Destroy(trail);
+            SpawnConnectionLine(other.transform.position, _previousPart.transform.position);
+
+            if (_activeTrail != null) Destroy(_activeTrail);
+            _activeTrail = null;
             _previousPart = null;
-            isDrawing = false;
+            _isDrawing = false;
         }
 
         private void OnTriggerExit(Collider other)
         {
             if (!other.CompareTag(drawAreaTag)) return;
 
-            if (trail != null) Destroy(trail);
+            if (_activeTrail != null) Destroy(_activeTrail);
+            _activeTrail = null;
             _canDraw = false;
-            isDrawing = false;
+            _isDrawing = false;
 
             if (_previousPart != null)
             {
-                var drawPart = _previousPart.GetComponent<DrawPart>();
-                if (drawPart != null) drawPart.isPlayerEntered = false;
+                var drawPart = _previousPart.GetComponent<IDrawPart>();
+                drawPart?.OnPlayerExited();
                 _previousPart = null;
             }
         }
 
-        private void AdjustLineRenderer(LineRenderer lineRenderer, Vector3 startPosition, Vector3 endPosition)
+        private void SpawnConnectionLine(Vector3 toWorld, Vector3 fromWorld)
+        {
+            if (_previousPart == null) return;
+            var lineRenderer = _previousPart.AddComponent<LineRenderer>();
+            ConfigureLineRenderer(lineRenderer, fromWorld, toWorld);
+        }
+
+        private void ConfigureLineRenderer(LineRenderer lineRenderer, Vector3 startPosition, Vector3 endPosition)
         {
             startPosition.y = 0f;
             endPosition.y = 0f;
