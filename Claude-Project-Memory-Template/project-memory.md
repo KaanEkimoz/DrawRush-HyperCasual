@@ -5,11 +5,13 @@
 
 ---
 
-## 🎯 Mevcut Durum — 2026-05-16
+## 🎯 Mevcut Durum — 2026-05-16 (senior-review refactor sonrası)
 
-**Tek satır:** DrawRush Faz 0-7 tamamlandı — Unity 6 baseline, repo hijyen (LFS dahil), feature folder migration, clean architecture refactor (GameServices + ScriptableObject state + event-driven), `Studios208.DrawRush.asmdef`, build settings (IL2CPP/SDK 34/applicationIdentifier), README rebuild. Sıradaki: EditMode test, signed Android build.
+**Tek satır:** Faz 0-12 tamam — Unity 6 baseline, repo hijyen, feature folder migration, clean architecture, asmdef, build settings, README rebuild, 39 EditMode test green, Unity MCP entegre, **senior Unity dev + senior software eng paralel review uygulandı** (PlayerHealth API split / IDrawPart / DrawingPhase FSM / DrawPartCompletionWatcher / GameManager 3'e bölündü / PersistentObject rename / GameConfig property encapsulation / dead code purge).
 
-**Repo state:** `claude-dev` branch HEAD push'lanmamış (lokal). Master 4 commit önde. Working tree clean (refactor commit'i sonrası). LFS aktif. Backup branch `backup-pre-claude-cleanup-1778895100` korunuyor.
+**Repo state:** `claude-dev` branch origin'e push'lu, master 22 commit önde. Working tree clean. LFS aktif. Backup branch `backup-pre-claude-cleanup-1778895100` korunuyor.
+
+**Test:** EditMode 39/39 PASS (PlayerHealth 11 + GameState 4 + GameServices 4 + EventChannel 3 + TrailMath 4 + DrawPartStateMachine 8 + DrawPartCompletionWatcher 5).
 
 **Aktif fazlar / blocker'lar:**
 - ✅ Bizim koddan 0 compile error, 0 deprecation warning (MCP read_console doğrulaması).
