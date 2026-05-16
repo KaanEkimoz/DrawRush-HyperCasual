@@ -1,0 +1,69 @@
+using UnityEngine;
+using UnityEngine.Serialization;
+
+namespace Studios208.DrawRush.Core
+{
+    /// <summary>
+    /// Game-wide tunables exposed as read-only properties so consumers cannot mutate
+    /// them at runtime. Serialized backing fields are private — designers tweak via
+    /// the Inspector on the GameConfig.asset instance.
+    /// </summary>
+    [CreateAssetMenu(fileName = "GameConfig", menuName = "DrawRush/Core/Game Config", order = 0)]
+    public sealed class GameConfig : ScriptableObject
+    {
+        [Header("Player Movement")]
+        [Tooltip("CharacterController forward speed (units / second).")]
+        [FormerlySerializedAs("playerSpeed")]
+        [SerializeField] private float _playerSpeed = 1.5f;
+
+        [Tooltip("SmoothDampAngle time for player turn (seconds).")]
+        [FormerlySerializedAs("turnSmoothTime")]
+        [SerializeField] private float _turnSmoothTime = 0.1f;
+
+        [Tooltip("Gravity applied to player (units / s^2). Negative.")]
+        [FormerlySerializedAs("gravity")]
+        [SerializeField] private float _gravity = -9.81f;
+
+        [Header("Combat")]
+        [Tooltip("Starting health for the player.")]
+        [FormerlySerializedAs("playerStartingHealth")]
+        [SerializeField] private int _playerStartingHealth = 3;
+
+        [Tooltip("Damage dealt by an enemy on touch (positive magnitude).")]
+        [FormerlySerializedAs("enemyTouchDamage")]
+        [SerializeField] private int _enemyTouchDamage = 1;
+
+        [Header("Drawing")]
+        [Tooltip("Seconds to wait before destroying the connecting LineRenderer.")]
+        [FormerlySerializedAs("lineDestroyDelay")]
+        [SerializeField] private float _lineDestroyDelay = 2.0f;
+
+        [Tooltip("Width of the connecting LineRenderer between two parts.")]
+        [FormerlySerializedAs("lineWidth")]
+        [SerializeField] private float _lineWidth = 0.4f;
+
+        [Tooltip("Lerp factor used when trail catches up to the player.")]
+        [FormerlySerializedAs("trailCatchUpLerp")]
+        [SerializeField] private float _trailCatchUpLerp = 100f;
+
+        [Header("Flow")]
+        [Tooltip("Seconds to wait after Game Won before showing the win panel.")]
+        [FormerlySerializedAs("gameWonDelay")]
+        [SerializeField] private float _gameWonDelay = 3.0f;
+
+        [Tooltip("Seconds to wait on splash before loading next scene.")]
+        [FormerlySerializedAs("splashWaitSeconds")]
+        [SerializeField] private float _splashWaitSeconds = 2.1f;
+
+        public float playerSpeed => _playerSpeed;
+        public float turnSmoothTime => _turnSmoothTime;
+        public float gravity => _gravity;
+        public int playerStartingHealth => _playerStartingHealth;
+        public int enemyTouchDamage => _enemyTouchDamage;
+        public float lineDestroyDelay => _lineDestroyDelay;
+        public float lineWidth => _lineWidth;
+        public float trailCatchUpLerp => _trailCatchUpLerp;
+        public float gameWonDelay => _gameWonDelay;
+        public float splashWaitSeconds => _splashWaitSeconds;
+    }
+}

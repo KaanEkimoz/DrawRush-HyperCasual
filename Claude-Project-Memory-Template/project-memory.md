@@ -5,17 +5,21 @@
 
 ---
 
-## 🎯 Mevcut Durum — 2026-05-16
+## 🎯 Mevcut Durum — 2026-05-16 (senior-review refactor sonrası)
 
-**Tek satır:** DrawRush 2022'de yapılmış hyper-casual prototip; Unity 2020 → Unity 6 (6000.3.12f1, URP 17.3) upgrade'i sonrası ilk inceleme, refactor/feature-folder migrasyonu ve modern mimariye (ScriptableObject + GameServices, Awaitable, Addressables) taşıma fazına hazırlanılıyor.
+**Tek satır:** Faz 0-12 tamam — Unity 6 baseline, repo hijyen, feature folder migration, clean architecture, asmdef, build settings, README rebuild, 39 EditMode test green, Unity MCP entegre, **senior Unity dev + senior software eng paralel review uygulandı** (PlayerHealth API split / IDrawPart / DrawingPhase FSM / DrawPartCompletionWatcher / GameManager 3'e bölündü / PersistentObject rename / GameConfig property encapsulation / dead code purge).
 
-**Repo state:** `master` branch HEAD `7877f08d build: deleted aab files`. Working tree çok kirli — Unity 6 upgrade'in ürettiği `.csproj`, `.mat` (URP migrasyon), `Library/` artefaktları staged değil. `refactor` adlı remote branch mevcut (önceki bir refactor denemesi `e9e7dbb7 Merge branch 'refactor'` ile master'a merge edilmiş).
+**Repo state:** `claude-dev` branch origin'e push'lu, master 22 commit önde. Working tree clean. LFS aktif. Backup branch `backup-pre-claude-cleanup-1778895100` korunuyor.
+
+**Test:** EditMode 39/39 PASS (PlayerHealth 11 + GameState 4 + GameServices 4 + EventChannel 3 + TrailMath 4 + DrawPartStateMachine 8 + DrawPartCompletionWatcher 5).
 
 **Aktif fazlar / blocker'lar:**
-- ⛔ Working tree temizliği: Unity 6 upgrade kalıntıları (mat / csproj / Assets.meta) ya commit edilmeli ya stash'lenmeli — sonraki commit kirli baseline'a yapılmasın.
-- ⛔ `.gitignore` minimal (sadece `Temp/UnityLockfile`) — Unity standardı eksik, Library/Logs/obj git history'sinde olmamalı. Repo disk usage GitHub'da 442 MB.
-- ⛔ Hiç `.gitattributes` / LFS yok — FBX/PNG vs. binary'ler repo'yu şişiriyor.
-- ⚠️ Hiç `asmdef` yok — full recompile her kod değişikliğinde tetikleniyor.
+- ✅ Bizim koddan 0 compile error, 0 deprecation warning (MCP read_console doğrulaması).
+- ⚠️ 3rd-party warning'leri sürüyor (CodeMonkey, GameAnalytics deprecated API'ler) — scope dışı, dokunulmadı.
+- ⚠️ ProjectSettings/ProjectSettings.asset commit'lendi ama `applicationIdentifier` Android için artık `com.Studios208.DrawAndRush2` (önce boştu).
+- ⛔ Henüz hiç EditMode/PlayMode test yok — Faz 8 hedefi.
+- ⛔ Sahnelerdeki Prefab/GameObject component referansları kontrol edilmedi — Unity Editor'da Play tuşuna basıp gerçek doğrulama lazım.
+- ⛔ Yeni GameBootstrap MonoBehaviour'u sahnelere eklenmiş değil — manuel sahne kurulumu / prefab güncellemesi gerekiyor.
 
 ---
 
@@ -109,11 +113,17 @@
 | Faz | Süre | Task Sayısı | Acceptance Criteria | Durum |
 |---|---|---|---|---|
 | 0. Inventory + Memory bootstrap | <1 gün | 4 | Bu dosya doldu, CLAUDE.md root'ta, working tree durumu raporlandı | ✅ |
-| 1. Repo hijyen | 1 gün | 5 | `.gitignore`/`.gitattributes` standardize, claude-dev branch açık, README güncel, Library git'te değil | ⬜ |
-| 2. Klasör migrasyonu (feature-based) | 1-2 gün | 6 | Tüm Scripts `Assets/_Project/<Feature>/Scripts/` altında, asmdef'lerle bölünmüş, derleme başarılı | ⬜ |
-| 3. Singleton/Find-tag temizliği | 2-3 gün | 8 | GameServices locator + ScriptableObject ref'ler, hiç `FindWithTag`/`FindObjectsOfType` yok | ⬜ |
-| 4. Test framework + ilk EditMode test | 1 gün | 3 | NSubstitute kurulu, DrawPart ve PartManager için unit test, 10/10 PASS | ⬜ |
-| 5. Build pipeline | 0.5 gün | 2 | Android signed APK output, `applicationIdentifier` + signing config | ⬜ |
+| 1. Repo hijyen | <1 gün | 5 | `.gitignore`/`.gitattributes`+LFS, claude-dev branch açık, untrack csproj/sln/Logs/obj | ✅ |
+| 2. Ölü kod temizliği | <1 gün | 3 | OldVersion/, Scenes/Test/, legacy .sln dosyaları silindi (43k satır) | ✅ |
+| 3. Klasör migrasyonu | <1 gün | 1 | 14 script flat layout → `_Project/<Feature>/Scripts/`, .meta korundu | ✅ |
+| 4. Clean architecture refactor | 1 gün | 14 | Namespace, GameServices, SO state (GameConfig/GameState/PlayerHealth), event-driven | ✅ |
+| 5. asmdef | <1 gün | 1 | `Studios208.DrawRush.asmdef` Assets/_Project/ root, PlayerControls scope içine taşındı | ✅ |
+| 6. Build settings | <1 gün | 1 | applicationIdentifier, AndroidTargetSdk 34, IL2CPP, ARMv7+ARM64 (MCP execute_code ile) | ✅ |
+| 7. README rebuild | <1 gün | 1 | Modern README — badges, mimari diyagram, build settings tablosu | ✅ |
+| 8. EditMode test | 1 gün | 3 | DrawPart.Completed firing, PlayerHealth.Apply edges, PartManager event subscription | ⬜ |
+| 9. Sahne / prefab refactor doğrulama | 1 gün | 5 | GameBootstrap her sahnede, GameManager prefab'ı yeni Inspector field'larına bağlı, EnemyCombat damage override kontrol | ⬜ |
+| 10. Signed Android build | 0.5 gün | 2 | Keystore config (repo dışı), signed APK output | ⬜ |
+| 11. Addressables | 1 gün | 2 | Resources/ → Addressables, GameAnalytics Settings hariç | ⬜ |
 
 ---
 
@@ -211,6 +221,12 @@
 | 2022 | AppsFlyer + GameAnalytics + Facebook SDK eklendi (`14c6c11d SDK's Added`) | Hyper-casual yayın için attribution + analytics gerekli | Repo size +30 MB |
 | 2026-05-08 | Claude-Project-Memory-Template kuruldu | MFD pattern projeye aktarıldı | Manuel kuralları her seferinde anlatmaktansa dosyaya bağla |
 | 2026-05-16 | Unity 6 LTS + URP 17.3'e upgrade | Modernize, mobile performans, Awaitable native | Materyaller modified, csproj regenerated, refactor gerekli |
+| 2026-05-16 | Singleton/Find pattern → GameServices locator + ScriptableObject state | EnemyFollow/DrawPart/Movement Awake'inde FindWithTag, GameManager.isGameWon static — test edilemez, additive sahne load'larda kırılır | VContainer overkill 14 script için; static locator yeterli, scope büyürse VContainer'a geçilir |
+| 2026-05-16 | `Studios208.DrawRush.asmdef` tek asmdef (feature başına değil) | Per-feature asmdef Core↔Enemy circular dep yaratıyordu | Namespace seviyesinde isolation; ~50+ script'te split |
+| 2026-05-16 | PlayerControls (Input System auto-gen) `_Project/Player/Input/`'a taşındı | Assets/Inputs/ asmdef kapsamı dışındaydı — `error CS0246: PlayerControls bulunamadı` | Feature-owned input; asmdef scope içinde |
+| 2026-05-16 | IL2CPP + ARMv7\|ARM64 Android scripting backend | Play Store 64-bit zorunluluğu, performans | Mono'dan daha uzun build süresi kabul edildi |
+| 2026-05-16 | applicationIdentifier `com.Studios208.DrawAndRush2` | Boştu — Android build başlayamıyordu | DrawAndRush2 ismi productName ile tutarlı; rebrand olursa migration script gerekir |
+| 2026-05-16 | git-lfs initialized + .gitattributes binary track | FBX/PNG/WAV repo'yu şişiriyordu | LFS quota kullanır (1 GB free); büyürse self-host |
 
 ---
 

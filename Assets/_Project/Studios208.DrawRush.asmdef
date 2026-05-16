@@ -1,0 +1,19 @@
+{
+    "name": "Studios208.DrawRush",
+    "rootNamespace": "Studios208.DrawRush",
+    "references": [
+        "Unity.TextMeshPro",
+        "Unity.InputSystem",
+        "Unity.AI.Navigation",
+        "Unity.Cinemachine"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
