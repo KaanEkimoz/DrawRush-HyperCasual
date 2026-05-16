@@ -1,43 +1,33 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace Studios208.DrawRush.Drawing
 {
     /// <summary>
-    /// Reveals a wall when all child DrawParts complete. Subscribes to
-    /// <see cref="IDrawPart.Completed"/> instead of polling.
+    /// Reveals a wall when every child DrawPart completes. Delegates the bookkeeping
+    /// to <see cref="DrawPartCompletionWatcher"/> — 90% of the legacy logic now lives
+    /// in the shared helper.
     /// </summary>
     public sealed class PartManager : MonoBehaviour
     {
         [SerializeField] private GameObject wall;
 
-        private readonly HashSet<IDrawPart> _completed = new();
-        private IDrawPart[] _parts;
+        private DrawPartCompletionWatcher _watcher;
 
         private void Awake()
         {
             var components = GetComponentsInChildren<DrawPart>(includeInactive: true);
-            _parts = new IDrawPart[components.Length];
-            for (int i = 0; i < components.Length; i++) _parts[i] = components[i];
+            var parts = new IDrawPart[components.Length];
+            for (int i = 0; i < components.Length; i++) parts[i] = components[i];
+            _watcher = new DrawPartCompletionWatcher(parts);
+            _watcher.AllCompleted += OnAllCompleted;
         }
 
-        private void OnEnable()
-        {
-            for (int i = 0; i < _parts.Length; i++) _parts[i].Completed += OnPartCompleted;
-        }
+        private void OnEnable() => _watcher?.Enable();
+        private void OnDisable() => _watcher?.Disable();
 
-        private void OnDisable()
+        private void OnAllCompleted()
         {
-            for (int i = 0; i < _parts.Length; i++) _parts[i].Completed -= OnPartCompleted;
-        }
-
-        private void OnPartCompleted(IDrawPart part)
-        {
-            _completed.Add(part);
-            if (_completed.Count >= _parts.Length && wall != null)
-            {
-                wall.SetActive(true);
-            }
+            if (wall != null) wall.SetActive(true);
         }
     }
 }
