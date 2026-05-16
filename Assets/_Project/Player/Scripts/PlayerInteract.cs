@@ -44,6 +44,19 @@ namespace Studios208.DrawRush.Player
         {
             if (playerTrail == null) playerTrail = GetComponentInChildren<TrailRenderer>(includeInactive: true);
             SetTrailEmitting(false);
+
+            // Fallback line material so the visual is never invisible if Inspector ref is missing.
+            if (lineMaterial == null)
+            {
+                var shader = Shader.Find("Sprites/Default");
+                if (shader != null) lineMaterial = new Material(shader) { name = "Auto_LineMaterial" };
+            }
+
+            // Mirror the line material onto the TrailRenderer if the trail has no shared material.
+            if (playerTrail != null && playerTrail.sharedMaterial == null && lineMaterial != null)
+            {
+                playerTrail.sharedMaterial = lineMaterial;
+            }
         }
 
         private void OnTriggerEnter(Collider other)
