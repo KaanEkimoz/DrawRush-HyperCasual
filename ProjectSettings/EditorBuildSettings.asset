@@ -9,15 +9,7 @@ EditorBuildSettings:
     path: Assets/Scenes/SplashScreen.unity
     guid: 31c12373712325a46ba320abf89edf86
   - enabled: 1
-    path: Assets/Scenes/TutorialLevel.unity
-    guid: 000d46f7b64734543a10bc6a06087a26
-  - enabled: 1
-    path: Assets/Scenes/Level 1.unity
-    guid: 429f0ca8de17f2e4fb401a7120ea3c95
-  - enabled: 1
-    path: Assets/Scenes/Level 2.unity
-    guid: 25098d801d367d34fb2d440e72bf78c4
-  - enabled: 1
-    path: Assets/Scenes/Level 3.unity
-    guid: 810097a3131f5974699a4d6fcde8e2a1
+    path: Assets/Scenes/Game.unity
+    guid: ab401583ce9d5460584441e59fb3a5df
   m_configObjects: {}
+  m_UseUCBPForAssetBundles: 0

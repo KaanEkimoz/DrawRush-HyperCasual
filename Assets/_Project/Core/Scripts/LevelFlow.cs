@@ -1,26 +1,30 @@
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using Random = UnityEngine.Random;
 
 namespace Studios208.DrawRush.Core
 {
     /// <summary>
-    /// Owns scene navigation + level-index persistence. Extracted from the legacy
-    /// god-class GameManager. Stateless apart from the static random-level pool
-    /// which is preserved for backwards-compatible level cycling.
+    /// Owns level navigation + level-index persistence. In the mega-scene
+    /// architecture there is no per-level scene reload: navigation delegates to
+    /// <see cref="LevelManager"/>, which enables one level group at a time and
+    /// resets per-level state. PlayerPrefs still persists the player's progress.
     /// </summary>
     public sealed class LevelFlow : MonoBehaviour
     {
         [Tooltip("PlayerPrefs key used to persist the current level number.")]
         [SerializeField] private string playerPrefsKey = "Level";
 
-        [Tooltip("Build indices used by LoadRandomLevel.")]
-        [SerializeField] private int[] randomPoolBuildIndices = { 2, 3, 4 };
-
-        private static List<int> s_randomPool;
+        [Tooltip("Switcher that enables level groups in the mega-scene.")]
+        [SerializeField] private LevelManager levelManager;
 
         public int CurrentLevel => PlayerPrefs.GetInt(playerPrefsKey, 1);
+
+        private void Awake()
+        {
+            // LevelFlow may be added at runtime by GameManager, so the Inspector
+            // wiring can be absent — resolve the scene's LevelManager as a fallback.
+            if (levelManager == null) levelManager = FindFirstObjectByType<LevelManager>();
+        }
 
         public void StartTheGame()
         {
@@ -29,38 +33,39 @@ namespace Studios208.DrawRush.Core
 
         public void RestartLevel()
         {
-            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+            if (levelManager == null) return;
+            levelManager.ActivateLevel(levelManager.CurrentIndex);
         }
 
         public void NextLevel()
         {
-            int next = SceneManager.GetActiveScene().buildIndex + 1;
-            if (next >= SceneManager.sceneCountInBuildSettings)
+            if (levelManager == null) return;
+
+            int next = levelManager.CurrentIndex + 1;
+            if (next >= levelManager.LevelCount)
             {
-                // Past the final scene — fall back to the random-pool cycler so the player
-                // never hits an out-of-bounds LoadScene exception after finishing the campaign.
+                // Past the final level — fall back to the random cycler so the player
+                // never dead-ends after finishing the campaign.
                 LoadRandomLevel();
                 return;
             }
             PlayerPrefs.SetInt(playerPrefsKey, CurrentLevel + 1);
-            SceneManager.LoadScene(next);
+            levelManager.ActivateLevel(next);
         }
 
         public void LoadRandomLevel()
         {
-            PlayerPrefs.SetInt(playerPrefsKey, CurrentLevel + 1);
-            s_randomPool ??= new List<int>(randomPoolBuildIndices);
-            if (s_randomPool.Count == 0) s_randomPool.AddRange(randomPoolBuildIndices);
+            if (levelManager == null || levelManager.LevelCount == 0) return;
 
-            int currentBuildIndex = SceneManager.GetActiveScene().buildIndex;
-            int pickIndex = Random.Range(0, s_randomPool.Count);
-            while (s_randomPool[pickIndex] == currentBuildIndex && s_randomPool.Count > 1)
+            PlayerPrefs.SetInt(playerPrefsKey, CurrentLevel + 1);
+
+            int current = levelManager.CurrentIndex;
+            int pick = Random.Range(0, levelManager.LevelCount);
+            while (pick == current && levelManager.LevelCount > 1)
             {
-                pickIndex = Random.Range(0, s_randomPool.Count);
+                pick = Random.Range(0, levelManager.LevelCount);
             }
-            int chosenScene = s_randomPool[pickIndex];
-            s_randomPool.RemoveAt(pickIndex);
-            SceneManager.LoadScene(chosenScene);
+            levelManager.ActivateLevel(pick);
         }
     }
 }

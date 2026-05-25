@@ -5,15 +5,15 @@
 
 ---
 
-## 🎯 Mevcut Durum — 2026-05-16 (chain-drawing milestone)
+## 🎯 Mevcut Durum — 2026-05-16 (mega-scene mimarisi)
 
-**Tek satır:** Çizim mekaniği baştan aşağı yeniden yazıldı — eski "DrawPart trail spawn'lar + uçar" modeli atıldı, player'da yere yatık (XZ düzleminde) persistent `TrailRenderer` ile **chain-anchor** modeli yapıldı, iki anchor arası `LineRenderer` ile **kalıcı kenar** çiziliyor ve trail her kenar tamamlandığında temizlenip sıradaki kenar için sıfırdan başlıyor. Closed-loop puzzle: 1 → 2 → 3 → … → 1.
+**Tek satır:** Scene-per-level mimarisi **tek `Game.unity` mega-sahneye** dönüştürüldü. `===SHARED===` (Player, Camera+vcam, Light, GeneralCanvas, GameManager, __Bootstrap, LevelManager) bir kez yaşıyor; `===LEVELS===` altında `Level_00_Tutorial`/`Level_01`/`Level_02`/`Level_03` grupları sadece level-specific içeriği (Enviroment, enemy, WallManager) taşıyor. Yeni `LevelManager.ActivateLevel(i)` tek grubu enable eder + state reset (health/win/chain/spawn). Önceki fazlar: anchor görsel swap → dedup (her köşede tek küre: L1=4, L2=3, L3=6, Tut=2) → köşegen-yasak chain (`DrawPart.IsNeighborOf`, en yakın 2 komşu, **artık level-group scope'unda**).
 
-**Repo state:** `master` HEAD = `3d5cd386` ("Merge claude-dev: ground-aligned trail + edge-by-edge clear"), tag `v0.24-chain-drawing` master'da, origin'e push edildi. `claude-dev` master'la merge edildi, 2 commit önde olduğu görünüyor sadece merge-base divergence sebebiyle (içerik aynı). Working tree clean. LFS aktif. Backup branch `backup-pre-claude-cleanup-1778895100` korunuyor.
+**Repo state:** `claude-dev` HEAD = `750b23ca` (build settings). Master HEAD hâlâ `236d83c9` (v0.24 handoff). claude-dev master'dan **18 commit önde**, push edilmedi, main'e merge Kaan onayı bekler. Working tree: DrawPointMat kendiliğinden dirty olabiliyor (Unity material re-serialize, restore edilir); Level 2 LightingData/ReflectionProbe artifact'ları untracked (gitignore ayrı iş). Eski Level/Tutorial sahneleri build'den çıktı ama diske duruyor (rollback). LFS aktif.
 
-**Test:** EditMode 35/35 PASS (PlayerHealth 11 + GameState 4 + GameServices 4 + EventChannel 3 + DrawPartStateMachine 8 + DrawPartCompletionWatcher 5). `TrailMath` testleri silindi (trail-lerp logic'i ile birlikte gitti).
+**Test:** EditMode 42/42 PASS (LevelManager/LevelFlow refactor data+kod, mevcut suite green; LevelManager için test eklenmedi — MonoBehaviour/scene-bağımlı).
 
-**Unity bağlantısı:** MCP for Unity bridge v9.6.6 (CoplayDev) `Packages/manifest.json`'da kurulu, port 6401, instance `DrawRush@4ff3b85c`, Unity 6000.3.12f1, 66-80 paket (kullanıcı ProBuilder + VFX Graph eklemiş).
+**Unity bağlantısı:** MCP for Unity bridge (CoplayDev) `Packages/manifest.json`'da kurulu. **Port oturumdan oturuma değişir** (bu session 6600 — önce 6401 idi); `mcpforunity://instances`'tan instance doğrula. Instance `DrawRush@4ff3b85c`, Unity 6000.3.12f1. ⚠️ Aynı anda başka projeler de açık olabiliyor (OrbRecall, Mini Fantasy Defense) — `set_active_instance` ŞART.
 
 ---
 
@@ -40,20 +40,35 @@
 | 16 | `LevelFlow.NextLevel` out-of-bounds → `LoadRandomLevel` fallback | dahil |
 | 17 | Player Trail prefab eklendi (cyan gradient TrailRenderer) + line material fallback | `4c6e3771` |
 | 18 | Trail yerde + edge-by-edge clear — `alignment=TransformZ`, parent X=90°, Y=0.05, time=4s, `Clear()` her anchor temasında | `0ef06683` |
+| 19 | **Anchor görsel swap** — DrawPoint cylinder→sphere + transparent material, 4 sahnede 28 hex/şekil görseli temizlenip sphere instance'ları konuldu. EndWallParts + DrawableArea korundu, anchor sayısı invariant (8/6/12/2). | `4ab852b3..d9a9ab17` |
+| 20 | **Anchor dedup** — paylaşılan köşelerde çakışan kürelerin clustering (threshold 2.0u) ile teke indirilmesi, küre y'si 0.35 (yere oturur). Sphere sayıları yarıya indi: L1 8→4, L2 6→3, L3 12→6, Tut 2→2. | `870d89a6..136b8537` |
+| 21 | **Neighbor-restricted chain** — `DrawPartNeighborGraph` pure helper + `DrawPart.IsNeighborOf` API; `PlayerInteract` mid-chain ve closure check'leri eklendi; auto-wire en yakın 2 komşu (Awake). Köşegen jump'lar reject. 5 EditMode test eklendi. | `f19450f0` |
+| 22 | **Mega-scene** — tüm level'lar tek `Game.unity`'de grup grup; `LevelManager.ActivateLevel` switcher + state reset; `PlayerInteract.ResetChain`; `LevelFlow` LoadScene yerine LevelManager delegate; DrawPart neighbor + WallManager watcher level-group scope'una çekildi; build = Splash + Game. | `8348d330..750b23ca` |
 
 ---
 
 ## 🚀 Sıradaki Adım
 
 **Manuel iş (Kaan, Unity Editor'da yapacak):**
-- [ ] Level 1'de Play tuşuna basıp yeni chain-drawing mekaniğini test et — golden path:
-  - DrawArea'ya gir → cyan trail yerde görünüyor mu?
-  - 1. nokta'ya değ → glow / trail Clear → trail sıfırdan başlıyor mu?
-  - 2., 3., … noktaya sırayla → her birinde aralarına kalıcı çizgi spawn, trail clear?
-  - Son nokta → 1. nokta'ya geri dön → closed loop kapanışı + wall reveal + win sequence?
-  - DrawArea'dan çık → trail görünmez, geri gir → chain progress duruyor mu?
-- [ ] Mevcut DrawPart instance'larını (Levels/Wall*.prefab içindeki köşe parçaları) yeni `Assets/_Project/Drawing/Prefabs/DrawPoint.prefab` ile değiştir — yere düz nokta görselleri. Test 1: tek bir Level'da swap, beğenirse yay.
-- [ ] Cinemachine 2 → 3 upgrade'inden sonra Player prefab'ındaki CMVcam2 hâlâ doğru framing'de mi kontrol et.
+- [ ] **Game.unity'yi Play'le test et (mega-scene):** Splash → Game akışı; Level_01 açılışta görünüyor mu; `LevelManager.ActivateLevel`/NextLevel/Restart ile level geçişinde Player spawn'a gidiyor + health/win/chain/trail resetleniyor mu; her level'da köşegen-yasak + EndWallParts win reveal çalışıyor mu; sadece aktif level görünüyor mu (inactive'ler gizli). Başlangıç level'ı şu an Level_01 — Tutorial (Level_00) ile başlatmak istersen LevelManager'a Start'ta `ActivateLevel(0)` eklenebilir.
+- [ ] (Opsiyonel) Scene view'da level'ları yan yana görmek istersen offset eklenebilir; şu an üst üste ama inactive'ler görünmediği için düzenlemede sorun değil.
+- [ ] **Yeni dedup+neighbor-restricted 4 sahneyi Play'le test et** (Level 1 → 2 → 3 → Tutorial):
+  - Her köşede TEK küre görüyor musun? (paylaşılan köşeler artık tek nokta)
+  - 1. küreye değ → glow halo + trail Clear?
+  - Köşegen denemesi: bir köşeye değ, sonra **karşı** köşeye git → bağlantı olmamalı (silent reject). Sadece komşu köşeye değince çizgi spawn olmalı.
+  - Sırayla poligon kenarlarından dolaş → her arada kalıcı LineRenderer + trail per-kenar clear?
+  - Closed loop kapanışı → EndWallParts Animator reveal (asıl risk noktası — sweep sırasında kardeş GameObject'ler silindi)?
+  - Tutorial 2-anchor loop (1→2→1) çalışıyor mu?
+- [ ] Küre boyutu/transparency tatmin edici mi? Scale 0.70 + alpha 0.45 → değişiklik DrawPoint.prefab + DrawPointMat tek edit.
+- [ ] Cinemachine 2→3 upgrade sonrası Player prefab CMVcam2 framing kontrolü (küre yüksekliği değişti).
+
+**Rail-based drawing (ONAYLI tasarım — implement bekliyor, sonraki iş):**
+- Serbest hareket (`ThirdPersonMovement`, mevcut) çizim DIŞINDA korunur → düşmandan kaçış core'u bozulmaz.
+- İlk `DrawPoint`'e değince → çizim moduna gir, o küreye **snap**.
+- Rail modu: input (swipe/joystick) yönüne **en yakın komşu kenarı** seç (`DrawPart.neighbors` grafiği hazır), o kenar boyunca **ileri-geri** kay. Karşı köşeye varınca snap + `SpawnConnectionLine` kalıcı + yeni köşe current olur. Köşeye varmadan geri dönülürse o kenar çizimi iptal.
+- Closed-loop kapanınca → çizim modu biter, **serbest moda** dön.
+- Etkilenen: `ThirdPersonMovement` (Free/Rail state machine), `PlayerInteract` (chain ile entegrasyon; trail rail boyunca), muhtemelen yeni `EdgeFollower`/`RailMovement` plain C# class. Komşuluk grafiği + neighbor-restricted chain altyapısı bunun için zaten hazır.
+- Karar oturumu: kullanıcı "köşeye snap + kenar doğrultusunda hareket daha iyi tasarım" dedi; 2 round soru ile netleşti (çizim-only rail + swipe-en-yakın-kenar).
 
 **Kod tarafı (sonraki sessions):**
 - [ ] Tutorial overlay (TutorialLevel.unity'ye "swipe to move + touch points to connect" UI hint).
