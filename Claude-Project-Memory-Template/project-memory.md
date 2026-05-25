@@ -5,15 +5,15 @@
 
 ---
 
-## 🎯 Mevcut Durum — 2026-05-16 (anchor swap + dedup + neighbor graph)
+## 🎯 Mevcut Durum — 2026-05-16 (mega-scene mimarisi)
 
-**Tek satır:** Anchor görsel swap → dedup → neighbor-restricted chain ardışık 3 fazda gitti. 4 sahnenin her şekil parçası (square/triangle/hex) görselleri silindi, yerlerine **transparan cyan küre** anchor'lar konuldu (her köşede TEK küre, paylaşılan köşeler birleşti). Sphere sayıları: L1=4, L2=3, L3=6, Tut=2 → mega-poligon köşeleri. **Chain artık köşegen kabul etmiyor** — `DrawPart.IsNeighborOf` ile sadece poligon kenar komşularına bağlanır, auto-wire en yakın 2 komşu üzerinden.
+**Tek satır:** Scene-per-level mimarisi **tek `Game.unity` mega-sahneye** dönüştürüldü. `===SHARED===` (Player, Camera+vcam, Light, GeneralCanvas, GameManager, __Bootstrap, LevelManager) bir kez yaşıyor; `===LEVELS===` altında `Level_00_Tutorial`/`Level_01`/`Level_02`/`Level_03` grupları sadece level-specific içeriği (Enviroment, enemy, WallManager) taşıyor. Yeni `LevelManager.ActivateLevel(i)` tek grubu enable eder + state reset (health/win/chain/spawn). Önceki fazlar: anchor görsel swap → dedup (her köşede tek küre: L1=4, L2=3, L3=6, Tut=2) → köşegen-yasak chain (`DrawPart.IsNeighborOf`, en yakın 2 komşu, **artık level-group scope'unda**).
 
-**Repo state:** `claude-dev` HEAD = `f19450f0` (neighbor graph commit). Master HEAD hâlâ `236d83c9` (v0.24 handoff). claude-dev master'dan **12 commit önde**, push edilmedi, main'e merge Kaan onayı bekler. Working tree clean (Level 2 LightingData/ReflectionProbe artifact'ları untracked, gitignore'a koymak ayrı iş). LFS aktif. Backup branch `backup-pre-claude-cleanup-1778895100` korunuyor.
+**Repo state:** `claude-dev` HEAD = `750b23ca` (build settings). Master HEAD hâlâ `236d83c9` (v0.24 handoff). claude-dev master'dan **18 commit önde**, push edilmedi, main'e merge Kaan onayı bekler. Working tree: DrawPointMat kendiliğinden dirty olabiliyor (Unity material re-serialize, restore edilir); Level 2 LightingData/ReflectionProbe artifact'ları untracked (gitignore ayrı iş). Eski Level/Tutorial sahneleri build'den çıktı ama diske duruyor (rollback). LFS aktif.
 
-**Test:** EditMode 42/42 PASS (önceki 37 + 5 yeni `DrawPartNeighborGraphTests` — single/pair/triangle/square/hexagon; square test diagonal exclusion'ı garantiliyor).
+**Test:** EditMode 42/42 PASS (LevelManager/LevelFlow refactor data+kod, mevcut suite green; LevelManager için test eklenmedi — MonoBehaviour/scene-bağımlı).
 
-**Unity bağlantısı:** MCP for Unity bridge v9.6.6 (CoplayDev) `Packages/manifest.json`'da kurulu, port 6401, instance `DrawRush@4ff3b85c`, Unity 6000.3.12f1, 66-80 paket (kullanıcı ProBuilder + VFX Graph eklemiş).
+**Unity bağlantısı:** MCP for Unity bridge (CoplayDev) `Packages/manifest.json`'da kurulu. **Port oturumdan oturuma değişir** (bu session 6600 — önce 6401 idi); `mcpforunity://instances`'tan instance doğrula. Instance `DrawRush@4ff3b85c`, Unity 6000.3.12f1. ⚠️ Aynı anda başka projeler de açık olabiliyor (OrbRecall, Mini Fantasy Defense) — `set_active_instance` ŞART.
 
 ---
 
@@ -43,12 +43,15 @@
 | 19 | **Anchor görsel swap** — DrawPoint cylinder→sphere + transparent material, 4 sahnede 28 hex/şekil görseli temizlenip sphere instance'ları konuldu. EndWallParts + DrawableArea korundu, anchor sayısı invariant (8/6/12/2). | `4ab852b3..d9a9ab17` |
 | 20 | **Anchor dedup** — paylaşılan köşelerde çakışan kürelerin clustering (threshold 2.0u) ile teke indirilmesi, küre y'si 0.35 (yere oturur). Sphere sayıları yarıya indi: L1 8→4, L2 6→3, L3 12→6, Tut 2→2. | `870d89a6..136b8537` |
 | 21 | **Neighbor-restricted chain** — `DrawPartNeighborGraph` pure helper + `DrawPart.IsNeighborOf` API; `PlayerInteract` mid-chain ve closure check'leri eklendi; auto-wire en yakın 2 komşu (Awake). Köşegen jump'lar reject. 5 EditMode test eklendi. | `f19450f0` |
+| 22 | **Mega-scene** — tüm level'lar tek `Game.unity`'de grup grup; `LevelManager.ActivateLevel` switcher + state reset; `PlayerInteract.ResetChain`; `LevelFlow` LoadScene yerine LevelManager delegate; DrawPart neighbor + WallManager watcher level-group scope'una çekildi; build = Splash + Game. | `8348d330..750b23ca` |
 
 ---
 
 ## 🚀 Sıradaki Adım
 
 **Manuel iş (Kaan, Unity Editor'da yapacak):**
+- [ ] **Game.unity'yi Play'le test et (mega-scene):** Splash → Game akışı; Level_01 açılışta görünüyor mu; `LevelManager.ActivateLevel`/NextLevel/Restart ile level geçişinde Player spawn'a gidiyor + health/win/chain/trail resetleniyor mu; her level'da köşegen-yasak + EndWallParts win reveal çalışıyor mu; sadece aktif level görünüyor mu (inactive'ler gizli). Başlangıç level'ı şu an Level_01 — Tutorial (Level_00) ile başlatmak istersen LevelManager'a Start'ta `ActivateLevel(0)` eklenebilir.
+- [ ] (Opsiyonel) Scene view'da level'ları yan yana görmek istersen offset eklenebilir; şu an üst üste ama inactive'ler görünmediği için düzenlemede sorun değil.
 - [ ] **Yeni dedup+neighbor-restricted 4 sahneyi Play'le test et** (Level 1 → 2 → 3 → Tutorial):
   - Her köşede TEK küre görüyor musun? (paylaşılan köşeler artık tek nokta)
   - 1. küreye değ → glow halo + trail Clear?
