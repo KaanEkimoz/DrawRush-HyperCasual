@@ -66,6 +66,7 @@ namespace Studios208.DrawRush.Player
                 _currentPart = anchor.GetComponent<DrawPart>();
                 _targetPart = null;
                 _needRelease = true;
+                SnapToAnchor(anchor);   // centre the player so every edge starts symmetric
                 Unlock();
                 return;
             }
@@ -106,6 +107,18 @@ namespace Studios208.DrawRush.Player
         private void Unlock()
         {
             if (movement != null) movement.MovementLocked = false;
+        }
+
+        // Centre the player on the anchor (x/z) so the next edge starts from the corner,
+        // not from an off-centre touch point — otherwise sliding feels biased to one side.
+        private void SnapToAnchor(Transform anchor)
+        {
+            Vector3 pos = transform.position;
+            pos.x = anchor.position.x;
+            pos.z = anchor.position.z;
+            _characterController.enabled = false;
+            transform.position = pos;
+            _characterController.enabled = true;
         }
 
         private Vector3 ResolveWorldInput()
