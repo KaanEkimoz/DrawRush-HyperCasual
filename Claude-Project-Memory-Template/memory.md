@@ -32,6 +32,9 @@
 - **Closed-loop puzzle:** 1 → 2 → … → N → 1 (geri başlangıca). Açık-uçlu chain değil.
 - **DrawArea exit progress'i korur** (default). Frustration kaynağı olan "elini drawArea dışına çıkardın → herşey sıfır" davranışı `resetProgressOnAreaExit` flag'iyle opt-in.
 - **Combat-puzzle ayrımı:** DrawArea içindeyken enemy damage YOK. Drawing safe zone.
+- **Köşegen yasak, sadece komşu kenar:** Anchor'lar (küreler) bir poligon oluşturur; yalnızca poligon-kenar komşuları birleşebilir. Köşegen bağlantı yok, dip dibe rastgele birleşme yok. (`DrawPart.IsNeighborOf`, en yakın 2 komşu grafiği.)
+- **Rail/edge-constrained çizim tercihi:** Serbest "değince bağlan" yerine → köşeye **snap** + sadece bir kenar doğrultusunda ileri-geri kayma. Serbest hareket sadece çizim DIŞINDA (düşmandan kaçış). "Daha kesin, daha iyi tasarım" diyor. (Onaylı, implement bekliyor — bkz. project-memory.)
+- **Tek sahne yönetimi (mega-scene) tercihi:** Level'ları tek `Game.unity`'de grup grup tutmayı, scene-per-level yerine tercih ediyor — "yönetmesi/düzenlemesi daha kolay". Shared objeler bir kez. (10-30 level hedefi; ~15+ olunca additive/data-driven'e geçiş planlı.)
 
 ---
 
