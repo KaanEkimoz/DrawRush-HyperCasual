@@ -19,6 +19,13 @@ namespace Studios208.DrawRush.Core
 
         public int CurrentLevel => PlayerPrefs.GetInt(playerPrefsKey, 1);
 
+        private void Awake()
+        {
+            // LevelFlow may be added at runtime by GameManager, so the Inspector
+            // wiring can be absent — resolve the scene's LevelManager as a fallback.
+            if (levelManager == null) levelManager = FindFirstObjectByType<LevelManager>();
+        }
+
         public void StartTheGame()
         {
             Time.timeScale = 1.0f;
