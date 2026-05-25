@@ -5,17 +5,19 @@ using Studios208.DrawRush.Drawing;
 namespace Studios208.DrawRush.Player
 {
     /// <summary>
-    /// Constrains the player to polygon edges while drawing. The whole time a chain is
-    /// active (an anchor has been touched and the loop hasn't closed), free movement is
-    /// LOCKED — the player can only slide straight along one chosen edge, never freely
-    /// up/down or sideways off the rail. From an anchor, pushing toward a neighbor slides
-    /// along that edge; reaching the far corner snaps to centre and stops (release the
-    /// stick, then push again for the next edge). Pushing away from / not along any edge
-    /// keeps the player put (still locked). When the loop closes, CurrentAnchor clears and
-    /// free movement returns — preserving enemy evasion outside of drawing.
+    /// Constrains the player to a single polygon edge while drawing. Two spheres define an
+    /// edge; touching either one starts the rail. The player then slides ONLY along the
+    /// straight line between the current anchor and the chosen neighbor, freely back and
+    /// forth (parameterised by t in [0,1]) — never off the line. Pushing the stick toward
+    /// a neighbor selects that edge; pushing along it moves forward (t→1) or back (t→0).
+    /// Reaching the far end (t≈1) lets PlayerInteract's collision-based chain spawn the
+    /// line and advance to that anchor, from which the next edge can be chosen. Returning
+    /// to the start (t≈0) frees the edge so a different neighbor can be picked. While a
+    /// chain is active the player is fully locked to the rail; free movement returns only
+    /// when the loop closes.
     ///
-    /// Runs before ThirdPersonMovement (execution order) so MovementLocked is set for the
-    /// same physics step, preventing a frame of free movement leaking through.
+    /// Runs before ThirdPersonMovement so the movement lock applies in the same physics
+    /// step (no one-frame leak of free movement).
     /// </summary>
     [DefaultExecutionOrder(-20)]
     [RequireComponent(typeof(CharacterController))]
@@ -37,9 +39,7 @@ namespace Studios208.DrawRush.Player
         private Transform _currentAnchor;
         private DrawPart _currentPart;
         private DrawPart _targetPart;
-        // After arriving at a corner, require the stick to be released before the next edge
-        // can start — so the player stops at each corner instead of auto-continuing.
-        private bool _needRelease;
+        private float _edgeT;   // 0 = at current anchor, 1 = at target anchor
 
         private void Awake()
         {
@@ -62,64 +62,56 @@ namespace Studios208.DrawRush.Player
                 return;
             }
 
-            // Drawing → player is rail-locked for the entire chain. No free up/down/side
-            // movement; the only motion allowed is sliding along the selected edge below.
+            // Drawing → player is fully rail-locked (no free / off-edge movement).
             if (movement != null) movement.MovementLocked = true;
 
-            // Reached a new corner (or first touch): centre on it and stop; wait for a
-            // fresh stick push before the next edge can begin.
+            // New corner (or first touch): reset to the start of a fresh edge selection.
             if (anchor != _currentAnchor)
             {
                 _currentAnchor = anchor;
                 _currentPart = anchor.GetComponent<DrawPart>();
                 _targetPart = null;
-                _needRelease = true;
-                SnapToAnchor(anchor);
-                return;
+                _edgeT = 0f;
             }
             if (_currentPart == null) return;
 
             Vector3 worldInput = ResolveWorldInput();
-            if (worldInput.sqrMagnitude < 0.0001f)
-            {
-                _needRelease = false;   // stick released → next push may start an edge
-                _targetPart = null;
-                return;
-            }
-            if (_needRelease) return;   // still holding the push from arrival
+            if (worldInput.sqrMagnitude < 0.0001f) return;   // no input → hold position (locked)
 
+            // No edge yet → pick the neighbor best aligned with the push.
             if (_targetPart == null)
             {
                 _targetPart = PickEdge(_currentPart, worldInput);
-                if (_targetPart == null) return;   // not toward an edge → stay put (locked)
+                if (_targetPart == null) return;
+                _edgeT = 0f;
             }
 
-            Vector3 edgeDir = _targetPart.transform.position - _currentAnchor.position;
-            edgeDir.y = 0f;
-            if (edgeDir.sqrMagnitude < 0.0001f) return;
-            edgeDir.Normalize();
+            Vector3 rawEdge = _targetPart.transform.position - _currentAnchor.position;
+            rawEdge.y = 0f;
+            float len = rawEdge.magnitude;
+            if (len < 0.001f) { _targetPart = null; return; }
+            Vector3 edgeDir = rawEdge / len;
 
+            // Forward (toward target) when pushing along the edge, backward when pushing
+            // against it — free movement along the line, clamped to the two spheres.
             float along = Vector3.Dot(worldInput, edgeDir);
-            if (along <= 0f) { _targetPart = null; return; }   // pushing away → reselect
-
             float speed = railSpeed > 0f
                 ? railSpeed
                 : (GameServices.Config != null ? GameServices.Config.playerSpeed : 2.7f);
-            // Move ONLY along the edge direction — no lateral component, so the player
-            // can't drift off the rail.
-            _characterController.Move(edgeDir * (along * speed * Time.deltaTime));
-            transform.rotation = Quaternion.LookRotation(edgeDir, Vector3.up);
-        }
+            _edgeT = Mathf.Clamp01(_edgeT + along * speed * Time.deltaTime / len);
 
-        // Centre the player on the anchor (x/z) so each edge starts from the corner.
-        private void SnapToAnchor(Transform anchor)
-        {
-            Vector3 pos = transform.position;
-            pos.x = anchor.position.x;
-            pos.z = anchor.position.z;
-            _characterController.enabled = false;
-            transform.position = pos;
-            _characterController.enabled = true;
+            Vector3 targetPos = _currentAnchor.position + rawEdge * _edgeT;
+            Vector3 delta = targetPos - transform.position;
+            delta.y = 0f;
+            _characterController.Move(delta);
+
+            if (Mathf.Abs(along) > 0.01f)
+            {
+                transform.rotation = Quaternion.LookRotation(edgeDir * Mathf.Sign(along), Vector3.up);
+            }
+
+            // Slid all the way back to the start anchor → release so another edge can be chosen.
+            if (_edgeT <= 0.001f && along < 0f) _targetPart = null;
         }
 
         private Vector3 ResolveWorldInput()
