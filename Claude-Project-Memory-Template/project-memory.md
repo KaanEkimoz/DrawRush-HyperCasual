@@ -63,13 +63,12 @@
 - [ ] Küre boyutu/transparency tatmin edici mi? Scale 0.70 + alpha 0.45 → değişiklik DrawPoint.prefab + DrawPointMat tek edit.
 - [ ] Cinemachine 2→3 upgrade sonrası Player prefab CMVcam2 framing kontrolü (küre yüksekliği değişti).
 
-**Rail-based drawing (ONAYLI tasarım — implement bekliyor, sonraki iş):**
-- Serbest hareket (`ThirdPersonMovement`, mevcut) çizim DIŞINDA korunur → düşmandan kaçış core'u bozulmaz.
-- İlk `DrawPoint`'e değince → çizim moduna gir, o küreye **snap**.
-- Rail modu: input (swipe/joystick) yönüne **en yakın komşu kenarı** seç (`DrawPart.neighbors` grafiği hazır), o kenar boyunca **ileri-geri** kay. Karşı köşeye varınca snap + `SpawnConnectionLine` kalıcı + yeni köşe current olur. Köşeye varmadan geri dönülürse o kenar çizimi iptal.
-- Closed-loop kapanınca → çizim modu biter, **serbest moda** dön.
-- Etkilenen: `ThirdPersonMovement` (Free/Rail state machine), `PlayerInteract` (chain ile entegrasyon; trail rail boyunca), muhtemelen yeni `EdgeFollower`/`RailMovement` plain C# class. Komşuluk grafiği + neighbor-restricted chain altyapısı bunun için zaten hazır.
-- Karar oturumu: kullanıcı "köşeye snap + kenar doğrultusunda hareket daha iyi tasarım" dedi; 2 round soru ile netleşti (çizim-only rail + swipe-en-yakın-kenar).
+**Rail-based drawing (IMPLEMENT EDİLDİ `9b9fb056` — Kaan Play test bekliyor):**
+- Yeni `RailDrawController` (Player'da, 01_DrawRushGame). Çizim DIŞINDA serbest hareket korunur (kaçış).
+- `PlayerInteract.ChainStarted` → `ThirdPersonMovement.MovementLocked=true`, rail devreye girer. Input yönüne en hizalı komşu kenar seçilir (`DrawPart.Neighbors`), o kenarda ileri-geri kayılır. Köşeye varış PlayerInteract'ın mevcut collision+neighbor-gated chain'iyle (line spawn) işlenir — RailDrawController sadece hareketi şekillendirir. Köşeye geri kayınca kenar bırakılır. `ChainEnded` → serbest moda dön.
+- Wiring: PlayerInteract events + `CurrentAnchor`; ThirdPersonMovement `MoveInput`+`MovementLocked` (gravity sürer); DrawPart `Neighbors` accessor.
+- **Açık uçlar (Play test sonrası):** köşeye tam "snap" eklenmedi (CharacterController.Move ile yaklaşık); tuning alanları (inputDeadzone 0.3, selectThreshold 0.4, railSpeed=Config fallback, cancelRadius 0.2) Inspector'da. Trail rail boyunca otomatik (PlayerInteract trail mantığı değişmedi).
+- claude-dev'de commit'li, **main'e push Kaan onayı bekliyor**.
 
 **Kod tarafı (sonraki sessions):**
 - [ ] Tutorial overlay (TutorialLevel.unity'ye "swipe to move + touch points to connect" UI hint).
