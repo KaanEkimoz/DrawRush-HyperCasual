@@ -9,7 +9,7 @@
 
 **Tek satır:** Scene-per-level mimarisi **tek `Game.unity` mega-sahneye** dönüştürüldü. `===SHARED===` (Player, Camera+vcam, Light, GeneralCanvas, GameManager, __Bootstrap, LevelManager) bir kez yaşıyor; `===LEVELS===` altında `Level_00_Tutorial`/`Level_01`/`Level_02`/`Level_03` grupları sadece level-specific içeriği (Enviroment, enemy, WallManager) taşıyor. Yeni `LevelManager.ActivateLevel(i)` tek grubu enable eder + state reset (health/win/chain/spawn). Önceki fazlar: anchor görsel swap → dedup (her köşede tek küre: L1=4, L2=3, L3=6, Tut=2) → köşegen-yasak chain (`DrawPart.IsNeighborOf`, en yakın 2 komşu, **artık level-group scope'unda**).
 
-**Repo state:** `master` = `claude-dev`, origin'e push edildi (merge commit `4ecd80ff`, `--no-ff` ile bu session'ın 21 commit'i). Tag **`v0.25-mega-scene`** master'da + origin'de. Working tree: Level 2 `LightingData.asset`/`ReflectionProbe-0.exr` artifact'ları untracked (orphan bake — eski Level 2 build dışı; `.gitignore`'a ekle / sil kararı Kaan'a kaldı). DrawPointMat sahne yüklemede kendiliğinden dirty olabiliyor (Unity re-serialize, restore edilir). Eski `Level 1/2/3.unity` + `TutorialLevel.unity` build'den çıktı ama diske duruyor (rollback). LFS aktif. Backup branch `backup-pre-claude-cleanup-1778895100` korunuyor.
+**Repo state:** `master` = `claude-dev` = `c8d23acf`, origin'e push edildi. Tag **`v0.25-mega-scene`**. **Sahneler reorganize edildi (Kaan, Unity editor):** build'de `00_SplashScreen.unity` + `01_DrawRushGame.unity` (mega-sahne — eski `Game.unity`'nin yeni adı). Eski `Level 1/2/3` + `TutorialLevel` + lighting → `Assets/Scenes/Old/` arşivi (git bunları rename olarak yakaladı, GUID + history korundu). Working tree temiz. DrawPointMat sahne yüklemede kendiliğinden dirty olabiliyor (Unity re-serialize → restore et). LFS aktif. Backup branch `backup-pre-claude-cleanup-1778895100` korunuyor. ⚠️ DERS: branch checkout sırasında Unity açık + dosya reorganize ediyorsa `git checkout -- <path>` working tree'yi ezebilir — önce `git status` ile kullanıcının el değişikliklerini doğrula.
 
 **Test:** EditMode 42/42 PASS (LevelManager/LevelFlow refactor data+kod, mevcut suite green; LevelManager için test eklenmedi — MonoBehaviour/scene-bağımlı).
 
@@ -44,13 +44,14 @@
 | 20 | **Anchor dedup** — paylaşılan köşelerde çakışan kürelerin clustering (threshold 2.0u) ile teke indirilmesi, küre y'si 0.35 (yere oturur). Sphere sayıları yarıya indi: L1 8→4, L2 6→3, L3 12→6, Tut 2→2. | `870d89a6..136b8537` |
 | 21 | **Neighbor-restricted chain** — `DrawPartNeighborGraph` pure helper + `DrawPart.IsNeighborOf` API; `PlayerInteract` mid-chain ve closure check'leri eklendi; auto-wire en yakın 2 komşu (Awake). Köşegen jump'lar reject. 5 EditMode test eklendi. | `f19450f0` |
 | 22 | **Mega-scene** — tüm level'lar tek `Game.unity`'de grup grup; `LevelManager.ActivateLevel` switcher + state reset; `PlayerInteract.ResetChain`; `LevelFlow` LoadScene yerine LevelManager delegate; DrawPart neighbor + WallManager watcher level-group scope'una çekildi; build = Splash + Game. | `8348d330..750b23ca` |
+| 23 | **Sahne reorganizasyonu** (Kaan) — `Game.unity`→`01_DrawRushGame.unity`, `SplashScreen`→`00_SplashScreen`, eski Level'lar→`Scenes/Old/`. Build = 00_+01_. Git rename ile GUID korundu. | `942e3ffb` |
 
 ---
 
 ## 🚀 Sıradaki Adım
 
 **Manuel iş (Kaan, Unity Editor'da yapacak):**
-- [ ] **Game.unity'yi Play'le test et (mega-scene):** Splash → Game akışı; Level_01 açılışta görünüyor mu; `LevelManager.ActivateLevel`/NextLevel/Restart ile level geçişinde Player spawn'a gidiyor + health/win/chain/trail resetleniyor mu; her level'da köşegen-yasak + EndWallParts win reveal çalışıyor mu; sadece aktif level görünüyor mu (inactive'ler gizli). Başlangıç level'ı şu an Level_01 — Tutorial (Level_00) ile başlatmak istersen LevelManager'a Start'ta `ActivateLevel(0)` eklenebilir.
+- [ ] **`01_DrawRushGame.unity`'yi Play'le test et (mega-scene):** 00_SplashScreen → 01_DrawRushGame akışı; Level_01 açılışta görünüyor mu; `LevelManager.ActivateLevel`/NextLevel/Restart ile level geçişinde Player spawn'a gidiyor + health/win/chain/trail resetleniyor mu; her level'da köşegen-yasak + EndWallParts win reveal çalışıyor mu; sadece aktif level görünüyor mu (inactive'ler gizli). Başlangıç level'ı şu an Level_01 — Tutorial (Level_00) ile başlatmak istersen LevelManager'a Start'ta `ActivateLevel(0)` eklenebilir.
 - [ ] (Opsiyonel) Scene view'da level'ları yan yana görmek istersen offset eklenebilir; şu an üst üste ama inactive'ler görünmediği için düzenlemede sorun değil.
 - [ ] **Yeni dedup+neighbor-restricted 4 sahneyi Play'le test et** (Level 1 → 2 → 3 → Tutorial):
   - Her köşede TEK küre görüyor musun? (paylaşılan köşeler artık tek nokta)
