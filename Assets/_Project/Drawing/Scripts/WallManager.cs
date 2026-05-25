@@ -13,17 +13,28 @@ namespace Studios208.DrawRush.Drawing
     {
         private DrawPartCompletionWatcher _watcher;
 
-        private void Awake()
+        // Rebuilt on every enable so re-activating a level group in the mega-scene
+        // (where there is no scene reload) starts from a fresh, all-idle watcher
+        // scoped to the currently-active DrawParts. FindObjectsByType excludes
+        // inactive objects by default, so only the active level's anchors count.
+        private void OnEnable()
         {
+            RebuildWatcher();
+            _watcher.Enable();
+        }
+
+        private void OnDisable() => _watcher?.Disable();
+
+        private void RebuildWatcher()
+        {
+            if (_watcher != null) _watcher.AllCompleted -= OnAllCompleted;
+
             var components = Object.FindObjectsByType<DrawPart>(FindObjectsSortMode.None);
             var parts = new IDrawPart[components.Length];
             for (int i = 0; i < components.Length; i++) parts[i] = components[i];
             _watcher = new DrawPartCompletionWatcher(parts);
             _watcher.AllCompleted += OnAllCompleted;
         }
-
-        private void OnEnable() => _watcher?.Enable();
-        private void OnDisable() => _watcher?.Disable();
 
         private void OnAllCompleted()
         {
