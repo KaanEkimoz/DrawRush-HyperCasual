@@ -29,6 +29,14 @@ namespace Studios208.DrawRush.Player
         private GameState _state;
         private bool _hasWon;
 
+        /// <summary>Latest movement input vector. Exposed so RailDrawController can reuse
+        /// the same input source while it drives edge-constrained movement.</summary>
+        public Vector2 MoveInput => _move;
+
+        /// <summary>When true, free movement is suspended (rail-drawing owns the player).
+        /// Gravity still applies so the character stays grounded.</summary>
+        public bool MovementLocked { get; set; }
+
         private void Awake()
         {
             _controls = new PlayerControls();
@@ -59,7 +67,7 @@ namespace Studios208.DrawRush.Player
         private void FixedUpdate()
         {
             if (_hasWon) return;
-            Move();
+            if (!MovementLocked) Move();
             ApplyGravity();
         }
 
