@@ -159,6 +159,16 @@ namespace Studios208.DrawRush.Player
             }
         }
 
+        /// <summary>Clears chain progress (first/previous anchor) and wipes the trail.
+        /// Called by LevelManager when switching levels in-scene, since there is no
+        /// scene reload to reset this state implicitly.</summary>
+        public void ResetChain()
+        {
+            _firstPart = null;
+            _previousPart = null;
+            if (playerTrail != null) playerTrail.Clear();
+        }
+
         private void SetTrailEmitting(bool on)
         {
             if (playerTrail == null) return;
