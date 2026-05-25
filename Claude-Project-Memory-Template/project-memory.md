@@ -62,6 +62,14 @@
 - [ ] Küre boyutu/transparency tatmin edici mi? Scale 0.70 + alpha 0.45 → değişiklik DrawPoint.prefab + DrawPointMat tek edit.
 - [ ] Cinemachine 2→3 upgrade sonrası Player prefab CMVcam2 framing kontrolü (küre yüksekliği değişti).
 
+**Rail-based drawing (ONAYLI tasarım — implement bekliyor, sonraki iş):**
+- Serbest hareket (`ThirdPersonMovement`, mevcut) çizim DIŞINDA korunur → düşmandan kaçış core'u bozulmaz.
+- İlk `DrawPoint`'e değince → çizim moduna gir, o küreye **snap**.
+- Rail modu: input (swipe/joystick) yönüne **en yakın komşu kenarı** seç (`DrawPart.neighbors` grafiği hazır), o kenar boyunca **ileri-geri** kay. Karşı köşeye varınca snap + `SpawnConnectionLine` kalıcı + yeni köşe current olur. Köşeye varmadan geri dönülürse o kenar çizimi iptal.
+- Closed-loop kapanınca → çizim modu biter, **serbest moda** dön.
+- Etkilenen: `ThirdPersonMovement` (Free/Rail state machine), `PlayerInteract` (chain ile entegrasyon; trail rail boyunca), muhtemelen yeni `EdgeFollower`/`RailMovement` plain C# class. Komşuluk grafiği + neighbor-restricted chain altyapısı bunun için zaten hazır.
+- Karar oturumu: kullanıcı "köşeye snap + kenar doğrultusunda hareket daha iyi tasarım" dedi; 2 round soru ile netleşti (çizim-only rail + swipe-en-yakın-kenar).
+
 **Kod tarafı (sonraki sessions):**
 - [ ] Tutorial overlay (TutorialLevel.unity'ye "swipe to move + touch points to connect" UI hint).
 - [ ] `LevelConfig` ScriptableObject — per-level enemy count/speed/HP/spawn positions (difficulty curve).
