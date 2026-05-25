@@ -58,7 +58,7 @@ namespace Studios208.DrawRush.Drawing
 
         private void AutoWireNeighbors()
         {
-            var all = UnityEngine.Object.FindObjectsByType<DrawPart>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            var all = ResolveScopedDrawParts();
             if (all.Length < 2) return;
 
             int myIndex = Array.IndexOf(all, this);
@@ -71,6 +71,25 @@ namespace Studios208.DrawRush.Drawing
             var indices = graph[myIndex];
             neighbors = new DrawPart[indices.Length];
             for (int i = 0; i < indices.Length; i++) neighbors[i] = all[indices[i]];
+        }
+
+        /// <summary>
+        /// In the mega-scene, anchors must only pair with siblings inside the same
+        /// level group ("Level_*"); otherwise different levels' spheres (which can
+        /// overlap in world space) would wire as neighbors. Walk up to the nearest
+        /// "Level_*" ancestor and scope to it. Falls back to a whole-scene scan for
+        /// the legacy scene-per-level layout where no such ancestor exists.
+        /// </summary>
+        private DrawPart[] ResolveScopedDrawParts()
+        {
+            Transform levelRoot = transform;
+            while (levelRoot != null && !levelRoot.name.StartsWith("Level_", StringComparison.Ordinal))
+                levelRoot = levelRoot.parent;
+
+            if (levelRoot != null)
+                return levelRoot.GetComponentsInChildren<DrawPart>(includeInactive: true);
+
+            return UnityEngine.Object.FindObjectsByType<DrawPart>(FindObjectsInactive.Include, FindObjectsSortMode.None);
         }
 
         /// <inheritdoc />
