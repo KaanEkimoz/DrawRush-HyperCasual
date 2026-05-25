@@ -153,7 +153,10 @@ namespace Studios208.DrawRush.Player
             for (int i = 0; i < neighbors.Count; i++)
             {
                 DrawPart n = neighbors[i];
-                if (n == null || n.IsCompleted) continue;
+                // Don't skip completed neighbors: the chain completes each anchor as it
+                // advances, and the closing edge returns to the (now completed) first
+                // anchor. PlayerInteract decides what each touch means — rail only moves.
+                if (n == null) continue;
 
                 Vector3 dir = n.transform.position - from.transform.position;
                 dir.y = 0f;
