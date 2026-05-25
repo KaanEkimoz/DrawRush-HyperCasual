@@ -63,7 +63,15 @@
 - [ ] Küre boyutu/transparency tatmin edici mi? Scale 0.70 + alpha 0.45 → değişiklik DrawPoint.prefab + DrawPointMat tek edit.
 - [ ] Cinemachine 2→3 upgrade sonrası Player prefab CMVcam2 framing kontrolü (küre yüksekliği değişti).
 
-**Rail-based drawing (IMPLEMENT EDİLDİ `9b9fb056` — Kaan Play test bekliyor):**
+**⚠️ ÇİZİM MEKANİĞİ YENİDEN TASARLANIYOR (edge-painting) — plan onaylı, implement bekliyor:**
+- Rail/chain sistemi (snap + tek-kenar kilit + closed-loop) defalarca iterasyona rağmen sorun çıkardı: çift-çizme, kitlenme, tek-yön, köşe takılma. Kaan "sıfırdan yaz" dedi.
+- **Yeni model (ONAYLI):** **Edge-painting.** İki küre = bir kenar. Küreye değince o kenar boyunca **ray** + geçtiği yeri **boyar** (kalıcı). Düşman değince ray'den çıkar (serbest=kaçış), boya izi kalır. Kenar **iki uçtan ayrı boyanıp ortada birleşince** complete (kısmi kalıcı). Tüm kenarlar → win.
+- **Tam plan:** `~/.claude/plans/unified-bouncing-lark.md` (edge-painting). Dosyalar: yeni `DrawEdge` + `EdgeNetwork` + `RailPaintController`; `PlayerInteract` chain kaldırılır; `WallManager`→EdgeNetwork; `EnemyCombat`→Detach; chain testleri edge fill testleriyle değişir. Korunan: DrawPart + DrawPartNeighborGraph + ThirdPersonMovement + mega-scene.
+- **Mevcut durum:** Eski `RailDrawController` (chain/snap, sorunlu) claude-dev `b22060d2`'de duruyor — edge-painting'e geçişte silinecek/değişecek. Taze session bu plandan başlamalı.
+
+---
+
+**[ESKİ — geçersiz olacak] Rail-based drawing (`9b9fb056`):**
 - Yeni `RailDrawController` (Player'da, 01_DrawRushGame). Çizim DIŞINDA serbest hareket korunur (kaçış).
 - `PlayerInteract.ChainStarted` → `ThirdPersonMovement.MovementLocked=true`, rail devreye girer. Input yönüne en hizalı komşu kenar seçilir (`DrawPart.Neighbors`), o kenarda ileri-geri kayılır. Köşeye varış PlayerInteract'ın mevcut collision+neighbor-gated chain'iyle (line spawn) işlenir — RailDrawController sadece hareketi şekillendirir. Köşeye geri kayınca kenar bırakılır. `ChainEnded` → serbest moda dön.
 - Wiring: PlayerInteract events + `CurrentAnchor`; ThirdPersonMovement `MoveInput`+`MovementLocked` (gravity sürer); DrawPart `Neighbors` accessor.
