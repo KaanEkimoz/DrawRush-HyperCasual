@@ -5,15 +5,19 @@ using Studios208.DrawRush.Drawing;
 namespace Studios208.DrawRush.Player
 {
     /// <summary>
-    /// Per-edge rail movement while drawing. The player walks freely until touching a
-    /// DrawPoint. From an anchor, pushing the stick toward a neighbor slides the player
-    /// straight along that one edge (free movement is locked during the slide). On
-    /// reaching the far corner the edge is done: the player STOPS and movement is
-    /// released back to free — it does not auto-continue. A fresh push (after releasing
-    /// the stick) starts the next edge from the new corner. Pushing away from any edge
-    /// leaves the player free. When the loop closes, CurrentAnchor clears and the player
-    /// is free again — preserving enemy evasion outside of drawing.
+    /// Constrains the player to polygon edges while drawing. The whole time a chain is
+    /// active (an anchor has been touched and the loop hasn't closed), free movement is
+    /// LOCKED — the player can only slide straight along one chosen edge, never freely
+    /// up/down or sideways off the rail. From an anchor, pushing toward a neighbor slides
+    /// along that edge; reaching the far corner snaps to centre and stops (release the
+    /// stick, then push again for the next edge). Pushing away from / not along any edge
+    /// keeps the player put (still locked). When the loop closes, CurrentAnchor clears and
+    /// free movement returns — preserving enemy evasion outside of drawing.
+    ///
+    /// Runs before ThirdPersonMovement (execution order) so MovementLocked is set for the
+    /// same physics step, preventing a frame of free movement leaking through.
     /// </summary>
+    [DefaultExecutionOrder(-20)]
     [RequireComponent(typeof(CharacterController))]
     public sealed class RailDrawController : MonoBehaviour
     {
@@ -33,8 +37,8 @@ namespace Studios208.DrawRush.Player
         private Transform _currentAnchor;
         private DrawPart _currentPart;
         private DrawPart _targetPart;
-        // After arriving at a corner, require the stick to be released before a new edge
-        // can start — so the player stops instead of auto-continuing to the next edge.
+        // After arriving at a corner, require the stick to be released before the next edge
+        // can start — so the player stops at each corner instead of auto-continuing.
         private bool _needRelease;
 
         private void Awake()
@@ -50,67 +54,64 @@ namespace Studios208.DrawRush.Player
 
             Transform anchor = interact.CurrentAnchor;
 
-            // Not drawing (no anchor visited yet, or the loop just closed) → free movement.
+            // Not drawing (no anchor visited yet, or loop just closed) → free movement.
             if (anchor == null)
             {
-                Unlock();
+                if (movement != null) movement.MovementLocked = false;
                 _currentAnchor = null; _currentPart = null; _targetPart = null;
                 return;
             }
 
-            // Reached a new corner (or first touch): edge complete → stop + free, and wait
-            // for a fresh stick push before the next edge can begin.
+            // Drawing → player is rail-locked for the entire chain. No free up/down/side
+            // movement; the only motion allowed is sliding along the selected edge below.
+            if (movement != null) movement.MovementLocked = true;
+
+            // Reached a new corner (or first touch): centre on it and stop; wait for a
+            // fresh stick push before the next edge can begin.
             if (anchor != _currentAnchor)
             {
                 _currentAnchor = anchor;
                 _currentPart = anchor.GetComponent<DrawPart>();
                 _targetPart = null;
                 _needRelease = true;
-                SnapToAnchor(anchor);   // centre the player so every edge starts symmetric
-                Unlock();
+                SnapToAnchor(anchor);
                 return;
             }
-            if (_currentPart == null) { Unlock(); return; }
+            if (_currentPart == null) return;
 
             Vector3 worldInput = ResolveWorldInput();
             if (worldInput.sqrMagnitude < 0.0001f)
             {
-                _needRelease = false;   // stick released → a new push may start an edge
+                _needRelease = false;   // stick released → next push may start an edge
                 _targetPart = null;
-                Unlock();
                 return;
             }
-            if (_needRelease) { Unlock(); return; }   // still holding the push from arrival
+            if (_needRelease) return;   // still holding the push from arrival
 
             if (_targetPart == null)
             {
                 _targetPart = PickEdge(_currentPart, worldInput);
-                if (_targetPart == null) { Unlock(); return; }   // not toward an edge → free
+                if (_targetPart == null) return;   // not toward an edge → stay put (locked)
             }
 
             Vector3 edgeDir = _targetPart.transform.position - _currentAnchor.position;
             edgeDir.y = 0f;
-            if (edgeDir.sqrMagnitude < 0.0001f) { Unlock(); return; }
+            if (edgeDir.sqrMagnitude < 0.0001f) return;
             edgeDir.Normalize();
 
             float along = Vector3.Dot(worldInput, edgeDir);
-            if (along <= 0f) { _targetPart = null; Unlock(); return; }   // pushing away → free
+            if (along <= 0f) { _targetPart = null; return; }   // pushing away → reselect
 
-            if (movement != null) movement.MovementLocked = true;
             float speed = railSpeed > 0f
                 ? railSpeed
                 : (GameServices.Config != null ? GameServices.Config.playerSpeed : 2.7f);
+            // Move ONLY along the edge direction — no lateral component, so the player
+            // can't drift off the rail.
             _characterController.Move(edgeDir * (along * speed * Time.deltaTime));
             transform.rotation = Quaternion.LookRotation(edgeDir, Vector3.up);
         }
 
-        private void Unlock()
-        {
-            if (movement != null) movement.MovementLocked = false;
-        }
-
-        // Centre the player on the anchor (x/z) so the next edge starts from the corner,
-        // not from an off-centre touch point — otherwise sliding feels biased to one side.
+        // Centre the player on the anchor (x/z) so each edge starts from the corner.
         private void SnapToAnchor(Transform anchor)
         {
             Vector3 pos = transform.position;
@@ -143,7 +144,7 @@ namespace Studios208.DrawRush.Player
             for (int i = 0; i < neighbors.Count; i++)
             {
                 DrawPart n = neighbors[i];
-                if (n == null) continue;
+                if (n == null || n == from) continue;
 
                 Vector3 dir = n.transform.position - from.transform.position;
                 dir.y = 0f;
