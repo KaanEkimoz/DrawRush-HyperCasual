@@ -40,6 +40,16 @@ namespace Studios208.DrawRush.Player
         /// <summary>True while a chain is being drawn — at least one anchor has been visited.</summary>
         public bool IsDrawing => _previousPart != null;
 
+        /// <summary>The anchor the chain currently sits on (last visited), or null.
+        /// RailDrawController reads this to know which edges are reachable next.</summary>
+        public Transform CurrentAnchor => _previousPart != null ? _previousPart.transform : null;
+
+        /// <summary>Raised when the first anchor is touched and drawing begins.</summary>
+        public event System.Action ChainStarted;
+
+        /// <summary>Raised when the closed loop is completed and drawing ends.</summary>
+        public event System.Action ChainEnded;
+
         private void Awake()
         {
             if (playerTrail == null) playerTrail = GetComponentInChildren<TrailRenderer>(includeInactive: true);
@@ -85,6 +95,7 @@ namespace Studios208.DrawRush.Player
                 ResetTrailForNextEdge();
                 _firstPart = null;
                 _previousPart = null;
+                ChainEnded?.Invoke();
                 return;
             }
 
@@ -100,6 +111,7 @@ namespace Studios208.DrawRush.Player
                 _firstPart = other.gameObject;
                 _previousPart = other.gameObject;
                 ResetTrailForNextEdge();
+                ChainStarted?.Invoke();
                 return;
             }
 

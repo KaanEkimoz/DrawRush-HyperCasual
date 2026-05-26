@@ -34,12 +34,14 @@ namespace Studios208.DrawRush.Core
         public void RestartLevel()
         {
             if (levelManager == null) return;
+            Time.timeScale = 1f;   // in-scene switch: no scene reload to un-pause for us
             levelManager.ActivateLevel(levelManager.CurrentIndex);
         }
 
         public void NextLevel()
         {
             if (levelManager == null) return;
+            Time.timeScale = 1f;
 
             int next = levelManager.CurrentIndex + 1;
             if (next >= levelManager.LevelCount)
@@ -56,6 +58,7 @@ namespace Studios208.DrawRush.Core
         public void LoadRandomLevel()
         {
             if (levelManager == null || levelManager.LevelCount == 0) return;
+            Time.timeScale = 1f;
 
             PlayerPrefs.SetInt(playerPrefsKey, CurrentLevel + 1);
 

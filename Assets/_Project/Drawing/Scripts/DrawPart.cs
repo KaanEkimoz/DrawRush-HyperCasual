@@ -33,6 +33,10 @@ namespace Studios208.DrawRush.Drawing
         public Transform Transform => transform;
         public DrawingPhase Phase => _fsm.Phase;
 
+        /// <summary>Polygon-edge neighbors (read-only). RailDrawController uses these
+        /// to pick which edge the player can slide along from this anchor.</summary>
+        public System.Collections.Generic.IReadOnlyList<DrawPart> Neighbors => neighbors;
+
         /// <summary>True if <paramref name="other"/> is in this part's neighbor set.</summary>
         public bool IsNeighborOf(DrawPart other)
         {

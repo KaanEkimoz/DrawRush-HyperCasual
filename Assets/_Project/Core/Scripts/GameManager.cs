@@ -67,9 +67,11 @@ namespace Studios208.DrawRush.Core
         #region Legacy facade (UI button bindings)
 
         public void StartTheGame() => levelFlow?.StartTheGame();
-        public void RestartLevel() => levelFlow?.RestartLevel();
-        public void NextLevel() => levelFlow?.NextLevel();
-        public void LoadRandomLevel() => levelFlow?.LoadRandomLevel();
+        // In the mega-scene there is no scene reload to clear the win/lose panel, so the
+        // facade hides panels before switching the level group in-place.
+        public void RestartLevel() { hudPanels?.HideAllPanels(); levelFlow?.RestartLevel(); }
+        public void NextLevel() { hudPanels?.HideAllPanels(); levelFlow?.NextLevel(); }
+        public void LoadRandomLevel() { hudPanels?.HideAllPanels(); levelFlow?.LoadRandomLevel(); }
         public void ResetTheGame() => hudPanels?.HideAllPanels();
 
         #endregion

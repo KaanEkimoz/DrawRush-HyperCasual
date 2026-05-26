@@ -27,10 +27,21 @@ namespace Studios208.DrawRush.Core
         [Tooltip("Child name searched inside each level group for the player spawn point.")]
         [SerializeField] private string spawnChildName = "Spawn";
 
+        [Tooltip("Level group enabled at scene start (index into levelsRoot). Set in the " +
+                 "Inspector to test a specific level in Play.")]
+        [SerializeField] private int startLevelIndex = 0;
+
         private int _currentIndex = -1;
 
         public int LevelCount => levelsRoot != null ? levelsRoot.childCount : 0;
         public int CurrentIndex => _currentIndex;
+
+        // Boot the mega-scene into exactly one active level group with the player at its
+        // spawn. Runs after Awake so each group's DrawParts can auto-wire neighbors.
+        private void Start()
+        {
+            ActivateLevel(startLevelIndex);
+        }
 
         /// <summary>
         /// Enables level group <paramref name="index"/>, disables all others, and
