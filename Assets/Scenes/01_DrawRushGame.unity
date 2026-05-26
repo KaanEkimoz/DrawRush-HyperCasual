@@ -2680,6 +2680,7 @@ MonoBehaviour:
   gameState: {fileID: 11400000, guid: 8a0f4501dc25e4ed7a64f92d6dc09c35, type: 2}
   player: {fileID: 580485273}
   spawnChildName: Spawn
+  startLevelIndex: 0
 --- !u!1001 &216544247
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -7189,7 +7190,6 @@ MonoBehaviour:
   inputDeadzone: 0.3
   selectThreshold: 0.4
   railSpeed: 0
-  cancelRadius: 0.2
 --- !u!1001 &593122079
 PrefabInstance:
   m_ObjectHideFlags: 0
