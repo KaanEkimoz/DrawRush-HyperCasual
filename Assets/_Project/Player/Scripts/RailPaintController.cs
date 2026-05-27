@@ -58,18 +58,35 @@ namespace Studios208.DrawRush.Player
             if (interact != null) interact.PartTouched -= OnPartTouched;
         }
 
-        /// <summary>Releases the paint rail so the player moves freely (enemy escape). Paint
-        /// progress is preserved; touching any sphere again re-attaches.</summary>
+        /// <summary>Releases the paint rail so the player moves freely — used both when an
+        /// edge finishes (get off the rail) and on enemy contact (escape). Paint progress is
+        /// preserved; touching a sphere again re-attaches. Clears the current anchor so the
+        /// player is not immediately re-locked while still standing in a sphere's trigger.</summary>
         public void Detach()
         {
             _detached = true;
             _edge = null;
             _targetPart = null;
+            _currentPart = null;
+            _localT = 0f;
             if (movement != null) movement.MovementLocked = false;
         }
 
         private void OnPartTouched(DrawPart part)
         {
+            // Reached the far end of the edge being painted → finish that edge and free the
+            // player (get off the rail). The whole span fills; if it was the last unpainted
+            // edge, EdgeNetwork raises AllCompleted and the level ends. We do NOT re-anchor
+            // here — that was the bug that re-locked the player onto a new rail.
+            if (_edge != null && part == _targetPart)
+            {
+                _edge.PaintFrom(_currentPart, _currentPart == _edge.A ? 1f : 0f);
+                Detach();
+                return;
+            }
+
+            // Fresh attach, or re-pick from the same corner: lock to this anchor and wait for
+            // a stick direction to choose an edge.
             _currentPart = part;
             _targetPart = null;
             _edge = null;
@@ -113,6 +130,10 @@ namespace Studios208.DrawRush.Player
             float edgeT = _currentPart == _edge.A ? _localT : 1f - _localT;
             _edge.PaintFrom(_currentPart, edgeT);
 
+            // Edge done — either the two painted spans met in the middle, or the player slid
+            // the whole length to the far end. Free the player off the rail.
+            if (_edge.IsComplete) { Detach(); return; }
+
             Vector3 targetPos = _currentPart.Transform.position + rawEdge * _localT;
             Vector3 delta = targetPos - transform.position;
             delta.y = 0f;
@@ -122,9 +143,6 @@ namespace Studios208.DrawRush.Player
             {
                 transform.rotation = Quaternion.LookRotation(edgeDir * Mathf.Sign(along), Vector3.up);
             }
-
-            // Slid all the way back to the start anchor → release so another edge can be chosen.
-            if (_localT <= 0.001f && along < 0f) { _edge = null; _targetPart = null; }
         }
 
         private bool TrySelectEdge(Vector3 worldInput)
