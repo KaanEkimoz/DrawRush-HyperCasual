@@ -19,6 +19,10 @@ namespace Studios208.DrawRush.Drawing
         /// <summary>Raised once, the first time this edge becomes fully painted.</summary>
         public event Action<DrawEdge> Completed;
 
+        /// <summary>Raised whenever the painted span advances, so a view can refresh
+        /// without polling every frame.</summary>
+        public event Action Changed;
+
         public DrawPart A { get; }
         public DrawPart B { get; }
         public EdgeFill Fill { get; }
@@ -54,9 +58,14 @@ namespace Studios208.DrawRush.Drawing
         /// </summary>
         public void PaintFrom(DrawPart fromEnd, float t)
         {
+            float low = Fill.PaintedLow;
+            float high = Fill.PaintedHigh;
+
             if (fromEnd == A) Fill.PaintFromA(t);
             else if (fromEnd == B) Fill.PaintFromB(t);
             else return;
+
+            if (Fill.PaintedLow != low || Fill.PaintedHigh != high) Changed?.Invoke();
 
             if (!_completedRaised && Fill.IsComplete)
             {

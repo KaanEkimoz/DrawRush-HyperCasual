@@ -18,7 +18,13 @@ namespace Studios208.DrawRush.Drawing
         /// <summary>Raised once when the last incomplete edge becomes complete.</summary>
         public event Action AllCompleted;
 
+        [Header("Fill visual")]
+        [Tooltip("Shared material for the painted-span LineRenderers. Falls back to a " +
+                 "Sprites/Default material when empty.")]
+        [SerializeField] private Material fillMaterial;
+
         private readonly List<DrawEdge> _edges = new();
+        private readonly List<GameObject> _views = new();
         private int _remaining;
 
         /// <summary>The edges built for the active level (read-only).</summary>
@@ -52,6 +58,7 @@ namespace Studios208.DrawRush.Drawing
         private void Rebuild()
         {
             UnsubscribeAll();
+            DestroyViews();
             _edges.Clear();
             _remaining = 0;
 
@@ -86,8 +93,27 @@ namespace Studios208.DrawRush.Drawing
                 var edge = new DrawEdge(parts[pairs[i].A], parts[pairs[i].B]);
                 edge.Completed += OnEdgeCompleted;
                 _edges.Add(edge);
+                CreateView(edge, i);
             }
             _remaining = _edges.Count;
+        }
+
+        private void CreateView(DrawEdge edge, int index)
+        {
+            var viewGo = new GameObject($"EdgeView_{index}");
+            viewGo.transform.SetParent(transform, false);
+            var view = viewGo.AddComponent<DrawEdgeView>();
+            view.Bind(edge, fillMaterial);
+            _views.Add(viewGo);
+        }
+
+        private void DestroyViews()
+        {
+            for (int i = 0; i < _views.Count; i++)
+            {
+                if (_views[i] != null) Destroy(_views[i]);
+            }
+            _views.Clear();
         }
 
         private void OnEdgeCompleted(DrawEdge edge)
