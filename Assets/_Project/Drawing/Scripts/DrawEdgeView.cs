@@ -20,27 +20,41 @@ namespace Studios208.DrawRush.Drawing
         [SerializeField] private Color color = new Color(0.1f, 1f, 0.8f, 1f);
 
         private DrawEdge _edge;
+        private PartManager _part;
         private LineRenderer _lowSpan;
         private LineRenderer _highSpan;
+        private bool _hidden;
 
         /// <summary>Wire this view to an edge and (optionally) a shared fill material.</summary>
         public void Bind(DrawEdge edge, Material material)
         {
             if (_edge != null) _edge.Changed -= Refresh;
+            if (_part != null) _part.Revealed -= Hide;
             _edge = edge;
+            _hidden = false;
             if (material != null) lineMaterial = material;
 
-            // Take the painted-line color from the part that owns this edge's anchors
-            // (its wall color by default, or its custom override), set on the Part object.
-            PartManager part = edge != null && edge.A != null
+            // The part that owns this edge's anchors (the Part object): drives the line color
+            // and, on wall reveal, clears the line.
+            _part = edge != null && edge.A != null
                 ? edge.A.GetComponentInParent<PartManager>()
                 : null;
-            if (part != null) color = part.GetFillColor();
+            if (_part != null) color = _part.GetFillColor();
 
             EnsureRenderers();
             ApplyColor();
             if (_edge != null) _edge.Changed += Refresh;
+            if (_part != null) _part.Revealed += Hide;
             Refresh();
+        }
+
+        // Clear the painted line once the part's wall is revealed — the wall animation now
+        // shows the finished shape, so the trail would just be clutter.
+        private void Hide()
+        {
+            _hidden = true;
+            if (_lowSpan != null) _lowSpan.enabled = false;
+            if (_highSpan != null) _highSpan.enabled = false;
         }
 
         private void ApplyColor()
@@ -52,6 +66,7 @@ namespace Studios208.DrawRush.Drawing
         private void OnDestroy()
         {
             if (_edge != null) _edge.Changed -= Refresh;
+            if (_part != null) _part.Revealed -= Hide;
         }
 
         private void EnsureRenderers()
@@ -88,7 +103,7 @@ namespace Studios208.DrawRush.Drawing
 
         private void Refresh()
         {
-            if (_edge == null) return;
+            if (_edge == null || _hidden) return;
             EdgeFill fill = _edge.Fill;
 
             if (fill.IsComplete)

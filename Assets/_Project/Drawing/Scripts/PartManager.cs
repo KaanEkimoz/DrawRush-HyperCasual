@@ -13,6 +13,10 @@ namespace Studios208.DrawRush.Drawing
     /// </summary>
     public sealed class PartManager : MonoBehaviour
     {
+        /// <summary>Raised when this part's wall is revealed (all its edges painted), so the
+        /// painted edge lines can be cleared — the wall animation now shows the result.</summary>
+        public event Action Revealed;
+
         [SerializeField] private GameObject wall;
 
         [Header("Painted line color")]
@@ -86,6 +90,7 @@ namespace Studios208.DrawRush.Drawing
 
             _revealed = true;
             if (wall != null) wall.SetActive(true);   // Animator plays the reveal on enable
+            Revealed?.Invoke();                        // edge lines clear themselves now
         }
 
         private EdgeNetwork ResolveNetwork()
