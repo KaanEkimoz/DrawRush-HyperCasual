@@ -1,41 +1,31 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Studios208.DrawRush.Drawing
 {
     /// <summary>
-    /// A single anchor in the chain-drawing puzzle. The player walks to each anchor in
-    /// sequence and a connecting line is spawned by <c>PlayerInteract</c> between consecutive
-    /// anchors. The part no longer owns a trail prefab — the player carries a persistent
-    /// TrailRenderer that does the actual drawing. DrawPart's only runtime job is to expose
-    /// an interaction surface, track its lifecycle phase, and fire <see cref="Completed"/>
-    /// when the chain has moved past it.
-    ///
-    /// Optional visual feedback: assign <see cref="armedHighlight"/> to a child GameObject
-    /// (glow / ring) that the part should toggle on when it becomes the active anchor.
+    /// A polygon-corner anchor for the edge-painting puzzle. Holds its edge-neighbor set
+    /// (auto-wired to the two nearest sibling anchors when left empty) and toggles an
+    /// optional highlight while the player is touching it. Edges, fill state and completion
+    /// live in <see cref="EdgeNetwork"/> / <see cref="DrawEdge"/> — DrawPart is just the corner.
     /// </summary>
-    public sealed class DrawPart : MonoBehaviour, IDrawPart
+    public sealed class DrawPart : MonoBehaviour
     {
-        public event Action<IDrawPart> Completed;
-
         [Header("Visuals (optional)")]
-        [Tooltip("Optional child GameObject toggled on while this part is the active anchor.")]
+        [Tooltip("Optional child GameObject toggled on while the player is touching this anchor.")]
         [SerializeField] private GameObject armedHighlight;
 
-        [Header("Chain topology")]
+        [Header("Topology")]
         [Tooltip("Anchors that this part can connect to (polygon-edge neighbors). " +
                  "Leave empty to auto-wire to the two nearest sibling DrawParts at scene load.")]
         [SerializeField] private DrawPart[] neighbors;
 
-        private readonly DrawPartStateMachine _fsm = new();
-
-        public bool IsCompleted => _fsm.IsCompleted;
         public Transform Transform => transform;
-        public DrawingPhase Phase => _fsm.Phase;
 
-        /// <summary>Polygon-edge neighbors (read-only). RailDrawController uses these
-        /// to pick which edge the player can slide along from this anchor.</summary>
-        public System.Collections.Generic.IReadOnlyList<DrawPart> Neighbors => neighbors;
+        /// <summary>Polygon-edge neighbors (read-only). RailPaintController uses these to pick
+        /// which edge the player can slide along from this anchor.</summary>
+        public IReadOnlyList<DrawPart> Neighbors => neighbors;
 
         /// <summary>True if <paramref name="other"/> is in this part's neighbor set.</summary>
         public bool IsNeighborOf(DrawPart other)
@@ -46,16 +36,8 @@ namespace Studios208.DrawRush.Drawing
             return false;
         }
 
-        [Obsolete("Use OnPlayerEntered / OnPlayerExited instead. Retained for prefab/scene backwards-compat only.")]
-        public bool isPlayerEntered
-        {
-            get => _fsm.Phase is DrawingPhase.Armed or DrawingPhase.Drawing;
-            set { /* intentional no-op; encapsulation enforcement */ }
-        }
-
         private void Awake()
         {
-            _fsm.ResetToIdle();
             SetHighlight(false);
             EnsureNeighborsWired();
         }
@@ -67,6 +49,12 @@ namespace Studios208.DrawRush.Drawing
         {
             if (neighbors == null || neighbors.Length == 0) AutoWireNeighbors();
         }
+
+        /// <summary>Turn the highlight on while the player is touching this anchor.</summary>
+        public void OnPlayerEntered() => SetHighlight(true);
+
+        /// <summary>Turn the highlight off when the player leaves this anchor.</summary>
+        public void OnPlayerExited() => SetHighlight(false);
 
         private void AutoWireNeighbors()
         {
@@ -102,51 +90,6 @@ namespace Studios208.DrawRush.Drawing
                 return levelRoot.GetComponentsInChildren<DrawPart>(includeInactive: true);
 
             return UnityEngine.Object.FindObjectsByType<DrawPart>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-        }
-
-        /// <inheritdoc />
-        public void Interact()
-        {
-            // Chain step. Idle/Done → Armed becomes the active anchor.
-            if (_fsm.Phase == DrawingPhase.Idle)
-            {
-                if (_fsm.TryTransition(DrawingPhase.Armed)) SetHighlight(true);
-            }
-        }
-
-        /// <inheritdoc />
-        public void OnPlayerEntered()
-        {
-            if (_fsm.Phase == DrawingPhase.Idle && _fsm.TryTransition(DrawingPhase.Armed))
-            {
-                SetHighlight(true);
-            }
-        }
-
-        /// <inheritdoc />
-        public void OnPlayerExited()
-        {
-            // Chain-preserving: only un-arm if we never advanced past the visit.
-            if (_fsm.Phase == DrawingPhase.Armed)
-            {
-                _fsm.TryTransition(DrawingPhase.Idle);
-                SetHighlight(false);
-            }
-        }
-
-        /// <inheritdoc />
-        public void Complete()
-        {
-            if (_fsm.IsCompleted) return;
-
-            // Move from Armed (anchor) or Drawing (chain mid-step) to Done.
-            if (_fsm.Phase == DrawingPhase.Armed)
-            {
-                _fsm.TryTransition(DrawingPhase.Drawing);
-            }
-            _fsm.TryTransition(DrawingPhase.Done);
-            SetHighlight(false);
-            Completed?.Invoke(this);
         }
 
         private void SetHighlight(bool on)
