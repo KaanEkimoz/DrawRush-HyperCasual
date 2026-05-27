@@ -71,6 +71,9 @@ namespace Studios208.DrawRush.Drawing
             var adjacency = new int[parts.Length][];
             for (int i = 0; i < parts.Length; i++)
             {
+                // Wire neighbors now so edge construction never depends on DrawPart.Awake
+                // having run first (OnEnable ordering across objects is not guaranteed).
+                parts[i].EnsureNeighborsWired();
                 IReadOnlyList<DrawPart> neighbors = parts[i].Neighbors;
                 if (neighbors == null)
                 {

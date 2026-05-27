@@ -57,6 +57,14 @@ namespace Studios208.DrawRush.Drawing
         {
             _fsm.ResetToIdle();
             SetHighlight(false);
+            EnsureNeighborsWired();
+        }
+
+        /// <summary>Wires the two nearest sibling anchors as neighbors if none are set yet.
+        /// Idempotent — safe to call from EdgeNetwork before it reads <see cref="Neighbors"/>,
+        /// so edge construction never depends on Awake ordering.</summary>
+        public void EnsureNeighborsWired()
+        {
             if (neighbors == null || neighbors.Length == 0) AutoWireNeighbors();
         }
 
