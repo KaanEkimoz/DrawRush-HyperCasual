@@ -18,6 +18,10 @@ namespace Studios208.DrawRush.Drawing
         /// <summary>Raised once when the last incomplete edge becomes complete.</summary>
         public event Action AllCompleted;
 
+        /// <summary>Raised each time an individual edge becomes complete. PartManager uses
+        /// this to reveal a wall when the edges belonging to its anchors are all painted.</summary>
+        public event Action<DrawEdge> EdgeCompleted;
+
         [Header("Fill visual")]
         [Tooltip("Shared material for the painted-span LineRenderers. Falls back to a " +
                  "Sprites/Default material when empty.")]
@@ -121,6 +125,7 @@ namespace Studios208.DrawRush.Drawing
 
         private void OnEdgeCompleted(DrawEdge edge)
         {
+            EdgeCompleted?.Invoke(edge);
             if (_remaining > 0) _remaining--;
             if (_remaining == 0) AllCompleted?.Invoke();
         }
