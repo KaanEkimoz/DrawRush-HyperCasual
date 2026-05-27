@@ -51,10 +51,16 @@ namespace Studios208.DrawRush.Core
         {
             if (levelsRoot == null || index < 0 || index >= levelsRoot.childCount) return;
 
+            // Two passes: disable every group, then enable the target. This forces the
+            // target through a fresh OnDisable/OnEnable cycle even when it is already the
+            // active level (Restart), so per-level systems re-initialize — EdgeNetwork
+            // rebuilds unpainted edges, PartManager re-hides its wall, WallManager
+            // re-subscribes — instead of keeping their finished state.
             for (int i = 0; i < levelsRoot.childCount; i++)
             {
-                levelsRoot.GetChild(i).gameObject.SetActive(i == index);
+                levelsRoot.GetChild(i).gameObject.SetActive(false);
             }
+            levelsRoot.GetChild(index).gameObject.SetActive(true);
             _currentIndex = index;
 
             Transform activeLevel = levelsRoot.GetChild(index);

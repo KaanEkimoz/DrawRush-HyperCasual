@@ -25,12 +25,14 @@ namespace Studios208.DrawRush.Drawing
             _myParts.Clear();
             foreach (DrawPart p in GetComponentsInChildren<DrawPart>(includeInactive: true)) _myParts.Add(p);
 
+            // Start hidden. The wall is revealed only when this part's edges are painted;
+            // hiding here also resets a previously-revealed wall when the level restarts.
+            if (wall != null) wall.SetActive(false);
+
+            // Reveal happens via EdgeCompleted (fired after a real paint, post-rebuild) so we
+            // never read a stale, pre-restart edge set.
             _network = ResolveNetwork();
-            if (_network != null)
-            {
-                _network.EdgeCompleted += OnEdgeCompleted;
-                TryReveal();   // already-complete edges (e.g. on level re-enable)
-            }
+            if (_network != null) _network.EdgeCompleted += OnEdgeCompleted;
         }
 
         private void OnDisable()
