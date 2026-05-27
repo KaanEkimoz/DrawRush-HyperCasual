@@ -4,36 +4,25 @@ using Studios208.DrawRush.Core;
 namespace Studios208.DrawRush.Drawing
 {
     /// <summary>
-    /// Flips <see cref="GameState.IsGameWon"/> when every scene-wide DrawPart is
-    /// complete. Delegates the bookkeeping to <see cref="DrawPartCompletionWatcher"/>.
-    /// Renaming to WinCondition is queued for a separate commit — keeps scene refs
-    /// stable.
+    /// Flips <see cref="GameState.IsGameWon"/> when the level's <see cref="EdgeNetwork"/>
+    /// reports every paintable edge filled. Lives on the same GameObject as the EdgeNetwork
+    /// for each level group in the mega-scene; the network is rebuilt on enable, so this only
+    /// needs to (re)subscribe. Renaming to WinCondition is queued for a separate commit —
+    /// keeps scene refs stable.
     /// </summary>
     public sealed class WallManager : MonoBehaviour
     {
-        private DrawPartCompletionWatcher _watcher;
+        [SerializeField] private EdgeNetwork edgeNetwork;
 
-        // Rebuilt on every enable so re-activating a level group in the mega-scene
-        // (where there is no scene reload) starts from a fresh, all-idle watcher
-        // scoped to the currently-active DrawParts. FindObjectsByType excludes
-        // inactive objects by default, so only the active level's anchors count.
         private void OnEnable()
         {
-            RebuildWatcher();
-            _watcher.Enable();
+            if (edgeNetwork == null) edgeNetwork = GetComponent<EdgeNetwork>();
+            if (edgeNetwork != null) edgeNetwork.AllCompleted += OnAllCompleted;
         }
 
-        private void OnDisable() => _watcher?.Disable();
-
-        private void RebuildWatcher()
+        private void OnDisable()
         {
-            if (_watcher != null) _watcher.AllCompleted -= OnAllCompleted;
-
-            var components = Object.FindObjectsByType<DrawPart>(FindObjectsSortMode.None);
-            var parts = new IDrawPart[components.Length];
-            for (int i = 0; i < components.Length; i++) parts[i] = components[i];
-            _watcher = new DrawPartCompletionWatcher(parts);
-            _watcher.AllCompleted += OnAllCompleted;
+            if (edgeNetwork != null) edgeNetwork.AllCompleted -= OnAllCompleted;
         }
 
         private void OnAllCompleted()
