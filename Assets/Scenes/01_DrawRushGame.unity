@@ -22168,7 +22168,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 7525204801281254168, guid: d3cc757ee8e075b4fb46e4700c71b85f, type: 3}
       propertyPath: m_Name
-      value: WallManager
+      value: WinCondition
       objectReference: {fileID: 0}
     - target: {fileID: 7525204801281254170, guid: d3cc757ee8e075b4fb46e4700c71b85f, type: 3}
       propertyPath: m_RootOrder
@@ -22732,7 +22732,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 7525204801281254168, guid: d3cc757ee8e075b4fb46e4700c71b85f, type: 3}
       propertyPath: m_Name
-      value: WallManager
+      value: WinCondition
       objectReference: {fileID: 0}
     - target: {fileID: 7525204801281254170, guid: d3cc757ee8e075b4fb46e4700c71b85f, type: 3}
       propertyPath: m_RootOrder
@@ -22931,7 +22931,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 7525204801281254168, guid: d3cc757ee8e075b4fb46e4700c71b85f, type: 3}
       propertyPath: m_Name
-      value: WallManager
+      value: WinCondition
       objectReference: {fileID: 0}
     - target: {fileID: 7525204801281254170, guid: d3cc757ee8e075b4fb46e4700c71b85f, type: 3}
       propertyPath: m_RootOrder
@@ -34395,7 +34395,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 7525204801281254168, guid: d3cc757ee8e075b4fb46e4700c71b85f, type: 3}
       propertyPath: m_Name
-      value: WallManager
+      value: WinCondition
       objectReference: {fileID: 0}
     - target: {fileID: 7525204801281254170, guid: d3cc757ee8e075b4fb46e4700c71b85f, type: 3}
       propertyPath: m_RootOrder

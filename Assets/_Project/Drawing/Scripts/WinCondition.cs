@@ -7,10 +7,9 @@ namespace Studios208.DrawRush.Drawing
     /// Flips <see cref="GameState.IsGameWon"/> when the level's <see cref="EdgeNetwork"/>
     /// reports every paintable edge filled. Lives on the same GameObject as the EdgeNetwork
     /// for each level group in the mega-scene; the network is rebuilt on enable, so this only
-    /// needs to (re)subscribe. Renaming to WinCondition is queued for a separate commit —
-    /// keeps scene refs stable.
+    /// needs to (re)subscribe.
     /// </summary>
-    public sealed class WallManager : MonoBehaviour
+    public sealed class WinCondition : MonoBehaviour
     {
         [SerializeField] private EdgeNetwork edgeNetwork;
 
