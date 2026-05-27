@@ -15,6 +15,13 @@ namespace Studios208.DrawRush.Drawing
     {
         [SerializeField] private GameObject wall;
 
+        [Header("Painted line color")]
+        [Tooltip("When on, the painted edge line uses this part's wall color automatically. " +
+                 "Turn off to use the custom color below.")]
+        [SerializeField] private bool useWallColor = true;
+        [Tooltip("Custom painted-line color, used when 'Use Wall Color' is off.")]
+        [SerializeField] private Color fillColor = Color.white;
+
         private EdgeNetwork _network;
         private readonly HashSet<DrawPart> _myParts = new();
         private bool _revealed;
@@ -41,6 +48,26 @@ namespace Studios208.DrawRush.Drawing
         }
 
         private void OnEdgeCompleted(DrawEdge edge) => TryReveal();
+
+        /// <summary>Color for this part's painted edge lines — the wall's color by default
+        /// (so the line matches the wall), or the custom override. Used by DrawEdgeView.</summary>
+        public Color GetFillColor()
+        {
+            if (useWallColor && TrySampleWallColor(out Color wallColor)) return wallColor;
+            return fillColor;
+        }
+
+        private bool TrySampleWallColor(out Color color)
+        {
+            color = fillColor;
+            if (wall == null) return false;
+            Renderer r = wall.GetComponentInChildren<Renderer>(includeInactive: true);
+            Material m = r != null ? r.sharedMaterial : null;
+            if (m == null) return false;
+            if (m.HasProperty("_Color")) { color = m.GetColor("_Color"); return true; }
+            if (m.HasProperty("_BaseColor")) { color = m.GetColor("_BaseColor"); return true; }
+            return false;
+        }
 
         private void TryReveal()
         {

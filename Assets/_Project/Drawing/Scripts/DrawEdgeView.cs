@@ -29,9 +29,24 @@ namespace Studios208.DrawRush.Drawing
             if (_edge != null) _edge.Changed -= Refresh;
             _edge = edge;
             if (material != null) lineMaterial = material;
+
+            // Take the painted-line color from the part that owns this edge's anchors
+            // (its wall color by default, or its custom override), set on the Part object.
+            PartManager part = edge != null && edge.A != null
+                ? edge.A.GetComponentInParent<PartManager>()
+                : null;
+            if (part != null) color = part.GetFillColor();
+
             EnsureRenderers();
+            ApplyColor();
             if (_edge != null) _edge.Changed += Refresh;
             Refresh();
+        }
+
+        private void ApplyColor()
+        {
+            if (_lowSpan != null) { _lowSpan.startColor = color; _lowSpan.endColor = color; }
+            if (_highSpan != null) { _highSpan.startColor = color; _highSpan.endColor = color; }
         }
 
         private void OnDestroy()
