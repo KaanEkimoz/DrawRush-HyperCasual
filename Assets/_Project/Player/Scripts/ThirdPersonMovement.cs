@@ -29,7 +29,7 @@ namespace Studios208.DrawRush.Player
         private GameState _state;
         private bool _hasWon;
 
-        /// <summary>Latest movement input vector. Exposed so RailDrawController can reuse
+        /// <summary>Latest movement input vector. Exposed so RailPaintController can reuse
         /// the same input source while it drives edge-constrained movement.</summary>
         public Vector2 MoveInput => _move;
 
