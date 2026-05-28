@@ -98,9 +98,11 @@ namespace Studios208.DrawRush.Player
 
         private void OnGameWonChanged(bool won)
         {
-            if (!won) return;
-            _hasWon = true;
-            if (playerAnim != null) playerAnim.SetBool(AnimatorIds.IsDancing, true);
+            // Mirror the win state both ways: dance + freeze on win, and clear them on a
+            // reset (Restart / next level), since the player is a shared object that never
+            // reloads.
+            _hasWon = won;
+            if (playerAnim != null) playerAnim.SetBool(AnimatorIds.IsDancing, won);
         }
 
         private float ResolveSpeed()

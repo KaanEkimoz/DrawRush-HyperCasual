@@ -81,5 +81,59 @@ namespace Studios208.DrawRush.Tests.EditMode
             CollectionAssert.AreEquivalent(new[] { 3, 5 }, graph[4]);
             CollectionAssert.AreEquivalent(new[] { 4, 0 }, graph[5]);
         }
+
+        [Test]
+        public void BuildUndirectedPairs_TwoPoints_OneEdge()
+        {
+            var adjacency = new[] { new[] { 1 }, new[] { 0 } };
+            var pairs = DrawPartNeighborGraph.BuildUndirectedPairs(adjacency);
+            Assert.AreEqual(new[] { (0, 1) }, pairs);
+        }
+
+        [Test]
+        public void BuildUndirectedPairs_Square_FourEdgesNoDiagonals()
+        {
+            // Square neighbor graph: each corner pairs with its two edge-neighbors.
+            var adjacency = new[]
+            {
+                new[] { 1, 3 },
+                new[] { 0, 2 },
+                new[] { 1, 3 },
+                new[] { 0, 2 },
+            };
+            var pairs = DrawPartNeighborGraph.BuildUndirectedPairs(adjacency);
+            Assert.AreEqual(new[] { (0, 1), (0, 3), (1, 2), (2, 3) }, pairs);
+        }
+
+        [Test]
+        public void BuildUndirectedPairs_Triangle_ThreeEdges()
+        {
+            var adjacency = new[]
+            {
+                new[] { 1, 2 },
+                new[] { 0, 2 },
+                new[] { 0, 1 },
+            };
+            var pairs = DrawPartNeighborGraph.BuildUndirectedPairs(adjacency);
+            Assert.AreEqual(new[] { (0, 1), (0, 2), (1, 2) }, pairs);
+        }
+
+        [Test]
+        public void BuildUndirectedPairs_AsymmetricAdjacency_StillYieldsEdge()
+        {
+            // Only one side lists the neighbor; the edge must still appear once.
+            var adjacency = new[] { new[] { 1 }, System.Array.Empty<int>() };
+            var pairs = DrawPartNeighborGraph.BuildUndirectedPairs(adjacency);
+            Assert.AreEqual(new[] { (0, 1) }, pairs);
+        }
+
+        [Test]
+        public void BuildUndirectedPairs_DedupesRepeatsAndSkipsInvalid()
+        {
+            // Duplicate (0,1), self-loop, and an out-of-range index all collapse to one edge.
+            var adjacency = new[] { new[] { 1, 1, 0, 99 }, new[] { 0 } };
+            var pairs = DrawPartNeighborGraph.BuildUndirectedPairs(adjacency);
+            Assert.AreEqual(new[] { (0, 1) }, pairs);
+        }
     }
 }

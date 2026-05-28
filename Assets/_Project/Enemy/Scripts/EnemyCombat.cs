@@ -20,6 +20,7 @@ namespace Studios208.DrawRush.Enemy
         [SerializeField] private int damageOverride;
 
         private PlayerCombat _playerCombat;
+        private RailPaintController _railPaint;
         private GameState _state;
 
         private void Awake()
@@ -45,6 +46,11 @@ namespace Studios208.DrawRush.Enemy
         {
             if (!other.CompareTag(playerTag)) return;
             if (_state != null && _state.IsGameWon) return;
+
+            // Contact always frees the player from the paint rail so they can flee — even
+            // inside the safe zone, where this is the only way out of an edge.
+            if (_railPaint == null) _railPaint = other.GetComponent<RailPaintController>();
+            if (_railPaint != null) _railPaint.Detach();
 
             // Drawing-puzzle safe zone: while the player is inside a DrawArea, enemies
             // cannot damage. Combat resumes the instant the player steps outside.

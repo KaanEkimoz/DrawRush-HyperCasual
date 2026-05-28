@@ -1198,6 +1198,7 @@ GameObject:
   - component: {fileID: 6718440921668358068}
   - component: {fileID: 6718440921668358078}
   - component: {fileID: 1496855639}
+  - component: {fileID: 1066403372554981823}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -1334,10 +1335,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a8d5c46a2081cfd4199e1fee23ea9b4a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  lineMaterial: {fileID: 0}
-  playerTrail: {fileID: 5774662075284368243}
   drawAreaTag: DrawArea
-  resetProgressOnAreaExit: 0
 --- !u!114 &6718440921668358078
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1373,6 +1371,23 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 0.12
   m_Center: {x: 0.3, y: -1.1, z: 0.7}
+--- !u!114 &1066403372554981823
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6718440921668358069}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f0d3b8b613c8e4b169d12bd0b100abef, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Studios208.DrawRush::Studios208.DrawRush.Player.RailPaintController
+  interact: {fileID: 0}
+  movement: {fileID: 0}
+  inputDeadzone: 0.3
+  selectThreshold: 0.4
+  railSpeed: 0
 --- !u!1 &6718440922259339700
 GameObject:
   m_ObjectHideFlags: 0
@@ -1580,7 +1595,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &2147795909362980250
 Transform:
   m_ObjectHideFlags: 0

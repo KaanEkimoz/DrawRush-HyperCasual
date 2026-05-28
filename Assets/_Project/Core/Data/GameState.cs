@@ -27,7 +27,9 @@ namespace Studios208.DrawRush.Core
 
         public void Reset()
         {
-            _isGameWon = false;
+            // Go through the property so GameWonChanged fires on a true->false reset —
+            // shared subscribers (player dance/lock) have no scene reload to clear them.
+            IsGameWon = false;
         }
     }
 }

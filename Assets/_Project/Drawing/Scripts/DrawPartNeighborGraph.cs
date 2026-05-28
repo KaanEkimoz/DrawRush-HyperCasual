@@ -49,5 +49,38 @@ namespace Studios208.DrawRush.Drawing
             }
             return result;
         }
+
+        /// <summary>
+        /// Collapses a (possibly directed/asymmetric) neighbor adjacency into the set of
+        /// unique undirected edges. A pair (i, j) is emitted once if either i lists j or j
+        /// lists i; each pair is normalized to (min, max) and deduplicated. Output is sorted
+        /// ascending by (low, high) so callers — and tests — get a deterministic order.
+        /// EdgeNetwork uses this to turn the anchors' neighbor graph into paintable edges
+        /// without ever creating an edge twice (A–B and B–A are the same edge).
+        /// </summary>
+        public static (int A, int B)[] BuildUndirectedPairs(int[][] adjacency)
+        {
+            if (adjacency == null) throw new ArgumentNullException(nameof(adjacency));
+
+            var seen = new HashSet<long>();
+            var pairs = new List<(int, int)>();
+            for (int i = 0; i < adjacency.Length; i++)
+            {
+                int[] row = adjacency[i];
+                if (row == null) continue;
+                for (int n = 0; n < row.Length; n++)
+                {
+                    int j = row[n];
+                    if (j == i || j < 0 || j >= adjacency.Length) continue;
+
+                    int lo = Math.Min(i, j);
+                    int hi = Math.Max(i, j);
+                    long key = ((long)lo << 32) | (uint)hi;
+                    if (seen.Add(key)) pairs.Add((lo, hi));
+                }
+            }
+            pairs.Sort((a, b) => a.Item1 != b.Item1 ? a.Item1.CompareTo(b.Item1) : a.Item2.CompareTo(b.Item2));
+            return pairs.ToArray();
+        }
     }
 }

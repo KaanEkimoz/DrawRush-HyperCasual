@@ -34,36 +34,21 @@ namespace Studios208.DrawRush.Core
         [SerializeField] private int _enemyTouchDamage = 1;
 
         [Header("Drawing")]
-        [Tooltip("Seconds to wait before destroying the connecting LineRenderer.")]
-        [FormerlySerializedAs("lineDestroyDelay")]
-        [SerializeField] private float _lineDestroyDelay = 2.0f;
-
-        [Tooltip("Width of the connecting LineRenderer between two parts.")]
+        [Tooltip("Width of the painted edge line.")]
         [FormerlySerializedAs("lineWidth")]
         [SerializeField] private float _lineWidth = 0.4f;
-
-        [Tooltip("Lerp factor used when trail catches up to the player.")]
-        [FormerlySerializedAs("trailCatchUpLerp")]
-        [SerializeField] private float _trailCatchUpLerp = 100f;
 
         [Header("Flow")]
         [Tooltip("Seconds to wait after Game Won before showing the win panel.")]
         [FormerlySerializedAs("gameWonDelay")]
         [SerializeField] private float _gameWonDelay = 3.0f;
 
-        [Tooltip("Seconds to wait on splash before loading next scene.")]
-        [FormerlySerializedAs("splashWaitSeconds")]
-        [SerializeField] private float _splashWaitSeconds = 2.1f;
-
         public float playerSpeed => _playerSpeed;
         public float turnSmoothTime => _turnSmoothTime;
         public float gravity => _gravity;
         public int playerStartingHealth => _playerStartingHealth;
         public int enemyTouchDamage => _enemyTouchDamage;
-        public float lineDestroyDelay => _lineDestroyDelay;
         public float lineWidth => _lineWidth;
-        public float trailCatchUpLerp => _trailCatchUpLerp;
         public float gameWonDelay => _gameWonDelay;
-        public float splashWaitSeconds => _splashWaitSeconds;
     }
 }
