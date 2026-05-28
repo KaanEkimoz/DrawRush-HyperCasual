@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using Studios208.DrawRush.Core;
 using Studios208.DrawRush.Drawing;
@@ -40,6 +41,7 @@ namespace Studios208.DrawRush.Player
         private DrawEdge _edge;
         private float _localT;          // 0 = at current anchor, 1 = at target anchor
         private bool _detached;
+        private readonly List<DrawEdge> _edgeBuffer = new();
 
         private void Awake()
         {
@@ -145,18 +147,36 @@ namespace Studios208.DrawRush.Player
             }
         }
 
+        // Pick the authored edge touching the current anchor that is best aligned with the
+        // stick, and slide along it. Edges come from EdgeNetwork (authored Kenar prefabs), so
+        // there is no neighbor graph to consult.
         private bool TrySelectEdge(Vector3 worldInput)
         {
-            DrawPart target = PickEdge(_currentPart, worldInput);
-            if (target == null) return false;
-
             if (_network == null || !_network.isActiveAndEnabled) _network = ResolveNetwork(_currentPart);
-            if (_network == null || !_network.TryGetEdge(_currentPart, target, out _edge))
+            if (_network == null) return false;
+
+            _network.GetEdgesTouching(_currentPart, _edgeBuffer);
+
+            DrawEdge best = null;
+            DrawPart bestTarget = null;
+            float bestDot = selectThreshold;
+            for (int i = 0; i < _edgeBuffer.Count; i++)
             {
-                _edge = null;
-                return false;
+                DrawEdge e = _edgeBuffer[i];
+                DrawPart other = e.Other(_currentPart);
+                if (other == null) continue;
+
+                Vector3 dir = other.Transform.position - _currentPart.Transform.position;
+                dir.y = 0f;
+                if (dir.sqrMagnitude < 0.0001f) continue;
+
+                float dot = Vector3.Dot(worldInput, dir.normalized);
+                if (dot > bestDot) { bestDot = dot; best = e; bestTarget = other; }
             }
-            _targetPart = target;
+
+            if (best == null) return false;
+            _edge = best;
+            _targetPart = bestTarget;
             _localT = 0f;
             return true;
         }
@@ -171,28 +191,6 @@ namespace Studios208.DrawRush.Player
             float cameraY = cam != null ? cam.eulerAngles.y : 0f;
             float angle = Mathf.Atan2(raw.x, raw.z) * Mathf.Rad2Deg + cameraY;
             return Quaternion.Euler(0f, angle, 0f) * Vector3.forward;
-        }
-
-        private DrawPart PickEdge(DrawPart from, Vector3 worldInput)
-        {
-            var neighbors = from.Neighbors;
-            if (neighbors == null) return null;
-
-            DrawPart best = null;
-            float bestDot = selectThreshold;
-            for (int i = 0; i < neighbors.Count; i++)
-            {
-                DrawPart n = neighbors[i];
-                if (n == null || n == from) continue;
-
-                Vector3 dir = n.Transform.position - from.Transform.position;
-                dir.y = 0f;
-                if (dir.sqrMagnitude < 0.0001f) continue;
-
-                float dot = Vector3.Dot(worldInput, dir.normalized);
-                if (dot > bestDot) { bestDot = dot; best = n; }
-            }
-            return best;
         }
 
         // Scope to the touched part's level group in the mega-scene (like DrawPart does),

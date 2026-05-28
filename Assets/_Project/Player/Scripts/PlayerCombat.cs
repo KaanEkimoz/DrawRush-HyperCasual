@@ -21,7 +21,6 @@ namespace Studios208.DrawRush.Player
         {
             if (health == null) return;
             health.Changed += OnHealthChanged;
-            health.Died += OnDied;
             OnHealthChanged(health.Current);
         }
 
@@ -29,7 +28,6 @@ namespace Studios208.DrawRush.Player
         {
             if (health == null) return;
             health.Changed -= OnHealthChanged;
-            health.Died -= OnDied;
         }
 
         /// <summary>Applies positive damage to the bound PlayerHealth asset.</summary>
@@ -47,11 +45,6 @@ namespace Studios208.DrawRush.Player
         private void OnHealthChanged(int value)
         {
             if (healthLabel != null) healthLabel.text = value.ToString();
-        }
-
-        private void OnDied()
-        {
-            Destroy(gameObject);
         }
     }
 }

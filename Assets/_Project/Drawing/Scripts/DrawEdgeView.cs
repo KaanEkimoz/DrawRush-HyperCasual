@@ -20,37 +20,28 @@ namespace Studios208.DrawRush.Drawing
         [SerializeField] private Color color = new Color(0.1f, 1f, 0.8f, 1f);
 
         private DrawEdge _edge;
-        private PartManager _part;
         private LineRenderer _lowSpan;
         private LineRenderer _highSpan;
         private bool _hidden;
 
-        /// <summary>Wire this view to an edge and (optionally) a shared fill material.</summary>
-        public void Bind(DrawEdge edge, Material material)
+        /// <summary>Wire this view to an edge with the given line color (EdgeNetwork passes the
+        /// edge's wall color so the painted line matches the wall).</summary>
+        public void Bind(DrawEdge edge, Color lineColor)
         {
             if (_edge != null) _edge.Changed -= Refresh;
-            if (_part != null) _part.Revealed -= Hide;
             _edge = edge;
             _hidden = false;
-            if (material != null) lineMaterial = material;
-
-            // The part that owns this edge's anchors (the Part object): drives the line color
-            // and, on wall reveal, clears the line.
-            _part = edge != null && edge.A != null
-                ? edge.A.GetComponentInParent<PartManager>()
-                : null;
-            if (_part != null) color = _part.GetFillColor();
+            color = lineColor;
 
             EnsureRenderers();
             ApplyColor();
             if (_edge != null) _edge.Changed += Refresh;
-            if (_part != null) _part.Revealed += Hide;
             Refresh();
         }
 
-        // Clear the painted line once the part's wall is revealed — the wall animation now
-        // shows the finished shape, so the trail would just be clutter.
-        private void Hide()
+        /// <summary>Clear the painted line — called when this edge's wall is revealed, since the
+        /// wall animation now shows the finished shape and the line would just be clutter.</summary>
+        public void Hide()
         {
             _hidden = true;
             if (_lowSpan != null) _lowSpan.enabled = false;
@@ -66,7 +57,6 @@ namespace Studios208.DrawRush.Drawing
         private void OnDestroy()
         {
             if (_edge != null) _edge.Changed -= Refresh;
-            if (_part != null) _part.Revealed -= Hide;
         }
 
         private void EnsureRenderers()
