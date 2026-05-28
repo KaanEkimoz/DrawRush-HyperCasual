@@ -29699,9 +29699,33 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 672789061}
     - target: {fileID: 2833216859517274292, guid: da059999e56de0c4d8079c324f7c65da, type: 3}
+      propertyPath: legacyGameUi
+      value: 
+      objectReference: {fileID: 748725320}
+    - target: {fileID: 2833216859517274292, guid: da059999e56de0c4d8079c324f7c65da, type: 3}
+      propertyPath: playerHealth
+      value: 
+      objectReference: {fileID: 11400000, guid: f00b6e2134e6b467b885d979c4863d0e, type: 2}
+    - target: {fileID: 2833216859517274292, guid: da059999e56de0c4d8079c324f7c65da, type: 3}
       propertyPath: _gameOverPanel
       value: 
       objectReference: {fileID: 0}
+    - target: {fileID: 2833216859517274292, guid: da059999e56de0c4d8079c324f7c65da, type: 3}
+      propertyPath: legacyWinPanel
+      value: 
+      objectReference: {fileID: 271787879}
+    - target: {fileID: 2833216859517274292, guid: da059999e56de0c4d8079c324f7c65da, type: 3}
+      propertyPath: legacyLevelText
+      value: 
+      objectReference: {fileID: 672789062}
+    - target: {fileID: 2833216859517274292, guid: da059999e56de0c4d8079c324f7c65da, type: 3}
+      propertyPath: legacyLosePanel
+      value: 
+      objectReference: {fileID: 2035809419}
+    - target: {fileID: 2833216859517274292, guid: da059999e56de0c4d8079c324f7c65da, type: 3}
+      propertyPath: legacyParticles
+      value: 
+      objectReference: {fileID: 672789061}
     - target: {fileID: 2833216859517274293, guid: da059999e56de0c4d8079c324f7c65da, type: 3}
       propertyPath: m_RootOrder
       value: 4
