@@ -36,9 +36,12 @@ namespace Studios208.DrawRush.EditorTools
             if (settings == null) return;
 
             const BindingFlags Flags = BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
-            SetBool(settings, "PromptBeforeAutoResolution", false, Flags);
+            // Quiet config: no editing-time auto-resolution (so no surprise Gradle runs or
+            // "Gradle failed to fetch dependencies" noise), no prompt, no disabled-warning nag.
+            // Dependencies still resolve at build time (AutoResolveOnBuild is left on).
+            SetBool(settings, "EnableAutoResolution", false, Flags);
             SetBool(settings, "AutoResolutionDisabledWarning", false, Flags);
-            SetBool(settings, "EnableAutoResolution", true, Flags);
+            SetBool(settings, "PromptBeforeAutoResolution", false, Flags);
         }
 
         private static void SetBool(Type type, string propertyName, bool value, BindingFlags flags)
