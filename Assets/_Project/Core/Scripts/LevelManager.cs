@@ -27,20 +27,48 @@ namespace Studios208.DrawRush.Core
         [Tooltip("Child name searched inside each level group for the player spawn point.")]
         [SerializeField] private string spawnChildName = "Spawn";
 
-        [Tooltip("Level group enabled at scene start (index into levelsRoot). Set in the " +
-                 "Inspector to test a specific level in Play.")]
-        [SerializeField] private int startLevelIndex = 0;
+        [Header("Tutorial")]
+        [Tooltip("Index of the tutorial level group.")]
+        [SerializeField] private int tutorialLevelIndex = 0;
+
+        [Tooltip("Level to start on once the tutorial has been completed (and for returning players).")]
+        [SerializeField] private int firstLevelIndex = 1;
+
+        [Tooltip("Dev override for the level enabled at scene start. -1 = auto (tutorial for a " +
+                 "new player, otherwise the first level). >= 0 forces that index for testing.")]
+        [SerializeField] private int startLevelIndex = -1;
 
         private int _currentIndex = -1;
+        private GameState _boundState;
 
         public int LevelCount => levelsRoot != null ? levelsRoot.childCount : 0;
         public int CurrentIndex => _currentIndex;
+
+        private void OnEnable()
+        {
+            _boundState = gameState != null ? gameState : GameServices.State;
+            if (_boundState != null) _boundState.GameWonChanged += OnGameWonChanged;
+        }
+
+        private void OnDisable()
+        {
+            if (_boundState != null) _boundState.GameWonChanged -= OnGameWonChanged;
+        }
 
         // Boot the mega-scene into exactly one active level group with the player at its
         // spawn. Runs after Awake so each group's DrawParts can auto-wire neighbors.
         private void Start()
         {
-            ActivateLevel(startLevelIndex);
+            int index = startLevelIndex >= 0
+                ? startLevelIndex
+                : (PlayerProgress.TutorialCompleted ? firstLevelIndex : tutorialLevelIndex);
+            ActivateLevel(index);
+        }
+
+        // Completing the tutorial level marks it done so it is skipped from now on.
+        private void OnGameWonChanged(bool won)
+        {
+            if (won && _currentIndex == tutorialLevelIndex) PlayerProgress.TutorialCompleted = true;
         }
 
         /// <summary>

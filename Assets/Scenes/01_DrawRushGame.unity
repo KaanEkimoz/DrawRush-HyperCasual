@@ -2675,7 +2675,9 @@ MonoBehaviour:
   gameState: {fileID: 11400000, guid: 8a0f4501dc25e4ed7a64f92d6dc09c35, type: 2}
   player: {fileID: 580485273}
   spawnChildName: Spawn
-  startLevelIndex: 0
+  tutorialLevelIndex: 0
+  firstLevelIndex: 1
+  startLevelIndex: -1
 --- !u!1001 &216544247
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -10737,7 +10739,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &902291179
 Transform:
   m_ObjectHideFlags: 0
@@ -17192,7 +17194,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1492870417
 Transform:
   m_ObjectHideFlags: 0
