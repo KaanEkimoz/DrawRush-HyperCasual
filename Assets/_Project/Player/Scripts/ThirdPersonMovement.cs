@@ -14,6 +14,7 @@ namespace Studios208.DrawRush.Player
     {
         [Header("Components"), Space]
         [SerializeField] private Animator playerAnim;
+        [SerializeField] private PlayerKnockback knockback;
 
         [Header("Movement Overrides"), Space]
         [Tooltip("If true, ignore GameConfig and use the per-instance values below.")]
@@ -49,6 +50,7 @@ namespace Studios208.DrawRush.Player
             {
                 playerAnim = GetComponentInChildren<Animator>();
             }
+            if (knockback == null) knockback = GetComponent<PlayerKnockback>();
         }
 
         private void OnEnable()
@@ -67,6 +69,9 @@ namespace Studios208.DrawRush.Player
         private void FixedUpdate()
         {
             if (_hasWon) return;
+            // Yield to PlayerKnockback while it's pushing the player away from an enemy;
+            // gravity still applies so the character stays grounded.
+            if (knockback != null && knockback.IsActive) { ApplyGravity(); return; }
             if (!MovementLocked) Move();
             ApplyGravity();
         }
