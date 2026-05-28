@@ -7,9 +7,9 @@ using Studios208.DrawRush.Drawing;
 namespace Studios208.DrawRush.Player
 {
     /// <summary>
-    /// Edge-painting movement. Touching an anchor sphere (inside a DrawArea) attaches the
-    /// player to that anchor; pushing the stick toward a neighbor selects that edge and the
-    /// player slides along the straight line between the two spheres, painting the span it
+    /// Edge-painting movement. Touching an anchor sphere attaches the player to that
+    /// anchor; pushing the stick toward a neighbor selects that edge and the player
+    /// slides along the straight line between the two spheres, painting the span it
     /// covers — the paint is persistent (see <see cref="DrawEdge"/> / <see cref="EdgeFill"/>).
     /// Reaching the far sphere re-anchors there so the next edge can be chosen. An enemy
     /// touch calls <see cref="Detach"/>, freeing the player to flee (paint is kept); touching
@@ -101,11 +101,10 @@ namespace Studios208.DrawRush.Player
         {
             if (interact == null) return;
 
-            // Not painting: outside the draw area, no anchor visited, or detached to flee.
-            if (!interact.IsInDrawArea || _currentPart == null || _detached)
+            // Not painting: no anchor visited yet, or detached to flee.
+            if (_currentPart == null || _detached)
             {
                 if (movement != null) movement.MovementLocked = false;
-                if (!interact.IsInDrawArea) { _currentPart = null; _edge = null; _detached = false; }
                 return;
             }
 
