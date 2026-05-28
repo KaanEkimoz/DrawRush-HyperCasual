@@ -19,6 +19,11 @@ namespace Studios208.DrawRush.Enemy
         [FormerlySerializedAs("damage")]
         [SerializeField] private int damageOverride;
 
+        [Header("Knockback")]
+        [Tooltip("Push speed (units/sec) applied to the player on contact, decaying to 0 over " +
+                 "PlayerKnockback.knockbackDuration. 0 disables knockback.")]
+        [SerializeField] private float knockbackForce = 12f;
+
         private PlayerCombat _playerCombat;
         private RailPaintController _railPaint;
         private GameState _state;
@@ -50,6 +55,17 @@ namespace Studios208.DrawRush.Enemy
             // Contact frees the player from the paint rail so they can flee.
             if (_railPaint == null) _railPaint = other.GetComponent<RailPaintController>();
             if (_railPaint != null) _railPaint.Detach();
+
+            // Knock the player away from the enemy along the horizontal contact direction.
+            if (knockbackForce > 0f)
+            {
+                var kb = other.GetComponent<PlayerKnockback>();
+                if (kb != null)
+                {
+                    Vector3 dir = other.transform.position - transform.position;
+                    kb.ApplyKnockback(dir, knockbackForce);
+                }
+            }
 
             if (_playerCombat == null)
             {

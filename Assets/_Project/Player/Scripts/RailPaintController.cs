@@ -25,6 +25,7 @@ namespace Studios208.DrawRush.Player
         [Header("Refs (auto-resolved from this GameObject if empty)")]
         [SerializeField] private PlayerInteract interact;
         [SerializeField] private ThirdPersonMovement movement;
+        [SerializeField] private PlayerKnockback knockback;
 
         [Header("Tuning")]
         [Tooltip("Minimum input magnitude before an edge is picked or driven.")]
@@ -48,6 +49,7 @@ namespace Studios208.DrawRush.Player
             _characterController = GetComponent<CharacterController>();
             if (interact == null) interact = GetComponent<PlayerInteract>();
             if (movement == null) movement = GetComponent<ThirdPersonMovement>();
+            if (knockback == null) knockback = GetComponent<PlayerKnockback>();
         }
 
         private void OnEnable()
@@ -100,6 +102,10 @@ namespace Studios208.DrawRush.Player
         private void FixedUpdate()
         {
             if (interact == null) return;
+
+            // Knockback owns movement for its brief duration — don't touch MovementLocked
+            // or try to drive the rail until it's done.
+            if (knockback != null && knockback.IsActive) return;
 
             // Not painting: no anchor visited yet, or detached to flee.
             if (_currentPart == null || _detached)
