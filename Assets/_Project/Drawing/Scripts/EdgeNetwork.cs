@@ -5,30 +5,24 @@ using UnityEngine;
 namespace Studios208.DrawRush.Drawing
 {
     /// <summary>
-    /// Builds the set of unique paintable edges for the active level from the anchors'
-    /// neighbor graph, and reports when every edge has been fully painted.
+    /// Collects the active level's authored edges (<see cref="DrawEdgeAuthor"/> "Kenar" prefabs)
+    /// and tracks completion. Each author already knows its two endpoint anchors, so no neighbor
+    /// graph is computed. When an edge fills, its author reveals its wall segment; when every
+    /// edge fills, <see cref="AllCompleted"/> fires (the win condition listens).
     ///
-    /// Rebuilt on every enable so re-activating a level group in the mega-scene (where there
-    /// is no scene reload) starts from a fresh, all-unpainted edge set scoped to the
-    /// currently-active anchors. <see cref="UnityEngine.Object.FindObjectsByType{T}(FindObjectsSortMode)"/>
-    /// excludes inactive objects, so only the active level's anchors contribute edges.
+    /// Rebuilt on every enable so re-activating a level in the mega-scene starts from a fresh,
+    /// unpainted edge set scoped to the active authors (FindObjectsByType excludes inactive).
     /// </summary>
     public sealed class EdgeNetwork : MonoBehaviour
     {
         /// <summary>Raised once when the last incomplete edge becomes complete.</summary>
         public event Action AllCompleted;
 
-        /// <summary>Raised each time an individual edge becomes complete. PartManager uses
-        /// this to reveal a wall when the edges belonging to its anchors are all painted.</summary>
-        public event Action<DrawEdge> EdgeCompleted;
-
-        [Header("Fill visual")]
-        [Tooltip("Shared material for the painted-span LineRenderers. Falls back to a " +
-                 "Sprites/Default material when empty.")]
-        [SerializeField] private Material fillMaterial;
+        [Tooltip("Fallback painted-line color when an edge's wall has no readable color.")]
+        [SerializeField] private Color fallbackLineColor = new Color(0.1f, 1f, 0.8f, 1f);
 
         private readonly List<DrawEdge> _edges = new();
-        private readonly List<GameObject> _views = new();
+        private readonly Dictionary<DrawEdge, DrawEdgeAuthor> _authors = new();
         private int _remaining;
 
         /// <summary>The edges built for the active level (read-only).</summary>
@@ -41,91 +35,41 @@ namespace Studios208.DrawRush.Drawing
 
         private void OnDisable() => UnsubscribeAll();
 
-        /// <summary>
-        /// Finds the edge connecting two anchors regardless of order. The paint controller
-        /// uses this to resolve the edge the player slides along from a given corner.
-        /// </summary>
-        public bool TryGetEdge(DrawPart a, DrawPart b, out DrawEdge edge)
+        /// <summary>Appends every edge touching <paramref name="anchor"/> to
+        /// <paramref name="results"/> (cleared first). The paint controller uses this to pick
+        /// which edge to slide along from a corner.</summary>
+        public void GetEdgesTouching(DrawPart anchor, List<DrawEdge> results)
         {
+            results.Clear();
             for (int i = 0; i < _edges.Count; i++)
-            {
-                if (_edges[i].Contains(a) && _edges[i].Contains(b))
-                {
-                    edge = _edges[i];
-                    return true;
-                }
-            }
-            edge = null;
-            return false;
+                if (_edges[i].Contains(anchor)) results.Add(_edges[i]);
         }
 
         private void Rebuild()
         {
             UnsubscribeAll();
-            DestroyViews();
             _edges.Clear();
+            _authors.Clear();
             _remaining = 0;
 
-            var parts = UnityEngine.Object.FindObjectsByType<DrawPart>(FindObjectsSortMode.None);
-            if (parts.Length < 2) return;
-
-            var indexOf = new Dictionary<DrawPart, int>(parts.Length);
-            for (int i = 0; i < parts.Length; i++) indexOf[parts[i]] = i;
-
-            var adjacency = new int[parts.Length][];
-            for (int i = 0; i < parts.Length; i++)
+            var authors = UnityEngine.Object.FindObjectsByType<DrawEdgeAuthor>(FindObjectsSortMode.None);
+            for (int i = 0; i < authors.Length; i++)
             {
-                // Wire neighbors now so edge construction never depends on DrawPart.Awake
-                // having run first (OnEnable ordering across objects is not guaranteed).
-                parts[i].EnsureNeighborsWired();
-                IReadOnlyList<DrawPart> neighbors = parts[i].Neighbors;
-                if (neighbors == null)
-                {
-                    adjacency[i] = Array.Empty<int>();
-                    continue;
-                }
+                DrawEdgeAuthor author = authors[i];
+                if (!author.IsValid) continue;
 
-                var row = new List<int>(neighbors.Count);
-                for (int n = 0; n < neighbors.Count; n++)
-                {
-                    if (neighbors[n] != null && indexOf.TryGetValue(neighbors[n], out int j))
-                        row.Add(j);
-                }
-                adjacency[i] = row.ToArray();
-            }
-
-            (int A, int B)[] pairs = DrawPartNeighborGraph.BuildUndirectedPairs(adjacency);
-            for (int i = 0; i < pairs.Length; i++)
-            {
-                var edge = new DrawEdge(parts[pairs[i].A], parts[pairs[i].B]);
+                var edge = new DrawEdge(author.AnchorA, author.AnchorB);
                 edge.Completed += OnEdgeCompleted;
                 _edges.Add(edge);
-                CreateView(edge, i);
+                _authors[edge] = author;
+                author.View.Bind(edge, author.WallColor(fallbackLineColor));
             }
             _remaining = _edges.Count;
         }
 
-        private void CreateView(DrawEdge edge, int index)
-        {
-            var viewGo = new GameObject($"EdgeView_{index}");
-            viewGo.transform.SetParent(transform, false);
-            var view = viewGo.AddComponent<DrawEdgeView>();
-            view.Bind(edge, fillMaterial);
-            _views.Add(viewGo);
-        }
-
-        private void DestroyViews()
-        {
-            for (int i = 0; i < _views.Count; i++)
-            {
-                if (_views[i] != null) Destroy(_views[i]);
-            }
-            _views.Clear();
-        }
-
         private void OnEdgeCompleted(DrawEdge edge)
         {
-            EdgeCompleted?.Invoke(edge);
+            if (_authors.TryGetValue(edge, out DrawEdgeAuthor author)) author.Reveal();
             if (_remaining > 0) _remaining--;
             if (_remaining == 0) AllCompleted?.Invoke();
         }
