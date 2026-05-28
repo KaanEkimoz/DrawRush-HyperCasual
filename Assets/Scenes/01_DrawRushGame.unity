@@ -23702,6 +23702,10 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7525204801281254171, guid: d3cc757ee8e075b4fb46e4700c71b85f, type: 3}
+      propertyPath: coinReward
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 7525204801281254171, guid: d3cc757ee8e075b4fb46e4700c71b85f, type: 3}
       propertyPath: 'walls.Array.data[0]'
       value: 
       objectReference: {fileID: 129903108}
@@ -24269,6 +24273,10 @@ PrefabInstance:
     - target: {fileID: 7525204801281254170, guid: d3cc757ee8e075b4fb46e4700c71b85f, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7525204801281254171, guid: d3cc757ee8e075b4fb46e4700c71b85f, type: 3}
+      propertyPath: coinReward
+      value: 15
       objectReference: {fileID: 0}
     - target: {fileID: 7525204801281254171, guid: d3cc757ee8e075b4fb46e4700c71b85f, type: 3}
       propertyPath: walls.Array.size
@@ -36097,6 +36105,10 @@ PrefabInstance:
     - target: {fileID: 7525204801281254170, guid: d3cc757ee8e075b4fb46e4700c71b85f, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7525204801281254171, guid: d3cc757ee8e075b4fb46e4700c71b85f, type: 3}
+      propertyPath: coinReward
+      value: 20
       objectReference: {fileID: 0}
     - target: {fileID: 7525204801281254171, guid: d3cc757ee8e075b4fb46e4700c71b85f, type: 3}
       propertyPath: walls.Array.size

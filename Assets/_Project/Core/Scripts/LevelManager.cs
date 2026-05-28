@@ -40,6 +40,7 @@ namespace Studios208.DrawRush.Core
 
         private int _currentIndex = -1;
         private GameState _boundState;
+        private HudPanels _hud;
 
         public int LevelCount => levelsRoot != null ? levelsRoot.childCount : 0;
         public int CurrentIndex => _currentIndex;
@@ -97,7 +98,16 @@ namespace Studios208.DrawRush.Core
             if (gameState != null) gameState.Reset();
             if (playerHealth != null) playerHealth.ResetToStarting();
 
+            UpdateLevelLabel(index);
             MovePlayerToSpawn(activeLevel);
+        }
+
+        // Keep the HUD level label in sync with the actually-active level (the old label read
+        // a stale PlayerPrefs value and never updated on level change).
+        private void UpdateLevelLabel(int index)
+        {
+            if (_hud == null) _hud = FindFirstObjectByType<HudPanels>();
+            if (_hud != null) _hud.SetLevelText(index == tutorialLevelIndex ? "Tutorial" : "Level " + index);
         }
 
         private void MovePlayerToSpawn(Transform activeLevel)

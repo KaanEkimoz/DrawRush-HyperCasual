@@ -53,11 +53,6 @@ namespace Studios208.DrawRush.Core
             if (playerHealth != null) playerHealth.Died -= OnPlayerDied;
         }
 
-        private void Start()
-        {
-            if (hudPanels != null && levelFlow != null) hudPanels.SetLevelLabel(levelFlow.CurrentLevel);
-        }
-
         private void OnPlayerDied()
         {
             if (hudPanels != null) hudPanels.ShowLosePanel();
