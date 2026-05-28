@@ -43,7 +43,13 @@ namespace Studios208.DrawRush.Core
 
         private async void OnGameWonChanged(bool won)
         {
-            if (!won) return;
+            // Restart fires won=false on a state that was just true — turn the celebratory
+            // particles back off so the next level doesn't start with them already on.
+            if (!won)
+            {
+                if (winParticles != null) winParticles.SetActive(false);
+                return;
+            }
             if (winParticles != null) winParticles.SetActive(true);
 
             float delay = GameServices.Config != null ? GameServices.Config.gameWonDelay : 3.0f;
