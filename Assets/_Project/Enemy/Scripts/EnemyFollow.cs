@@ -22,6 +22,11 @@ namespace Studios208.DrawRush.Enemy
 
         private void OnEnable()
         {
+            // Resume chasing on every (re)enable so a restarted/revisited level doesn't keep
+            // an enemy frozen from a previous win (_halted persists across SetActive).
+            _halted = false;
+            if (_agent != null && _agent.isOnNavMesh) _agent.isStopped = false;
+
             _state = GameServices.State;
             if (_state != null) _state.GameWonChanged += OnGameWonChanged;
         }
