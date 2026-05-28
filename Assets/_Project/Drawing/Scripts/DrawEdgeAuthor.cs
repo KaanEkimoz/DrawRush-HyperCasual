@@ -29,7 +29,9 @@ namespace Studios208.DrawRush.Drawing
 
         public bool IsValid => anchorA != null && anchorB != null && anchorA != anchorB;
 
-        private void Awake()
+        // Hidden on every enable (not just Awake) so a revealed wall resets when the level is
+        // re-activated (restart / revisit) — Awake does not run again on re-enable.
+        private void OnEnable()
         {
             if (wallSegment != null) wallSegment.SetActive(false);
         }
