@@ -99,3 +99,6 @@ Secrets.cs
 # =============================================================================
 [Aa]ssets/[Rr]esources/PerformanceTest*.json
 [Aa]ssets/[Rr]esources/PerformanceTest*.json.meta
+
+# Local Claude Code config / plans (machine-local, not project content)
+.claude/
