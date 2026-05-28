@@ -13,6 +13,9 @@ namespace Studios208.DrawRush.Drawing
     {
         [SerializeField] private EdgeNetwork edgeNetwork;
 
+        [Tooltip("Coins awarded to the player when this level is completed.")]
+        [SerializeField] private int coinReward = 10;
+
         private void OnEnable()
         {
             if (edgeNetwork == null) edgeNetwork = GetComponent<EdgeNetwork>();
@@ -26,6 +29,7 @@ namespace Studios208.DrawRush.Drawing
 
         private void OnAllCompleted()
         {
+            PlayerProgress.AddCoins(coinReward);
             if (GameServices.State != null)
             {
                 GameServices.State.IsGameWon = true;
