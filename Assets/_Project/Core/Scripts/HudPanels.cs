@@ -47,6 +47,12 @@ namespace Studios208.DrawRush.Core
             if (levelText != null) levelText.text = string.Format(levelLabelFormat, level);
         }
 
+        /// <summary>Sets the level label to an explicit string (e.g. "Tutorial").</summary>
+        public void SetLevelText(string text)
+        {
+            if (levelText != null) levelText.text = text;
+        }
+
         public void ShowWinPanel()
         {
             if (winPanel != null) winPanel.SetActive(true);
