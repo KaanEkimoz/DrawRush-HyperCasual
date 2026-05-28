@@ -83,7 +83,7 @@ namespace Studios208.DrawRush.Core
             // Two passes: disable every group, then enable the target. This forces the
             // target through a fresh OnDisable/OnEnable cycle even when it is already the
             // active level (Restart), so per-level systems re-initialize — EdgeNetwork
-            // rebuilds unpainted edges, PartManager re-hides its wall, WallManager
+            // rebuilds unpainted edges, DrawEdgeAuthor re-hides its wall, WinCondition
             // re-subscribes — instead of keeping their finished state.
             for (int i = 0; i < levelsRoot.childCount; i++)
             {
