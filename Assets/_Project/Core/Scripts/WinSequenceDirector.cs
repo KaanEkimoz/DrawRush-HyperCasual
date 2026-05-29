@@ -50,7 +50,14 @@ namespace Studios208.DrawRush.Core
                 if (winParticles != null) winParticles.SetActive(false);
                 return;
             }
-            if (winParticles != null) winParticles.SetActive(true);
+            if (winParticles != null)
+            {
+                winParticles.SetActive(true);
+                // PlayOnAwake only fires the first time the object activates; replay
+                // explicitly so confetti bursts on every win (restart, next level, …).
+                var systems = winParticles.GetComponentsInChildren<ParticleSystem>(true);
+                for (int i = 0; i < systems.Length; i++) { systems[i].Clear(true); systems[i].Play(true); }
+            }
 
             float delay = GameServices.Config != null ? GameServices.Config.gameWonDelay : 3.0f;
             try
