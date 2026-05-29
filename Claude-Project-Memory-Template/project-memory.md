@@ -5,6 +5,36 @@
 
 ---
 
+## 🎯 Mevcut Durum — 2026-05-30 (polish & juice oturumu, master `979cde51`)
+
+Kaan ile interaktif polish oturumu. Hepsi master'a `--no-ff` merge + push (her commit ayrı). Sırasıyla yapılanlar:
+
+**Restart-state hijyen (devam):** `WinSequenceDirector` win-particles `won=false`'da kapanır; `RailPaintController.Detach()` artık `LevelManager.MovePlayerToSpawn`'da çağrılır; `EnemyFollow` Awake'te authored spawn pos/rot kaydeder, OnEnable'da `NavMeshAgent.Warp` ile döner (restart'ta enemy başlangıç konumuna gider).
+
+**Authored-edge = her kenar kendi 2 küresi (KARAR DEĞİŞTİ):** Kaan "her kenarın 2 küresi olsun, köşede 2 küre" dedi → `Kenar.prefab`'a AnchorA+AnchorB child küreleri eklendi (paylaşım YOK), `DrawEdgeAuthor` anchor'ları local child. Tüm sahnedeki Kenar'lar migrate edildi, eski paylaşılan DrawPoint'ler silindi (Tut 2 / L01 8 / L02 6 / L03 12 küre). Edge tamamlanınca `Reveal()` 2 küreyi de `SetActive(false)` (bitmiş kenara dokunma engellendi), OnEnable geri açar. Bug fix: Level_01 kare topolojisi (eksik SOL ÜST küre + yanlış wallSegment eşleşmeleri); L02/L03 wallSegment'leri en-yakın-eşleme ile düzeltildi. **DrawableArea mantığı tamamen kaldırıldı** (PlayerInteract/RailPaintController/EnemyCombat'tan IsInDrawArea + sahneden 14 DrawableArea silindi); anchor trigger'ları her yerde çalışır, combat safe-zone artık YOK.
+
+**Küreler:** tüm DrawPoint'ler world-scale 0.50'ye eşitlendi (uniform, level'lar arası tutarlı).
+
+**Combat juice & feel:**
+- **Knockback:** `PlayerKnockback` (Player prefab) — enemy temasında dik yönde itme, linear decay. `EnemyCombat.knockbackForce` (per-enemy, **9** = eski 12'nin %75'i), `PlayerKnockback.knockbackDuration`. ThirdPersonMovement + RailPaintController knockback aktifken yield.
+- **Hit reaction anim:** `player_hit_react_small.fbx` (Generic, KeyframeReduction) → `PlayerHitReactSmall.anim`, Player.controller'da `Hit` state. `AnyState→Hit` (t_hit trigger, **exit time 0, duration 0** = anında). `PlayerCombat.TakeDamage` SetTrigger(Hit).
+- **Damage feedback:** `PlayerHitFeedback` (Player prefab) — kırmızı flash (1 yanıp sönme, `flashDuration=0.8`, `flashBlinks=1`, MaterialPropertyBlock, _BaseColor/_Color) + scale **büyü→küçül** punch (Visuals, `punchScale=0.2`, `punchDuration=0.8`).
+- **i-frames:** `PlayerCombat.invulnerabilityDuration` (**3s**) — hasar sonrası pencerede yeni hasar yok sayılır. `IsInvulnerable` public. (Knockback i-frame'de hâlâ uygulanıyor — Kaan isterse kapatılır.)
+- **Idle:** `player_idle.fbx` → `PlayerIdle.anim`, `Run↔Idle` (f_speed eşik 0.1). **Idle'da üst gövde kilidi:** `UpperBodyMask.mask` (Generic, üst gövde aktif/hips+bacaklar kapalı) + Player.controller `IdleArmsLock` layer (ArmsHold=PlayerRun speed 0). `ThirdPersonMovement.Update` layer weight'i Base "Idle" state'inde 1'e lerp → idle'da kollar sabit (kalem tutma), bacaklar idle.
+
+**Floating joystick:** sabit On-Screen Stick → `FloatingJoystick` (OnScreenControl, `Assets/_Project/UI/Scripts/`). Dokunulan yerde belirir, bırakınca kaybolur, `<Gamepad>/leftStick`'e yazar (pipeline değişmedi). Joystick container full-area transparent raycast touch-zone, ring+handle birlikte toggle (handle ring child'ı DEĞİL, ikisi de SetActive). `movementRange=110`.
+
+**Level akışı:**
+- **3-2-1 countdown:** `LevelStartCountdown` (GameManager'da, `T_Countdown` TMP). Her level aktivasyonunda (start/next/restart) oyunu dondurur (timeScale 0), unscaled 3→2→1, sonra timeScale 1. **TAP TO PLAY kaldırıldı** (otomatik başlar). LevelManager.ActivateLevel sonunda `countdown.Begin()`.
+- **Win confetti:** `GeneralCanvas/Particles` (3 ConfettiBlastRainbow, ekranda farklı yerlerde) win'de aktive (`WinSequenceDirector.winParticles` + GameManager.legacyParticles). Restart'ta gizlenir.
+- **Editör tek-level testi:** `LevelManager.autoActivateOnStart` (`#if UNITY_EDITOR`, scene'de **false**) → editörde aktif bırakılan level Play'de korunur, build her zaman normal akış.
+
+**NavMesh (legacy → AI Navigation):** Legacy bake silindi. Her level grubuna `NavMeshSurface` (collectObjects=Children, **useGeometry=PhysicsColliders** → çiçek/dekor collider'sız olduğu için bake'e girmez, sadece zemin). Her surface kendi `NavMeshData` asset'i (`Assets/_Project/Navigation/NavMesh_Level_*.asset`), level enable/disable'da otomatik add/remove. Duvarlar: her wallSegment'e **carving `NavMeshObstacle`** (box, carveOnlyStationary, **local-space bounds** → rotated alt/üst duvarlarda 90° ters carve fix'lendi). Duvar reveal → carve → enemy geçemez; restart'ta gizlenince carve kalkar. Sadece enemy'leri etkiler (player CharacterController).
+
+**⚠️ Notlar:** Working tree'de `Assets/Prefabs/Edges/Edge.prefab` silinmiş görünebilir (eski kullanılmayan prefab, Kaan'a soruldu). EditMode 37/37 PASS. ⚠️ EditMode run_tests bazen ilk denemede "initialize timeout" veriyor → tekrar çalıştır. ⚠️ Scene değişikliği yaparken Unity Play modunda olabilir → `manage_editor stop` veya MarkSceneDirty "cannot be used during play mode" hatası. **Sıradaki Kaan için (yayın yolu):** 10-15 yeni level (Kenar prefab drag-drop), ses (UI/hit/win), 512² icon + store screenshots; sonra internal test → production.
+
+---
+
 ## 🎯 Mevcut Durum — 2026-05-28 (authored-edge sistemi, otonom oturum)
 
 **Tek satır (2026-05-28):** Çizim artık **authored edge** modeli. Köşe küreleri (DrawPoint) paylaşılır; her kenar bir **`Kenar` prefab'ı** (`DrawEdgeAuthor`: anchorA/anchorB + wallSegment + DrawEdgeView). `EdgeNetwork` sahnedeki Kenar'ları toplar (komşu hesabı YOK), kenar boyanınca **kendi duvar parçasını reveal** eder (per-edge), hepsi bitince win. `RailPaintController` edge'leri `EdgeNetwork.GetEdgesTouching`'den seçer. **4 level de bu sisteme çevrildi** (Tutorial 1, Level_01 4, Level_02 üçgen 3, Level_03 altıgen 6 edge). Level kurma akışı: Kenar prefab'ını sürükle → anchorA/B + wallSegment ata. **Ödül:** `PlayerProgress.Coins` (PlayerPrefs) kazanınca +10, `CoinHud` HUD'da gösterir (I_Coins üst-sol, placement Kaan'a göster-onayla). **Lose-flow düzeltildi:** GameManager.playerHealth wire edildi (ölünce LosePanel + pause) + PlayerCombat artık player'ı Destroy etmiyor (Restart resetler). Ölü komşu kodu (DrawPartNeighborGraph + DrawPart.Neighbors) tamamen silindi; DrawPart yalın anchor.
