@@ -29,7 +29,7 @@ namespace Studios208.DrawRush.Player
 
         [Header("Punch")]
         [Range(0f, 0.9f)]
-        [Tooltip("Fraction the visuals grow by at the peak of the punch (0.2 = up to 120%, " +
+        [Tooltip("Fraction the visuals shrink by at the peak of the punch (0.2 = down to 80%, " +
                  "then back to normal).")]
         [SerializeField] private float punchScale = 0.2f;
         [Tooltip("How long the scale punch lasts, in seconds.")]
@@ -94,12 +94,12 @@ namespace Studios208.DrawRush.Player
                     }
                     else ApplyColor(0f);
 
-                    // Punch: a single 0 → grow → 0 pulse on its own clock (grow, then back).
+                    // Punch: a single 0 → shrink → 0 pulse on its own clock (shrink, then back).
                     if (t <= punchDuration && punchDuration > 0f)
                     {
                         float pp = t / punchDuration;                 // 0..1
                         float s = Mathf.Sin(pp * Mathf.PI);
-                        punchTarget.localScale = _baseScale * (1f + punchScale * s);
+                        punchTarget.localScale = _baseScale * (1f - punchScale * s);
                     }
                     else punchTarget.localScale = _baseScale;
 
