@@ -1200,6 +1200,7 @@ GameObject:
   - component: {fileID: 1496855639}
   - component: {fileID: 1066403372554981823}
   - component: {fileID: 6092154430700188147}
+  - component: {fileID: 1120346370640045950}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -1325,6 +1326,8 @@ MonoBehaviour:
   useLocalValues: 0
   localPlayerSpeed: 1.5
   localTurnSmoothTime: 0.1
+  idleArmsLayer: 1
+  idleArmsBlend: 10
 --- !u!114 &6718440921668358068
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1350,6 +1353,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   health: {fileID: 11400000, guid: f00b6e2134e6b467b885d979c4863d0e, type: 2}
+  playerAnim: {fileID: 0}
+  hitFeedback: {fileID: 0}
   healthLabel: {fileID: 0}
 --- !u!135 &1496855639
 SphereCollider:
@@ -1403,6 +1408,23 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Studios208.DrawRush::Studios208.DrawRush.Player.PlayerKnockback
   knockbackDuration: 0.35
+--- !u!114 &1120346370640045950
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6718440921668358069}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f36cd809df3214dd7918053fc88c1712, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Studios208.DrawRush::Studios208.DrawRush.Player.PlayerHitFeedback
+  punchTarget: {fileID: 0}
+  flashColor: {r: 1, g: 0, b: 0, a: 1}
+  flashStrength: 0.85
+  punchScale: 0.15
+  duration: 0.25
 --- !u!1 &6718440922259339700
 GameObject:
   m_ObjectHideFlags: 0
