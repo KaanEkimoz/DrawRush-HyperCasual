@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: fdf9ca862bbbb45bc8acca00b5c7c074
+guid: c5acdd6dec4fd4e1c81d96b541a56444
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
@@ -31,11 +31,11 @@ ModelImporter:
     extraUserProperties: []
     clipAnimations:
     - serializedVersion: 16
-      name: PlayerHitReactOver
+      name: PlayerHitReactSmall
       takeName: mixamo.com
       internalID: -203655887218126122
       firstFrame: 0
-      lastFrame: 99
+      lastFrame: 38
       wrapMode: 0
       orientationOffsetY: 0
       level: 0
