@@ -14,8 +14,7 @@ namespace Studios208.DrawRush.UI
     ///
     /// Setup: put this on a full-area RectTransform with a transparent, raycast-target Image
     /// (the touch zone). Assign <see cref="background"/> (the ring) and <see cref="handle"/>
-    /// (the knob); both live in this rect's local space. The background is shown/hidden as a
-    /// whole, so parent the handle under the background in the hierarchy.
+    /// (the knob); both are siblings in this rect's local space and are shown/hidden together.
     /// </summary>
     [RequireComponent(typeof(RectTransform))]
     public sealed class FloatingJoystick : OnScreenControl,
@@ -23,7 +22,7 @@ namespace Studios208.DrawRush.UI
     {
         [Tooltip("The joystick ring. Moved to the touch point and toggled on/off.")]
         [SerializeField] private RectTransform background;
-        [Tooltip("The knob. Should be a child of background; clamped within movementRange.")]
+        [Tooltip("The knob (sibling of background, same local space). Clamped within movementRange.")]
         [SerializeField] private RectTransform handle;
         [Tooltip("Max knob travel from center, in canvas units. Full deflection = input 1.")]
         [SerializeField] private float movementRange = 80f;
@@ -51,8 +50,9 @@ namespace Studios208.DrawRush.UI
                     _rect, eventData.position, eventData.pressEventCamera, out Vector2 local))
             {
                 background.anchoredPosition = local;
+                if (handle != null) handle.anchoredPosition = local;
                 background.gameObject.SetActive(true);
-                if (handle != null) handle.anchoredPosition = Vector2.zero;
+                if (handle != null) handle.gameObject.SetActive(true);
             }
             SendValueToControl(Vector2.zero);
             OnDrag(eventData);
@@ -67,7 +67,8 @@ namespace Studios208.DrawRush.UI
 
             Vector2 delta = local - background.anchoredPosition;
             Vector2 clamped = Vector2.ClampMagnitude(delta, movementRange);
-            if (handle != null) handle.anchoredPosition = clamped;   // handle is child of background
+            // handle is a sibling (same local space), so add the ring's position.
+            if (handle != null) handle.anchoredPosition = background.anchoredPosition + clamped;
             SendValueToControl(movementRange > 0f ? clamped / movementRange : Vector2.zero);
         }
 
@@ -77,10 +78,11 @@ namespace Studios208.DrawRush.UI
             HideStick();
         }
 
+        // Both the ring and the knob are hidden when not in use, so nothing lingers on screen.
         private void HideStick()
         {
-            if (handle != null) handle.anchoredPosition = Vector2.zero;
             if (background != null) background.gameObject.SetActive(false);
+            if (handle != null) handle.gameObject.SetActive(false);
         }
     }
 }
