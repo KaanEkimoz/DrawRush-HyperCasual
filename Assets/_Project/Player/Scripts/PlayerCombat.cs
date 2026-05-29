@@ -18,6 +18,14 @@ namespace Studios208.DrawRush.Player
         [SerializeField] private Animator playerAnim;
         [Tooltip("Damage flash + squash juice. Auto-resolved from this GameObject if null.")]
         [SerializeField] private PlayerHitFeedback hitFeedback;
+        [Tooltip("Invulnerability window after taking damage, in seconds. Further hits are " +
+                 "ignored until it elapses.")]
+        [SerializeField] private float invulnerabilityDuration = 3f;
+
+        private float _invulnerableUntil;
+
+        /// <summary>True while the post-hit invulnerability window is active.</summary>
+        public bool IsInvulnerable => Time.time < _invulnerableUntil;
 
         [FormerlySerializedAs("playerHp")]
         [SerializeField] private TextMeshProUGUI healthLabel;
@@ -41,16 +49,17 @@ namespace Studios208.DrawRush.Player
             health.Changed -= OnHealthChanged;
         }
 
-        /// <summary>Applies positive damage to the bound PlayerHealth asset and plays
-        /// the hit-reaction animation (one-shot).</summary>
+        /// <summary>Applies positive damage to the bound PlayerHealth asset, plays the
+        /// hit-reaction animation/juice, and opens an invulnerability window. Hits during
+        /// that window are ignored.</summary>
         public void TakeDamage(int amount)
         {
+            if (amount <= 0 || IsInvulnerable) return;
+
             if (health != null) health.TakeDamage(amount);
-            if (amount > 0)
-            {
-                if (playerAnim != null) playerAnim.SetTrigger(AnimatorIds.Hit);
-                if (hitFeedback != null) hitFeedback.Play();
-            }
+            if (playerAnim != null) playerAnim.SetTrigger(AnimatorIds.Hit);
+            if (hitFeedback != null) hitFeedback.Play();
+            _invulnerableUntil = Time.time + invulnerabilityDuration;
         }
 
         /// <summary>Applies positive healing to the bound PlayerHealth asset.</summary>
