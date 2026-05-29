@@ -22,6 +22,11 @@ namespace Studios208.DrawRush.Player
         [SerializeField] private float localPlayerSpeed = 1.5f;
         [SerializeField] private float localTurnSmoothTime = 0.1f;
 
+        [Tooltip("Animator layer index that locks the arms while idling (Avatar Mask = upper " +
+                 "body). Weight is driven to 1 only while the Base Layer is in the Idle state.")]
+        [SerializeField] private int idleArmsLayer = 1;
+        [SerializeField] private float idleArmsBlend = 10f;
+
         private PlayerControls _controls;
         private Vector2 _move;
         private float _turnSmoothVelocity;
@@ -29,6 +34,7 @@ namespace Studios208.DrawRush.Player
         private CharacterController _characterController;
         private GameState _state;
         private bool _hasWon;
+        private int _idleStateHash;
 
         /// <summary>Latest movement input vector. Exposed so RailPaintController can reuse
         /// the same input source while it drives edge-constrained movement.</summary>
@@ -51,6 +57,19 @@ namespace Studios208.DrawRush.Player
                 playerAnim = GetComponentInChildren<Animator>();
             }
             if (knockback == null) knockback = GetComponent<PlayerKnockback>();
+            _idleStateHash = Animator.StringToHash("Idle");
+        }
+
+        // The upper-body Avatar Mask layer should only assert itself while the player is
+        // actually standing in Idle — never during Run / Hit / Dance (those need full-body
+        // motion). Blend the layer weight toward 1 in Idle, 0 otherwise.
+        private void Update()
+        {
+            if (playerAnim == null || idleArmsLayer <= 0 || idleArmsLayer >= playerAnim.layerCount) return;
+            var baseState = playerAnim.GetCurrentAnimatorStateInfo(0);
+            float target = baseState.shortNameHash == _idleStateHash ? 1f : 0f;
+            float w = Mathf.MoveTowards(playerAnim.GetLayerWeight(idleArmsLayer), target, idleArmsBlend * Time.deltaTime);
+            playerAnim.SetLayerWeight(idleArmsLayer, w);
         }
 
         private void OnEnable()
