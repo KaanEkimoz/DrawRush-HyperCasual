@@ -74,6 +74,10 @@ namespace Studios208.DrawRush.Player
             if (knockback != null && knockback.IsActive) { ApplyGravity(); return; }
             if (!MovementLocked) Move();
             ApplyGravity();
+            // Drive the Run ↔ Idle blend from input magnitude. RailPaintController locks
+            // movement while sliding, but the player is still actively moving on the rail —
+            // report the rail's input so the run anim stays active.
+            if (playerAnim != null) playerAnim.SetFloat(AnimatorIds.Speed, _move.magnitude);
         }
 
         private void Move()
