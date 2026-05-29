@@ -1420,13 +1420,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f36cd809df3214dd7918053fc88c1712, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Studios208.DrawRush::Studios208.DrawRush.Player.PlayerHitFeedback
-  punchTarget: {fileID: 0}
+  punchTarget: {fileID: 6718440922780190893}
   flashColor: {r: 1, g: 0, b: 0, a: 1}
   flashStrength: 0.85
   flashDuration: 1
   flashBlinks: 3
-  punchScale: 0.15
-  punchDuration: 0.25
+  punchScale: 0.28
+  punchDuration: 0.4
 --- !u!1 &6718440922259339700
 GameObject:
   m_ObjectHideFlags: 0
