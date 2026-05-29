@@ -38,6 +38,11 @@ namespace Studios208.DrawRush.Core
                  "new player, otherwise the first level). >= 0 forces that index for testing.")]
         [SerializeField] private int startLevelIndex = -1;
 
+        [Tooltip("EDITOR ONLY: when off, pressing Play keeps whichever level group is already " +
+                 "active in the scene instead of running the tutorial/first-level flow — handy " +
+                 "for testing a single level. Ignored in builds (always uses the normal flow).")]
+        [SerializeField] private bool autoActivateOnStart = true;
+
         private int _currentIndex = -1;
         private GameState _boundState;
         private HudPanels _hud;
@@ -60,11 +65,32 @@ namespace Studios208.DrawRush.Core
         // spawn. Runs after Awake so each group's DrawParts can auto-wire neighbors.
         private void Start()
         {
+#if UNITY_EDITOR
+            // Editor convenience: keep the level the developer left enabled in the scene so a
+            // single level can be tested in isolation. Never compiled into builds.
+            if (!autoActivateOnStart)
+            {
+                int active = FindActiveLevelIndex();
+                ActivateLevel(active >= 0 ? active : firstLevelIndex);
+                return;
+            }
+#endif
             int index = startLevelIndex >= 0
                 ? startLevelIndex
                 : (PlayerProgress.TutorialCompleted ? firstLevelIndex : tutorialLevelIndex);
             ActivateLevel(index);
         }
+
+#if UNITY_EDITOR
+        // First level group currently enabled under levelsRoot, or -1 if none.
+        private int FindActiveLevelIndex()
+        {
+            if (levelsRoot == null) return -1;
+            for (int i = 0; i < levelsRoot.childCount; i++)
+                if (levelsRoot.GetChild(i).gameObject.activeSelf) return i;
+            return -1;
+        }
+#endif
 
         // Completing the tutorial level marks it done so it is skipped from now on.
         private void OnGameWonChanged(bool won)
