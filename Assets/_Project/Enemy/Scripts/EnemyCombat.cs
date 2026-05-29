@@ -22,7 +22,7 @@ namespace Studios208.DrawRush.Enemy
         [Header("Knockback")]
         [Tooltip("Push speed (units/sec) applied to the player on contact, decaying to 0 over " +
                  "PlayerKnockback.knockbackDuration. 0 disables knockback.")]
-        [SerializeField] private float knockbackForce = 12f;
+        [SerializeField] private float knockbackForce = 9f;
 
         private PlayerCombat _playerCombat;
         private RailPaintController _railPaint;
