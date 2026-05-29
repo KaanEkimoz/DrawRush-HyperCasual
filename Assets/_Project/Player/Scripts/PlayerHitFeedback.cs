@@ -27,12 +27,13 @@ namespace Studios208.DrawRush.Player
         [Tooltip("How many red pulses (blinks) happen within flashDuration.")]
         [SerializeField] private int flashBlinks = 3;
 
-        [Header("Squash")]
+        [Header("Punch")]
         [Range(0f, 0.9f)]
-        [Tooltip("Fraction the visuals shrink by at the peak of the squash (0.15 = down to 85%).")]
-        [SerializeField] private float punchScale = 0.15f;
-        [Tooltip("How long the scale squash lasts, in seconds.")]
-        [SerializeField] private float punchDuration = 0.25f;
+        [Tooltip("Fraction the visuals grow by at the peak of the punch (0.2 = up to 120%, " +
+                 "then back to normal).")]
+        [SerializeField] private float punchScale = 0.2f;
+        [Tooltip("How long the scale punch lasts, in seconds.")]
+        [SerializeField] private float punchDuration = 0.8f;
 
         private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
         private static readonly int ColorId = Shader.PropertyToID("_Color");
@@ -93,12 +94,12 @@ namespace Studios208.DrawRush.Player
                     }
                     else ApplyColor(0f);
 
-                    // Squash: a single 0 → shrink → 0 pulse, on its own (shorter) clock.
+                    // Punch: a single 0 → grow → 0 pulse on its own clock (grow, then back).
                     if (t <= punchDuration && punchDuration > 0f)
                     {
                         float pp = t / punchDuration;                 // 0..1
                         float s = Mathf.Sin(pp * Mathf.PI);
-                        punchTarget.localScale = _baseScale * (1f - punchScale * s);
+                        punchTarget.localScale = _baseScale * (1f + punchScale * s);
                     }
                     else punchTarget.localScale = _baseScale;
 
