@@ -10765,6 +10765,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 2004894702}
     m_Modifications:
+    - target: {fileID: 1229385681, guid: e591242241495374292fdc8f0a189f46, type: 3}
+      propertyPath: knockbackForce
+      value: 9
+      objectReference: {fileID: 0}
     - target: {fileID: 4847869003858600382, guid: e591242241495374292fdc8f0a189f46, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
@@ -12987,6 +12991,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1380190004}
     m_Modifications:
+    - target: {fileID: 1229385681, guid: e591242241495374292fdc8f0a189f46, type: 3}
+      propertyPath: knockbackForce
+      value: 9
+      objectReference: {fileID: 0}
     - target: {fileID: 5275645636955800150, guid: e591242241495374292fdc8f0a189f46, type: 3}
       propertyPath: m_Name
       value: Enemy
@@ -16795,7 +16803,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1380190004
 Transform:
   m_ObjectHideFlags: 0
@@ -19623,6 +19631,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1380190004}
     m_Modifications:
+    - target: {fileID: 1229385681, guid: e591242241495374292fdc8f0a189f46, type: 3}
+      propertyPath: knockbackForce
+      value: 9
+      objectReference: {fileID: 0}
     - target: {fileID: 5275645636955800150, guid: e591242241495374292fdc8f0a189f46, type: 3}
       propertyPath: m_Name
       value: Enemy (2)
@@ -31073,6 +31085,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1046434179}
     m_Modifications:
+    - target: {fileID: 1229385681, guid: e591242241495374292fdc8f0a189f46, type: 3}
+      propertyPath: knockbackForce
+      value: 9
+      objectReference: {fileID: 0}
     - target: {fileID: 5275645636955800150, guid: e591242241495374292fdc8f0a189f46, type: 3}
       propertyPath: m_Name
       value: Enemy

@@ -16,15 +16,23 @@ namespace Studios208.DrawRush.Player
         [Tooltip("Transform that gets the scale punch. Defaults to a child named 'Visuals', " +
                  "else this GameObject. Should NOT be the CharacterController root.")]
         [SerializeField] private Transform punchTarget;
+        [Header("Flash")]
         [SerializeField] private Color flashColor = Color.red;
         [Range(0f, 1f)]
-        [Tooltip("How far the mesh color lerps toward flashColor at the peak of the flash.")]
+        [Tooltip("How far the mesh color lerps toward flashColor at each blink peak.")]
         [SerializeField] private float flashStrength = 0.85f;
+        [Tooltip("How long the red flash lasts, in seconds.")]
+        [SerializeField] private float flashDuration = 1f;
+        [Range(1, 8)]
+        [Tooltip("How many red pulses (blinks) happen within flashDuration.")]
+        [SerializeField] private int flashBlinks = 3;
+
+        [Header("Squash")]
         [Range(0f, 0.9f)]
         [Tooltip("Fraction the visuals shrink by at the peak of the squash (0.15 = down to 85%).")]
         [SerializeField] private float punchScale = 0.15f;
-        [Tooltip("Total length of the flash + squash, in seconds.")]
-        [SerializeField] private float duration = 0.25f;
+        [Tooltip("How long the scale squash lasts, in seconds.")]
+        [SerializeField] private float punchDuration = 0.25f;
 
         private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
         private static readonly int ColorId = Shader.PropertyToID("_Color");
@@ -69,15 +77,31 @@ namespace Studios208.DrawRush.Player
         {
             _playing = true;
             float t = 0f;
+            float total = Mathf.Max(flashDuration, punchDuration);
             try
             {
-                while (t < duration)
+                while (t < total)
                 {
                     t += Time.deltaTime;
-                    // 0 → 1 → 0 over the duration: peaks in the middle.
-                    float k = Mathf.Sin(Mathf.Clamp01(t / duration) * Mathf.PI);
-                    ApplyColor(k * flashStrength);
-                    punchTarget.localScale = _baseScale * (1f - punchScale * k);
+
+                    // Flash: |sin| with flashBlinks half-cycles → that many red pulses.
+                    if (t <= flashDuration && flashDuration > 0f)
+                    {
+                        float fp = t / flashDuration;                 // 0..1
+                        float k = Mathf.Abs(Mathf.Sin(fp * Mathf.PI * flashBlinks));
+                        ApplyColor(k * flashStrength);
+                    }
+                    else ApplyColor(0f);
+
+                    // Squash: a single 0 → shrink → 0 pulse, on its own (shorter) clock.
+                    if (t <= punchDuration && punchDuration > 0f)
+                    {
+                        float pp = t / punchDuration;                 // 0..1
+                        float s = Mathf.Sin(pp * Mathf.PI);
+                        punchTarget.localScale = _baseScale * (1f - punchScale * s);
+                    }
+                    else punchTarget.localScale = _baseScale;
+
                     await Awaitable.NextFrameAsync(destroyCancellationToken);
                 }
             }
