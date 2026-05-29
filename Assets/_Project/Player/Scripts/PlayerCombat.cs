@@ -16,6 +16,8 @@ namespace Studios208.DrawRush.Player
         [SerializeField] private PlayerHealth health;
         [Tooltip("Animator that plays the hit-reaction clip. Auto-resolved from children if null.")]
         [SerializeField] private Animator playerAnim;
+        [Tooltip("Damage flash + squash juice. Auto-resolved from this GameObject if null.")]
+        [SerializeField] private PlayerHitFeedback hitFeedback;
 
         [FormerlySerializedAs("playerHp")]
         [SerializeField] private TextMeshProUGUI healthLabel;
@@ -23,6 +25,7 @@ namespace Studios208.DrawRush.Player
         private void Awake()
         {
             if (playerAnim == null) playerAnim = GetComponentInChildren<Animator>();
+            if (hitFeedback == null) hitFeedback = GetComponent<PlayerHitFeedback>();
         }
 
         private void OnEnable()
@@ -43,7 +46,11 @@ namespace Studios208.DrawRush.Player
         public void TakeDamage(int amount)
         {
             if (health != null) health.TakeDamage(amount);
-            if (playerAnim != null && amount > 0) playerAnim.SetTrigger(AnimatorIds.Hit);
+            if (amount > 0)
+            {
+                if (playerAnim != null) playerAnim.SetTrigger(AnimatorIds.Hit);
+                if (hitFeedback != null) hitFeedback.Play();
+            }
         }
 
         /// <summary>Applies positive healing to the bound PlayerHealth asset.</summary>
