@@ -27,6 +27,10 @@ namespace Studios208.DrawRush.Core
         [Tooltip("Child name searched inside each level group for the player spawn point.")]
         [SerializeField] private string spawnChildName = "Spawn";
 
+        [Tooltip("3-2-1 countdown shown before play starts on every level activation. " +
+                 "Auto-resolved if left empty.")]
+        [SerializeField] private LevelStartCountdown countdown;
+
         [Header("Tutorial")]
         [Tooltip("Index of the tutorial level group.")]
         [SerializeField] private int tutorialLevelIndex = 0;
@@ -126,6 +130,10 @@ namespace Studios208.DrawRush.Core
 
             UpdateLevelLabel(index);
             MovePlayerToSpawn(activeLevel);
+
+            // Freeze + 3-2-1 before the player can move (every activation: start/next/restart).
+            if (countdown == null) countdown = FindFirstObjectByType<LevelStartCountdown>();
+            if (countdown != null) countdown.Begin();
         }
 
         // Keep the HUD level label in sync with the actually-active level (the old label read
