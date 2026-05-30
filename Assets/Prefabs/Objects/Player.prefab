@@ -1383,7 +1383,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Studios208.DrawRush::Studios208.DrawRush.Player.PlayerInvulnerabilityBlink
   combat: {fileID: 0}
-  blinkInterval: 0.12
+  blinkInterval: 0.24
 --- !u!1 &6718440922259339700
 GameObject:
   m_ObjectHideFlags: 0
