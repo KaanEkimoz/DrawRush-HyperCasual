@@ -52,6 +52,11 @@ namespace Studios208.DrawRush.Enemy
             if (!other.CompareTag(playerTag)) return;
             if (_state != null && _state.IsGameWon) return;
 
+            // During the post-hit invulnerability window the player is intangible to enemies:
+            // no damage, no knockback, no rail detach — contact does nothing at all.
+            if (_playerCombat == null) _playerCombat = other.GetComponent<PlayerCombat>();
+            if (_playerCombat != null && _playerCombat.IsInvulnerable) return;
+
             // Contact frees the player from the paint rail so they can flee.
             if (_railPaint == null) _railPaint = other.GetComponent<RailPaintController>();
             if (_railPaint != null) _railPaint.Detach();
@@ -67,10 +72,6 @@ namespace Studios208.DrawRush.Enemy
                 }
             }
 
-            if (_playerCombat == null)
-            {
-                _playerCombat = other.GetComponent<PlayerCombat>();
-            }
             if (_playerCombat == null) return;
 
             int dmg = damageOverride > 0
