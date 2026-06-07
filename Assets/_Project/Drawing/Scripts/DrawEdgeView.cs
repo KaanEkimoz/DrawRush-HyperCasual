@@ -17,6 +17,8 @@ namespace Studios208.DrawRush.Drawing
         [SerializeField] private float width = 0f;
         [Tooltip("World Y height of the painted line (kept just above the ground).")]
         [SerializeField] private float lineY = 0.02f;
+        [Tooltip("Segments used to draw a curved (arc) span; straight spans use 1.")]
+        [SerializeField] private int arcSegments = 24;
         [SerializeField] private Color color = new Color(0.1f, 1f, 0.8f, 1f);
 
         private DrawEdge _edge;
@@ -112,12 +114,16 @@ namespace Studios208.DrawRush.Drawing
 
         private void SetSpan(LineRenderer lr, float t0, float t1)
         {
-            Vector3 p0 = _edge.PointAt(t0);
-            Vector3 p1 = _edge.PointAt(t1);
-            p0.y = lineY;
-            p1.y = lineY;
-            lr.SetPosition(0, p0);
-            lr.SetPosition(1, p1);
+            // Straight edge → a single 2-point segment. Arc → sample the curve so the painted
+            // line actually follows the bow.
+            int segs = _edge.IsArc ? Mathf.Max(2, arcSegments) : 1;
+            lr.positionCount = segs + 1;
+            for (int i = 0; i <= segs; i++)
+            {
+                Vector3 p = _edge.PointAt(Mathf.Lerp(t0, t1, (float)i / segs));
+                p.y = lineY;
+                lr.SetPosition(i, p);
+            }
             lr.enabled = true;
         }
 
