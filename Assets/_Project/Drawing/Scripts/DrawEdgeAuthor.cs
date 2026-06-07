@@ -105,5 +105,14 @@ namespace Studios208.DrawRush.Drawing
             if (m.HasProperty("_BaseColor")) return m.GetColor("_BaseColor");
             return fallback;
         }
+
+        /// <summary>The wall's material, so a corner filler can match the wall's look.
+        /// Null when there is no wall renderer.</summary>
+        public Material WallMaterial()
+        {
+            if (wallSegment == null) return null;
+            Renderer r = wallSegment.GetComponentInChildren<Renderer>(includeInactive: true);
+            return r != null ? r.sharedMaterial : null;
+        }
     }
 }
