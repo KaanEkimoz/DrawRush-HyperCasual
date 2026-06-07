@@ -21,6 +21,17 @@ namespace Studios208.DrawRush.Drawing
                  "Starts hidden.")]
         [SerializeField] private GameObject wallSegment;
 
+        [Header("Drop color")]
+        [Tooltip("When off, both drops take this edge's wall color. When on, use dropColor " +
+                 "below instead (per-edge override).")]
+        [SerializeField] private bool overrideDropColor;
+        [SerializeField] private Color dropColor = new Color(0.10f, 0.85f, 1f);
+
+        private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
+        private static readonly int ColorId = Shader.PropertyToID("_Color");
+        private static readonly int EmissionId = Shader.PropertyToID("_EmissionColor");
+        private MaterialPropertyBlock _mpb;
+
         private DrawEdgeView _view;
 
         public DrawPart AnchorA => anchorA;
@@ -37,6 +48,37 @@ namespace Studios208.DrawRush.Drawing
             if (wallSegment != null) wallSegment.SetActive(false);
             if (anchorA != null) anchorA.gameObject.SetActive(true);
             if (anchorB != null) anchorB.gameObject.SetActive(true);
+            ApplyDropColor();
+        }
+
+#if UNITY_EDITOR
+        // Live preview in the editor when tweaking the wall color or the override.
+        private void OnValidate() => ApplyDropColor();
+#endif
+
+        /// <summary>Tints both endpoint drops to this edge's color: the wall color by default,
+        /// or <see cref="dropColor"/> when <see cref="overrideDropColor"/> is on. Applied via a
+        /// MaterialPropertyBlock so the shared drop material isn't mutated. Both drops always
+        /// share one color (one edge = one color).</summary>
+        public void ApplyDropColor()
+        {
+            Color c = overrideDropColor ? dropColor : WallColor(dropColor);
+            TintDrop(anchorA, c);
+            TintDrop(anchorB, c);
+        }
+
+        private void TintDrop(DrawPart anchor, Color c)
+        {
+            if (anchor == null) return;
+            var r = anchor.GetComponent<Renderer>();
+            if (r == null) r = anchor.GetComponentInChildren<Renderer>(includeInactive: true);
+            if (r == null) return;
+            _mpb ??= new MaterialPropertyBlock();
+            r.GetPropertyBlock(_mpb);
+            _mpb.SetColor(BaseColorId, c);
+            _mpb.SetColor(ColorId, c);
+            _mpb.SetColor(EmissionId, c * 0.45f);   // self-glow in its own color → pops off the ground
+            r.SetPropertyBlock(_mpb);
         }
 
         /// <summary>Show this edge's wall segment (its Animator plays the reveal), clear the
