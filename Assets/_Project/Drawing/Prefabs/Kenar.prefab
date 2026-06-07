@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 1506064898454500642}
   - component: {fileID: 6281296526979497774}
   - component: {fileID: 8878605407648098162}
+  - component: {fileID: 4004556214058580686}
   m_Layer: 0
   m_Name: AnchorA
   m_TagString: Untagged
@@ -127,6 +128,19 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 0.5
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &4004556214058580686
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2876068110417507245}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 14badc4006864410c8725c8b4705abc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Studios208.DrawRush::Studios208.DrawRush.Drawing.BillboardToCamera
+  offsetEuler: {x: -90, y: 0, z: 0}
 --- !u!1 &5022876435918370966
 GameObject:
   m_ObjectHideFlags: 0
@@ -230,6 +244,7 @@ GameObject:
   - component: {fileID: 982552279327253878}
   - component: {fileID: 790697452660945098}
   - component: {fileID: 5639379791754960929}
+  - component: {fileID: 6325459264259864703}
   m_Layer: 0
   m_Name: AnchorB
   m_TagString: Untagged
@@ -344,6 +359,19 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 0.5
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &6325459264259864703
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6659403366547357948}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 14badc4006864410c8725c8b4705abc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Studios208.DrawRush::Studios208.DrawRush.Drawing.BillboardToCamera
+  offsetEuler: {x: -90, y: 0, z: 0}
 --- !u!1 &6770665978776919814
 GameObject:
   m_ObjectHideFlags: 0
