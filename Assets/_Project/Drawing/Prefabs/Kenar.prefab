@@ -351,7 +351,7 @@ MonoBehaviour:
   wallMaterial: {fileID: 0}
   wallColor: {r: 0.85, g: 0.2, b: 0.18, a: 1}
   wallHeight: 0.9
-  wallThickness: 0.4
+  wallThickness: 0.7
   overrideDropColor: 0
   dropColor: {r: 0.1, g: 0.85, b: 1, a: 1}
 --- !u!114 &1743664000495337078
