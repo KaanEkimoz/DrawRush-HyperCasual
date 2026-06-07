@@ -83,7 +83,7 @@ namespace Studios208.DrawRush.Drawing
                 DrawEdgeAuthor author = authors[i];
                 if (!author.IsValid) continue;
 
-                var edge = new DrawEdge(author.AnchorA, author.AnchorB);
+                var edge = new DrawEdge(author.AnchorA, author.AnchorB) { Waypoint = author.Waypoint };
                 edge.Completed += OnEdgeCompleted;
                 _edges.Add(edge);
                 _authors[edge] = author;
@@ -96,7 +96,7 @@ namespace Studios208.DrawRush.Drawing
 
         private void OnEdgeCompleted(DrawEdge edge)
         {
-            if (_authors.TryGetValue(edge, out DrawEdgeAuthor author)) author.Reveal();
+            if (_authors.TryGetValue(edge, out DrawEdgeAuthor author)) author.Reveal(edge);
             if (_remaining > 0) _remaining--;
 
             // Rise any corner whose every edge is now painted.
@@ -125,8 +125,15 @@ namespace Studios208.DrawRush.Drawing
 
         private void BuildCorners()
         {
-            // Reset any posts spawned on a previous activation.
-            if (_cornerRoot != null) SafeDestroy(_cornerRoot.gameObject);
+            // Reset any posts from a previous activation — destroy EVERY existing "CornerPosts"
+            // root (the cached one AND any that leaked into the scene via a prior edit-mode
+            // rebuild), so they can never accumulate or serialize into duplicate posts.
+            for (int i = transform.childCount - 1; i >= 0; i--)
+            {
+                Transform child = transform.GetChild(i);
+                if (child != null && child.name == "CornerPosts") SafeDestroy(child.gameObject);
+            }
+            _cornerRoot = null;
             if (!generateCornerPosts || _edges.Count == 0) return;
 
             _cornerRoot = new GameObject("CornerPosts").transform;
@@ -145,11 +152,16 @@ namespace Studios208.DrawRush.Drawing
             {
                 Corner c = _corners[i];
                 if (c.Edges.Count < 2) continue;
-                // The drops sit a little inside the corner, so their midpoint is off. Use the
-                // intersection of the two edge lines — the true corner where the walls meet —
-                // so the post lands flush with both walls.
+                // For two STRAIGHT walls the drops sit a little inside the corner, so their
+                // midpoint is off — use the intersection of the two edge lines (the true corner
+                // where the walls meet) so the post lands flush. For an ARC the chord line is
+                // not the wall, so a chord intersection is meaningless; the arc endpoints are
+                // pinned exactly to the anchors, so the grouped endpoint position already sits
+                // where the walls actually end. Use it directly.
                 Vector3 pos = c.Position;
-                if (TryEdgeIntersection(c.Edges[0], c.Edges[1], out Vector3 hit)) pos = hit;
+                bool anyArc = false;
+                for (int e = 0; e < c.Edges.Count; e++) if (c.Edges[e].IsArc) { anyArc = true; break; }
+                if (!anyArc && TryEdgeIntersection(c.Edges[0], c.Edges[1], out Vector3 hit)) pos = hit;
                 c.Post = SpawnPost(pos, c.Edges);
             }
         }
@@ -181,8 +193,9 @@ namespace Studios208.DrawRush.Drawing
             var col = go.GetComponent<Collider>();
             if (col != null) SafeDestroy(col);
 
-            // Derive height + base + thickness from the meeting wall so the post lines up
-            // with the walls instead of floating or towering. Fall back to inspector values.
+            // Match height + thickness to the procedural wall so the post lines up. The corner
+            // is a clear square: twice the wall thickness (wall=1 → corner=2) so it reads as a
+            // corner and the two walls butt flush against it. Fall back to inspector values.
             float height = cornerHeight;
             float baseY = cornerBaseY;
             float thickness = cornerThickness;
@@ -192,14 +205,8 @@ namespace Studios208.DrawRush.Drawing
             {
                 wallMat = a.WallMaterial();
                 wallCol = a.WallColor(fallbackLineColor);
-                if (a.TryGetWallBounds(out Bounds wb))
-                {
-                    height = wb.size.y;
-                    baseY = wb.min.y;
-                    // Corner is a clear square: twice the wall thickness (wall=1 → corner=2),
-                    // so it reads as a corner and the two walls butt flush against it.
-                    thickness = Mathf.Min(wb.size.x, wb.size.z) * 2f;
-                }
+                height = a.WallHeight;
+                thickness = a.WallThickness * 2f;
             }
 
             go.transform.SetParent(_cornerRoot, worldPositionStays: false);

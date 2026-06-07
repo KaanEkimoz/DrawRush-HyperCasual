@@ -291,6 +291,7 @@ GameObject:
   - component: {fileID: 7275242480758805663}
   - component: {fileID: 7208365043304257656}
   - component: {fileID: 7712792700407167178}
+  - component: {fileID: 1743664000495337078}
   m_Layer: 0
   m_Name: Kenar
   m_TagString: Untagged
@@ -330,6 +331,7 @@ MonoBehaviour:
   lineMaterial: {fileID: 0}
   width: 0
   lineY: 0.02
+  arcSegments: 24
   color: {r: 0.1, g: 1, b: 0.8, a: 1}
 --- !u!114 &7712792700407167178
 MonoBehaviour:
@@ -345,4 +347,25 @@ MonoBehaviour:
   m_EditorClassIdentifier: Studios208.DrawRush::Studios208.DrawRush.Drawing.DrawEdgeAuthor
   anchorA: {fileID: 6281296526979497774}
   anchorB: {fileID: 790697452660945098}
-  wallSegment: {fileID: 0}
+  waypoint: {fileID: 0}
+  wallMaterial: {fileID: 0}
+  wallColor: {r: 0.85, g: 0.2, b: 0.18, a: 1}
+  wallHeight: 0.9
+  wallThickness: 0.4
+  overrideDropColor: 0
+  dropColor: {r: 0.1, g: 0.85, b: 1, a: 1}
+--- !u!114 &1743664000495337078
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6770665978776919814}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5629ef8c08ea648ad91e397b3d73cfc2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Studios208.DrawRush::Studios208.DrawRush.Drawing.ProceduralWall
+  arcSegments: 24
+  riseSeconds: 0.5
+  baseY: 0

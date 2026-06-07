@@ -141,19 +141,23 @@ namespace Studios208.DrawRush.Player
 
             if (_edge == null && !TrySelectEdge(worldInput)) return;
 
-            Vector3 rawEdge = _targetPart.Transform.position - _currentPart.Transform.position;
-            rawEdge.y = 0f;
-            float len = rawEdge.magnitude;
+            // Geometry-agnostic traversal: works for straight edges AND arcs. _localT is the
+            // local progress current→target; convert to the edge's A→B parameter (edgeT). All
+            // positions/directions/length come from the edge, so the player slides along the
+            // arc exactly like the painted line and wall.
+            float len = _edge.Length;
             if (len < 0.001f) { _edge = null; _targetPart = null; return; }
-            Vector3 edgeDir = rawEdge / len;
 
-            float along = Vector3.Dot(worldInput, edgeDir);
+            float edgeTNow = _currentPart == _edge.A ? _localT : 1f - _localT;
+            // Heading along current→target: TangentAt is in the A→B sense; flip if we entered from B.
+            Vector3 heading = _currentPart == _edge.A ? _edge.TangentAt(edgeTNow) : -_edge.TangentAt(edgeTNow);
+
+            float along = Vector3.Dot(worldInput, heading);
             float speed = railSpeed > 0f
                 ? railSpeed
                 : (GameServices.Config != null ? GameServices.Config.playerSpeed : 2.7f);
-            _localT = Mathf.Clamp01(_localT + along * speed * Time.deltaTime / len);
+            _localT = Mathf.Clamp01(_localT + along * speed * Time.deltaTime / len);   // arc-length normalized
 
-            // Paint the covered span. Convert local (current→target) t to the edge's A→B t.
             float edgeT = _currentPart == _edge.A ? _localT : 1f - _localT;
             _edge.PaintFrom(_currentPart, edgeT);
 
@@ -161,14 +165,16 @@ namespace Studios208.DrawRush.Player
             // is handled above, before the input gate).
             if (_edge.IsComplete) { Detach(); return; }
 
-            Vector3 targetPos = _currentPart.Transform.position + rawEdge * _localT;
+            Vector3 targetPos = _edge.PointAt(edgeT);
             Vector3 delta = targetPos - transform.position;
             delta.y = 0f;
             _characterController.Move(delta);
 
             if (Mathf.Abs(along) > 0.01f)
             {
-                transform.rotation = Quaternion.LookRotation(edgeDir * Mathf.Sign(along), Vector3.up);
+                // Re-evaluate heading at the new point so the player visibly curves along the arc.
+                Vector3 headNow = _currentPart == _edge.A ? _edge.TangentAt(edgeT) : -_edge.TangentAt(edgeT);
+                transform.rotation = Quaternion.LookRotation(headNow * Mathf.Sign(along), Vector3.up);
             }
         }
 
@@ -191,7 +197,10 @@ namespace Studios208.DrawRush.Player
                 DrawPart other = e.Other(_currentPart);
                 if (other == null) continue;
 
-                Vector3 dir = other.Transform.position - _currentPart.Transform.position;
+                // Leave the anchor along the edge's tangent there (matters for arcs, whose
+                // initial direction differs from the straight chord). For straight edges this
+                // equals the old endpoint-to-endpoint direction.
+                Vector3 dir = _currentPart == e.A ? e.TangentAt(0f) : -e.TangentAt(1f);
                 dir.y = 0f;
                 if (dir.sqrMagnitude < 0.0001f) continue;
 

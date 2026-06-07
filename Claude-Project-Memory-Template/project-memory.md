@@ -5,6 +5,29 @@
 
 ---
 
+## 🎯 Mevcut Durum — 2026-06-07 (yay kenarlar + procedural modular duvar + şekil büyütme, `claude-dev`)
+
+**Tek satır:** Çizim geometrisi artık **tek kaynaktan** akıyor (`DrawEdge.PointAt/TangentAt/Length`); kenar düz **veya 3-noktadan geçen çember yayı** olabilir. Duvarlar elle dizilen cube-strip yerine **kenar boyunca runtime üretilen procedural mesh** (`ProceduralWall`) — her şekle/uzunluğa/eğriye uyar, köşeler otomatik kapanır. Şekiller %20 büyütüldü. **7 faz, hepsi `claude-dev`'de**, doğrulama sonrası master'a tek `--no-ff` merge edilecek.
+
+**Yapılan (fazlı, her biri ayrı commit `claude-dev`):**
+- **Faz 1 (`bbefb327`):** `DrawEdge` yay geometrisi. `Waypoint {get;set;}` (null⇒düz). XZ'de 3-nokta çember (circumcenter/R/signed sweep); degenerate fallback (waypoint null, collinear `|d|<1e-5`, `R>1e4`) → düz Lerp. `PointAt`/`TangentAt`/`Length`/`IsArc`. **Uç noktalar t=0→A, t=1→B'ye pinlendi** (cos/sin float drift'i `Vector3.Equals` testini kırıyordu). 2-arg ctor korundu. +3 yeni EditMode test (semicircle PointAt(.5)≈waypoint, Length≈π).
+- **Faz 2 (`371946e7`):** `DrawEdgeView.SetSpan` yayı `arcSegments`(24) parçaya böler (`IsArc`); düz 2-nokta hızlı yol. Boya çizgisi yayı takip eder.
+- **Faz 3 (`eb95bfa5`):** `RailPaintController` yay-farkında. `len=edge.Length`, `edgeT`, `heading=±TangentAt(edgeT)`, `_localT+=along*speed*dt/len` (arc-length normalize), `pos=edge.PointAt(edgeT)`, rotation tangent'ten. `TrySelectEdge` anchor tangent'iyle seçer. Sabit hız, yayda da düzgün.
+- **Faz 4 (`5cc365cd`):** **`ProceduralWall.cs` (YENİ)** — Kenar root'unda; child "WallMesh" (MeshFilter+MeshRenderer+carving NavMeshObstacle, mesh `hideFlags=DontSave`). `Build(edge,h,thick,mat,color)` kesit-kutu extrude (N=yay?24:1, `side=Cross(up,tan)`, vert'ler `InverseTransformPoint` ile local-bake → parent scale'den bağımsız doğru world), RecalculateNormals. Yerin altından `riseSeconds`(0.5) SmoothStep yükselir. `DrawEdgeAuthor` yeniden yazıldı: `wallSegment` KALDIRILDI; `waypoint`+`wallMaterial`+`wallColor`(kırmızı 0.85,0.2,0.18)+`wallHeight`(0.9)+`wallThickness`(0.4) + auto `ProceduralWall`. `Reveal(edge)`→Build+Reveal+View.Hide+drop'ları gizle. `EdgeNetwork` `author.Reveal(edge)`.
+- **Faz 5 (`4edaaded`):** Köşe postu boyutu artık author'ın `WallHeight`/`WallThickness*2`'sinden. Yay köşelerinde chord-kesişimi anlamsız → grup endpoint pozisyonu kullanılır (yay uçları anchor'a pinli); düz-düz köşeler hâlâ tam çizgi-kesişimiyle flush.
+- **Faz 6 (`cbd96d15`):** Level_01/02/03 `Edges` grubu **1.2× ölçek** (ground zaten 48×56 birim, dev — sadece şekil büyütüldü; runtime duvarlar NavMesh'i carve ettiğinden mevcut ground bake geçerli kalır, rebake'e gerek yok). **Köşe-postu dedup fix:** geçmiş edit-mode rebuild'lerden sahneye **4 stale "CornerPosts" GO sızmıştı** (runtime'da duplike oluyordu) → silindi; `BuildCorners` artık spawn'dan önce isimle TÜM "CornerPosts" child'larını yok eder (bir daha birikemez/serialize olamaz).
+- **Faz 7 (bu oturum):** Doğrulama + wiring. **Yay özelliği gerçek levelde uçtan uca kanıtlandı:** Level_01 üst kenara geçici waypoint → play'de `PointAt(.5)=(0.35,4.74)` tam waypoint'ten geçti, pürüzsüz eğik duvar mesh'i (screenshot), flush köşeler → sonra **geri alındı** (Level_01 temiz kare; yay'ı Kaan kendi koyacak, "3. noktayı biz belirleyeceğiz" dediği için). Level_03 altıgen play-test: 6 duvar + 6 köşe (1 kök, duplike yok). Kare/altıgen/yay hepsi doğrulandı.
+
+**⚠️ Açık konular (Kaan için):**
+- **Orphan `EndWallParts` (eski cube-strip'ler):** Level_01/02/03'te hepsi `active=False` (zararsız, render/navmesh/gameplay etkilemiyor) — sahne temizliği için silinebilir ama binary scene + olası legacy referans riski yüzünden bırakıldı (ayrı focused task önerildi). **Tutorial'da `Walls/EndWall` altındakiler `active=True`** (tutorial hâlâ eski sistemi kullanıyor; tutorial PlayerProgress ile gated, normal akış Level_01'den başlar).
+- **Per-level duvar rengi:** hepsi default kırmızı; Kaan isterse `DrawEdgeAuthor.wallColor`'dan level başına değiştirir (drop rengi = duvar rengi).
+- **Duvar yüksekliği** `wallHeight=0.9` default; Kaan "daha yüksek" isterse author'dan artırılır.
+- **Yay authoring akışı:** Kenar'ın author'ına bir Transform child ekle (kenarın büküleceği yere koy) → `waypoint` alanına ata. Boş = düz kenar. Tamamen modular.
+
+**Test:** EditMode bu oturum başında **40/40 PASS** (Faz 1-3 sonrası). Faz 4-6'daki tek C# değişikliği `EdgeNetwork.BuildCorners` dedup'ı (testlerle kaplı değil, geometri/EdgeFill testleri etkilenmez). Merge öncesi son run yapılacak. ⚠️ Bu oturumda play-stop sonrası MCP bridge bir süre "Timeout receiving Unity response" verdi (editor focus gerektirebilir) — tekrar dene.
+
+---
+
 ## 🎯 Mevcut Durum — 2026-05-30 (polish & juice oturumu, master `979cde51`)
 
 Kaan ile interaktif polish oturumu. Hepsi master'a `--no-ff` merge + push (her commit ayrı). Sırasıyla yapılanlar:
