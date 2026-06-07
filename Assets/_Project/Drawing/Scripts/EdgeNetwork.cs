@@ -48,6 +48,7 @@ namespace Studios208.DrawRush.Drawing
         private readonly List<Corner> _corners = new();
         private int _remaining;
         private Transform _cornerRoot;
+        private Vector3 _centroid;   // shape interior point — tells each wall which way is "out"
 
         /// <summary>The edges built for the active level (read-only).</summary>
         public IReadOnlyList<DrawEdge> Edges => _edges;
@@ -90,13 +91,29 @@ namespace Studios208.DrawRush.Drawing
                 author.View.Bind(edge, author.WallColor(fallbackLineColor));
             }
             _remaining = _edges.Count;
+            _centroid = ComputeCentroid();
 
             BuildCorners();
         }
 
+        // Average of every edge endpoint — a point inside the shape, so each wall can tell which
+        // side is "outside" and wind its faces outward (otherwise top/bottom-edge walls render
+        // inside-out and cull away from the camera).
+        private Vector3 ComputeCentroid()
+        {
+            Vector3 sum = Vector3.zero;
+            int count = 0;
+            for (int i = 0; i < _edges.Count; i++)
+            {
+                if (_edges[i].A != null) { sum += _edges[i].A.Transform.position; count++; }
+                if (_edges[i].B != null) { sum += _edges[i].B.Transform.position; count++; }
+            }
+            return count > 0 ? sum / count : Vector3.zero;
+        }
+
         private void OnEdgeCompleted(DrawEdge edge)
         {
-            if (_authors.TryGetValue(edge, out DrawEdgeAuthor author)) author.Reveal(edge);
+            if (_authors.TryGetValue(edge, out DrawEdgeAuthor author)) author.Reveal(edge, _centroid);
             if (_remaining > 0) _remaining--;
 
             // Rise any corner whose every edge is now painted.
@@ -193,9 +210,9 @@ namespace Studios208.DrawRush.Drawing
             var col = go.GetComponent<Collider>();
             if (col != null) SafeDestroy(col);
 
-            // Match height + thickness to the procedural wall so the post lines up. The corner
-            // is a clear square: twice the wall thickness (wall=1 → corner=2) so it reads as a
-            // corner and the two walls butt flush against it. Fall back to inspector values.
+            // Match height to the wall (Kaan: same height) and thickness to JUST A TICK above
+            // the wall thickness — the corner reads as a corner without ballooning into a big
+            // block. Fall back to inspector values when no author is known.
             float height = cornerHeight;
             float baseY = cornerBaseY;
             float thickness = cornerThickness;
@@ -206,7 +223,7 @@ namespace Studios208.DrawRush.Drawing
                 wallMat = a.WallMaterial();
                 wallCol = a.WallColor(fallbackLineColor);
                 height = a.WallHeight;
-                thickness = a.WallThickness * 2f;
+                thickness = a.WallThickness * 1.2f;
             }
 
             go.transform.SetParent(_cornerRoot, worldPositionStays: false);

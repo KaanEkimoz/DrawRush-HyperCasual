@@ -30,6 +30,7 @@ namespace Studios208.DrawRush.Drawing
 
         private float _height;
         private float _thickness;
+        private Vector3 _interiorPoint;
         private Vector3 _shownLocal;
         private Vector3 _hiddenLocal;
         private bool _revealed;
@@ -42,11 +43,12 @@ namespace Studios208.DrawRush.Drawing
 
         /// <summary>(Re)build the wall mesh along <paramref name="edge"/> and place it hidden
         /// below ground, ready to rise.</summary>
-        public void Build(DrawEdge edge, float height, float thickness, Material mat, Color color)
+        public void Build(DrawEdge edge, float height, float thickness, Material mat, Color color, Vector3 interiorPoint)
         {
             EnsureChild();
             _height = Mathf.Max(0.01f, height);
             _thickness = Mathf.Max(0.01f, thickness);
+            _interiorPoint = interiorPoint;
 
             GenerateMesh(edge);
 
@@ -145,6 +147,16 @@ namespace Studios208.DrawRush.Drawing
             int rings = n + 1;
             float half = _thickness * 0.5f;
 
+            // Decide outward orientation ONCE for the whole wall. Each edge only knows its own
+            // A→B direction, not which side of the closed shape is "outside", so cross(up,tangent)
+            // points INWARD for walls of some orientations — their faces wind inside-out and cull
+            // away from a top-down camera (the top/bottom edges looked empty). Flip the cross-section
+            // side so it points AWAY from the shape interior; then every face winds outward.
+            Vector3 midP = edge.PointAt(0.5f); midP.y = baseY;
+            Vector3 midSide = Vector3.Cross(Vector3.up, edge.TangentAt(0.5f));
+            Vector3 outwardRef = midP - _interiorPoint; outwardRef.y = 0f;
+            bool flip = Vector3.Dot(midSide, outwardRef) < 0f;
+
             var verts = new Vector3[rings * 4];
             for (int i = 0; i < rings; i++)
             {
@@ -154,6 +166,7 @@ namespace Studios208.DrawRush.Drawing
                 Vector3 tan = edge.TangentAt(t);
                 Vector3 side = Vector3.Cross(Vector3.up, tan);
                 side = side.sqrMagnitude > 1e-8f ? side.normalized : Vector3.right;
+                if (flip) side = -side;
 
                 Vector3 bl = p - side * half;
                 Vector3 br = p + side * half;
@@ -178,6 +191,8 @@ namespace Studios208.DrawRush.Drawing
                 AddQuad(tris, a + 1, c + 1, c + 3, a + 3);
                 // Top face (outward +up): tl_a, tr_a, tr_c, tl_c
                 AddQuad(tris, a + 2, a + 3, c + 3, c + 2);
+                // Bottom face (closes the box so low/under angles never see through): bl_a, bl_c, br_c, br_a
+                AddQuad(tris, a + 0, c + 0, c + 1, a + 1);
             }
             // End caps.
             int last = n * 4;

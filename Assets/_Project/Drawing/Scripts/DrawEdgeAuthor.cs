@@ -28,7 +28,7 @@ namespace Studios208.DrawRush.Drawing
         [Tooltip("Wall (and drop) color for this edge.")]
         [SerializeField] private Color wallColor = new Color(0.85f, 0.2f, 0.18f);
         [SerializeField] private float wallHeight = 0.9f;
-        [SerializeField] private float wallThickness = 0.4f;
+        [SerializeField] private float wallThickness = 0.7f;
 
         [Header("Drop color")]
         [Tooltip("When off, both drops take this edge's wall color. When on, use dropColor below.")]
@@ -97,11 +97,11 @@ namespace Studios208.DrawRush.Drawing
         /// <summary>Build + raise this edge's procedural wall along the edge geometry, clear the
         /// painted line, and hide the two endpoint drops. Called by EdgeNetwork when the edge
         /// fills.</summary>
-        public void Reveal(DrawEdge edge)
+        public void Reveal(DrawEdge edge, Vector3 interiorPoint)
         {
             if (Wall != null)
             {
-                Wall.Build(edge, wallHeight, wallThickness, wallMaterial, wallColor);
+                Wall.Build(edge, wallHeight, wallThickness, wallMaterial, wallColor, interiorPoint);
                 Wall.Reveal();
             }
             View.Hide();
