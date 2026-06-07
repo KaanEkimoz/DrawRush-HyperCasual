@@ -34,6 +34,10 @@ namespace Studios208.DrawRush.Player
         [SerializeField] private float selectThreshold = 0.4f;
         [Tooltip("Rail slide speed. When <= 0, falls back to GameConfig.playerSpeed.")]
         [SerializeField] private float railSpeed = 0f;
+        [Range(0.8f, 1f)]
+        [Tooltip("How close to the far anchor (0..1 along the edge) counts as arrival and " +
+                 "completes the edge — independent of the anchor's trigger.")]
+        [SerializeField] private float arrivalThreshold = 0.96f;
 
         private CharacterController _characterController;
         private EdgeNetwork _network;
@@ -136,6 +140,18 @@ namespace Studios208.DrawRush.Player
             // Paint the covered span. Convert local (current→target) t to the edge's A→B t.
             float edgeT = _currentPart == _edge.A ? _localT : 1f - _localT;
             _edge.PaintFrom(_currentPart, edgeT);
+
+            // Reached the far anchor along the rail → finish the edge here, without waiting
+            // for the anchor's trigger. The trigger collider is smaller than the drop visual,
+            // so on long/angled edges (e.g. Level_03) the player could slide right up to the
+            // drop yet never re-enter the trigger — the edge would stall until they wiggled
+            // back and forth. Completing on arrival fixes that.
+            if (_localT >= arrivalThreshold)
+            {
+                _edge.PaintFrom(_currentPart, _currentPart == _edge.A ? 1f : 0f);
+                Detach();
+                return;
+            }
 
             // Edge done — either the two painted spans met in the middle, or the player slid
             // the whole length to the far end. Free the player off the rail.
