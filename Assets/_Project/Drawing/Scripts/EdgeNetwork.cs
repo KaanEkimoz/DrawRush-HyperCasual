@@ -145,11 +145,16 @@ namespace Studios208.DrawRush.Drawing
             {
                 Corner c = _corners[i];
                 if (c.Edges.Count < 2) continue;
-                // The drops sit a little inside the corner, so their midpoint is off. Use the
-                // intersection of the two edge lines — the true corner where the walls meet —
-                // so the post lands flush with both walls.
+                // For two STRAIGHT walls the drops sit a little inside the corner, so their
+                // midpoint is off — use the intersection of the two edge lines (the true corner
+                // where the walls meet) so the post lands flush. For an ARC the chord line is
+                // not the wall, so a chord intersection is meaningless; the arc endpoints are
+                // pinned exactly to the anchors, so the grouped endpoint position already sits
+                // where the walls actually end. Use it directly.
                 Vector3 pos = c.Position;
-                if (TryEdgeIntersection(c.Edges[0], c.Edges[1], out Vector3 hit)) pos = hit;
+                bool anyArc = false;
+                for (int e = 0; e < c.Edges.Count; e++) if (c.Edges[e].IsArc) { anyArc = true; break; }
+                if (!anyArc && TryEdgeIntersection(c.Edges[0], c.Edges[1], out Vector3 hit)) pos = hit;
                 c.Post = SpawnPost(pos, c.Edges);
             }
         }
