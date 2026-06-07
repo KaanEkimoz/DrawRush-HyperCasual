@@ -31,6 +31,8 @@ namespace Studios208.DrawRush.Drawing
         private float _height;
         private float _thickness;
         private Vector3 _interiorPoint;
+        private Vector3 _endA;   // corner-post position at edge.A — wall extends here to meet flush
+        private Vector3 _endB;   // corner-post position at edge.B
         private Vector3 _shownLocal;
         private Vector3 _hiddenLocal;
         private bool _revealed;
@@ -43,12 +45,14 @@ namespace Studios208.DrawRush.Drawing
 
         /// <summary>(Re)build the wall mesh along <paramref name="edge"/> and place it hidden
         /// below ground, ready to rise.</summary>
-        public void Build(DrawEdge edge, float height, float thickness, Material mat, Color color, Vector3 interiorPoint)
+        public void Build(DrawEdge edge, float height, float thickness, Material mat, Color color, Vector3 interiorPoint, Vector3 endA, Vector3 endB)
         {
             EnsureChild();
             _height = Mathf.Max(0.01f, height);
             _thickness = Mathf.Max(0.01f, thickness);
             _interiorPoint = interiorPoint;
+            _endA = endA;
+            _endB = endB;
 
             GenerateMesh(edge);
 
@@ -161,7 +165,10 @@ namespace Studios208.DrawRush.Drawing
             for (int i = 0; i < rings; i++)
             {
                 float t = (float)i / n;
-                Vector3 p = edge.PointAt(t);
+                // Extend the two END rings out to the corner-post position so the wall meets the
+                // corner flush — the painted anchors sit a little inside the true corner, which
+                // left a small gap. Interior rings follow the edge geometry as usual.
+                Vector3 p = i == 0 ? _endA : (i == rings - 1 ? _endB : edge.PointAt(t));
                 p.y = baseY;
                 Vector3 tan = edge.TangentAt(t);
                 Vector3 side = Vector3.Cross(Vector3.up, tan);

@@ -97,11 +97,11 @@ namespace Studios208.DrawRush.Drawing
         /// <summary>Build + raise this edge's procedural wall along the edge geometry, clear the
         /// painted line, and hide the two endpoint drops. Called by EdgeNetwork when the edge
         /// fills.</summary>
-        public void Reveal(DrawEdge edge, Vector3 interiorPoint)
+        public void Reveal(DrawEdge edge, Vector3 interiorPoint, Vector3 endA, Vector3 endB)
         {
             if (Wall != null)
             {
-                Wall.Build(edge, wallHeight, wallThickness, wallMaterial, wallColor, interiorPoint);
+                Wall.Build(edge, wallHeight, wallThickness, wallMaterial, wallColor, interiorPoint, endA, endB);
                 Wall.Reveal();
             }
             View.Hide();
