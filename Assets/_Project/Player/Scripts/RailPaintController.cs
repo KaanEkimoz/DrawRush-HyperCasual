@@ -39,6 +39,12 @@ namespace Studios208.DrawRush.Player
                  "release the stick right at the end).")]
         [SerializeField] private float arrivalDistance = 0.6f;
 
+        // While actively drawing, only snap-complete once the player is essentially on the far
+        // drop, so the last stretch of an arc is not chopped off (which left the body beside the
+        // finished line near the end). The larger arrivalDistance still applies when the stick is
+        // released. A FixedUpdate step is ~0.05 world units, well under this, so it never skips.
+        private const float ArrivalSnap = 0.15f;
+
         private CharacterController _characterController;
         private EdgeNetwork _network;
         private DrawPart _currentPart;
@@ -120,15 +126,26 @@ namespace Studios208.DrawRush.Player
 
             if (movement != null) movement.MovementLocked = true;
 
-            // Arrival completion — checked BEFORE the input gate so it still fires when the
-            // player releases the stick at the far anchor, and independent of the anchor's
-            // trigger (its collider is smaller than the drop visual). If we're painting an
-            // edge and the player is within arrivalDistance of the target drop, finish it.
+            Vector3 worldInput = ResolveWorldInput();
+            bool released = worldInput.sqrMagnitude < 0.0001f;
+
+            // Arrival completion — finish the edge + get off the rail. Two cases, so an ACTIVE
+            // draw is not chopped short:
+            //  • While the stick is held, only snap once the player is essentially ON the far
+            //    drop (ArrivalSnap). The old code snapped the whole last `arrivalDistance` (0.6)
+            //    the moment the player got that close — on a STRAIGHT edge that just looked like
+            //    stopping a touch early, but on an ARC the finished line curved on ~0.6 further
+            //    while the body stayed behind, so the character ended up beside the line near the
+            //    end (Kaan's bug).
+            //  • If the stick is released, keep the generous `arrivalDistance` so letting go right
+            //    before the drop still completes the edge.
             if (_edge != null && _targetPart != null)
             {
                 Vector3 pp = transform.position; pp.y = 0f;
                 Vector3 tp = _targetPart.Transform.position; tp.y = 0f;
-                if ((pp - tp).sqrMagnitude <= arrivalDistance * arrivalDistance)
+                float sqr = (pp - tp).sqrMagnitude;
+                if (sqr <= ArrivalSnap * ArrivalSnap ||
+                    (released && sqr <= arrivalDistance * arrivalDistance))
                 {
                     _edge.PaintFrom(_currentPart, _currentPart == _edge.A ? 1f : 0f);
                     Detach();
@@ -136,8 +153,7 @@ namespace Studios208.DrawRush.Player
                 }
             }
 
-            Vector3 worldInput = ResolveWorldInput();
-            if (worldInput.sqrMagnitude < 0.0001f) return;   // no input → hold position
+            if (released) return;   // no input → hold position
 
             if (_edge == null && !TrySelectEdge(worldInput)) return;
 
