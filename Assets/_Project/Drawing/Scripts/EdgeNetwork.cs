@@ -202,7 +202,11 @@ namespace Studios208.DrawRush.Drawing
                 Vector3 pos = c.Position;
                 bool anyArc = false;
                 for (int e = 0; e < c.Edges.Count; e++) if (c.Edges[e].IsArc) { anyArc = true; break; }
-                if (!anyArc && TryEdgeIntersection(c.Edges[0], c.Edges[1], out Vector3 hit)) pos = hit;
+                // Infinite-line intersection of the two edges = the true corner where straight
+                // walls meet. Only trust it when it lands near the grouped drops — for near-parallel
+                // edges the intersection flies off to infinity, so fall back to the grouped position.
+                if (!anyArc && TryEdgeIntersection(c.Edges[0], c.Edges[1], out Vector3 hit)
+                    && (hit - c.Position).sqrMagnitude < 4f) pos = hit;
                 c.PostPosition = pos;
                 c.Post = SpawnPost(pos, c.Edges);
             }

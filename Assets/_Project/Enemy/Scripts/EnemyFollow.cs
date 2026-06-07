@@ -69,6 +69,10 @@ namespace Studios208.DrawRush.Enemy
             if (_halted) return;
             var player = GameServices.Player;
             if (player == null) return;
+            // SetDestination throws ("can only be called on an agent that is on a NavMesh") when
+            // the agent is off-mesh — e.g. the frame right after a level (re)activation before its
+            // surface registers, or a spawn that landed off-mesh. Skip until the agent is on.
+            if (_agent == null || !_agent.isActiveAndEnabled || !_agent.isOnNavMesh) return;
             _agent.SetDestination(player.position);
         }
 
