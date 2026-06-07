@@ -125,8 +125,15 @@ namespace Studios208.DrawRush.Drawing
 
         private void BuildCorners()
         {
-            // Reset any posts spawned on a previous activation.
-            if (_cornerRoot != null) SafeDestroy(_cornerRoot.gameObject);
+            // Reset any posts from a previous activation — destroy EVERY existing "CornerPosts"
+            // root (the cached one AND any that leaked into the scene via a prior edit-mode
+            // rebuild), so they can never accumulate or serialize into duplicate posts.
+            for (int i = transform.childCount - 1; i >= 0; i--)
+            {
+                Transform child = transform.GetChild(i);
+                if (child != null && child.name == "CornerPosts") SafeDestroy(child.gameObject);
+            }
+            _cornerRoot = null;
             if (!generateCornerPosts || _edges.Count == 0) return;
 
             _cornerRoot = new GameObject("CornerPosts").transform;
