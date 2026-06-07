@@ -145,7 +145,12 @@ namespace Studios208.DrawRush.Drawing
             {
                 Corner c = _corners[i];
                 if (c.Edges.Count < 2) continue;
-                c.Post = SpawnPost(c.Position, c.Edges);
+                // The drops sit a little inside the corner, so their midpoint is off. Use the
+                // intersection of the two edge lines — the true corner where the walls meet —
+                // so the post lands flush with both walls.
+                Vector3 pos = c.Position;
+                if (TryEdgeIntersection(c.Edges[0], c.Edges[1], out Vector3 hit)) pos = hit;
+                c.Post = SpawnPost(pos, c.Edges);
             }
         }
 
@@ -191,8 +196,9 @@ namespace Studios208.DrawRush.Drawing
                 {
                     height = wb.size.y;
                     baseY = wb.min.y;
-                    // wall thickness = its shorter horizontal extent, slightly padded to seal the gap
-                    thickness = Mathf.Min(wb.size.x, wb.size.z) + 0.05f;
+                    // Corner is a clear square: twice the wall thickness (wall=1 → corner=2),
+                    // so it reads as a corner and the two walls butt flush against it.
+                    thickness = Mathf.Min(wb.size.x, wb.size.z) * 2f;
                 }
             }
 
@@ -212,6 +218,23 @@ namespace Studios208.DrawRush.Drawing
         private void UnsubscribeAll()
         {
             for (int i = 0; i < _edges.Count; i++) _edges[i].Completed -= OnEdgeCompleted;
+        }
+
+        // XZ intersection of two edges' lines — the true corner where the walls meet.
+        private static bool TryEdgeIntersection(DrawEdge e1, DrawEdge e2, out Vector3 hit)
+        {
+            hit = default;
+            if (e1.A == null || e1.B == null || e2.A == null || e2.B == null) return false;
+            Vector3 a1 = e1.A.Transform.position, a2 = e1.B.Transform.position;
+            Vector3 b1 = e2.A.Transform.position, b2 = e2.B.Transform.position;
+            Vector2 p1 = new(a1.x, a1.z), d1 = new(a2.x - a1.x, a2.z - a1.z);
+            Vector2 p3 = new(b1.x, b1.z), d2 = new(b2.x - b1.x, b2.z - b1.z);
+            float denom = d1.x * d2.y - d1.y * d2.x;
+            if (Mathf.Abs(denom) < 1e-4f) return false;   // parallel
+            float t = ((p3.x - p1.x) * d2.y - (p3.y - p1.y) * d2.x) / denom;
+            Vector2 h = p1 + t * d1;
+            hit = new Vector3(h.x, (a1.y + b1.y) * 0.5f, h.y);
+            return true;
         }
 
         // Destroy works at runtime; editor-time (e.g. a manual Rebuild) needs DestroyImmediate.
