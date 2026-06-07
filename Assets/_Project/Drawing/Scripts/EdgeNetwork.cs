@@ -96,7 +96,7 @@ namespace Studios208.DrawRush.Drawing
 
         private void OnEdgeCompleted(DrawEdge edge)
         {
-            if (_authors.TryGetValue(edge, out DrawEdgeAuthor author)) author.Reveal();
+            if (_authors.TryGetValue(edge, out DrawEdgeAuthor author)) author.Reveal(edge);
             if (_remaining > 0) _remaining--;
 
             // Rise any corner whose every edge is now painted.
@@ -181,8 +181,9 @@ namespace Studios208.DrawRush.Drawing
             var col = go.GetComponent<Collider>();
             if (col != null) SafeDestroy(col);
 
-            // Derive height + base + thickness from the meeting wall so the post lines up
-            // with the walls instead of floating or towering. Fall back to inspector values.
+            // Match height + thickness to the procedural wall so the post lines up. The corner
+            // is a clear square: twice the wall thickness (wall=1 → corner=2) so it reads as a
+            // corner and the two walls butt flush against it. Fall back to inspector values.
             float height = cornerHeight;
             float baseY = cornerBaseY;
             float thickness = cornerThickness;
@@ -192,14 +193,8 @@ namespace Studios208.DrawRush.Drawing
             {
                 wallMat = a.WallMaterial();
                 wallCol = a.WallColor(fallbackLineColor);
-                if (a.TryGetWallBounds(out Bounds wb))
-                {
-                    height = wb.size.y;
-                    baseY = wb.min.y;
-                    // Corner is a clear square: twice the wall thickness (wall=1 → corner=2),
-                    // so it reads as a corner and the two walls butt flush against it.
-                    thickness = Mathf.Min(wb.size.x, wb.size.z) * 2f;
-                }
+                height = a.WallHeight;
+                thickness = a.WallThickness * 2f;
             }
 
             go.transform.SetParent(_cornerRoot, worldPositionStays: false);

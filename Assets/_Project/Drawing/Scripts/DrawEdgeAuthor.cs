@@ -5,9 +5,11 @@ namespace Studios208.DrawRush.Drawing
     /// <summary>
     /// Authoring component for one paintable edge — the reusable "Kenar" prefab. It owns the
     /// two <see cref="DrawPart"/> spheres at its endpoints (children of the prefab — no corner
-    /// sharing between edges) and the wall segment that is revealed once this edge is painted.
-    /// <see cref="EdgeNetwork"/> reads these in the active level to build the runtime edges, so
-    /// shapes are composed edge-by-edge from prefabs instead of being derived from positions.
+    /// sharing between edges), an optional waypoint that turns the edge into a circular arc, and
+    /// the wall that is built + revealed once this edge is painted. The wall is generated
+    /// procedurally along the edge geometry (see <see cref="ProceduralWall"/>) — no hand-built
+    /// cube strips — so it fits any shape/length, straight or curved.
+    /// <see cref="EdgeNetwork"/> reads these in the active level to build the runtime edges.
     /// </summary>
     [RequireComponent(typeof(DrawEdgeView))]
     public sealed class DrawEdgeAuthor : MonoBehaviour
@@ -20,14 +22,16 @@ namespace Studios208.DrawRush.Drawing
                  "circular arc through A → this point → B. Leave empty for a straight edge.")]
         [SerializeField] private Transform waypoint;
 
-        [Header("Wall")]
-        [Tooltip("Wall piece revealed (Animator plays) when this edge is fully painted. " +
-                 "Starts hidden.")]
-        [SerializeField] private GameObject wallSegment;
+        [Header("Wall (procedural)")]
+        [Tooltip("Optional wall material. If empty, a URP Lit material is generated.")]
+        [SerializeField] private Material wallMaterial;
+        [Tooltip("Wall (and drop) color for this edge.")]
+        [SerializeField] private Color wallColor = new Color(0.85f, 0.2f, 0.18f);
+        [SerializeField] private float wallHeight = 0.9f;
+        [SerializeField] private float wallThickness = 0.4f;
 
         [Header("Drop color")]
-        [Tooltip("When off, both drops take this edge's wall color. When on, use dropColor " +
-                 "below instead (per-edge override).")]
+        [Tooltip("When off, both drops take this edge's wall color. When on, use dropColor below.")]
         [SerializeField] private bool overrideDropColor;
         [SerializeField] private Color dropColor = new Color(0.10f, 0.85f, 1f);
 
@@ -37,37 +41,41 @@ namespace Studios208.DrawRush.Drawing
         private MaterialPropertyBlock _mpb;
 
         private DrawEdgeView _view;
+        private ProceduralWall _wall;
 
         public DrawPart AnchorA => anchorA;
         public DrawPart AnchorB => anchorB;
         public Transform Waypoint => waypoint;
         public DrawEdgeView View => _view != null ? _view : (_view = GetComponent<DrawEdgeView>());
+        public ProceduralWall Wall => _wall != null ? _wall : (_wall = GetComponent<ProceduralWall>());
+
+        public float WallHeight => wallHeight;
+        public float WallThickness => wallThickness;
+        public Material WallMaterialAsset => wallMaterial;
 
         public bool IsValid => anchorA != null && anchorB != null && anchorA != anchorB;
 
-        // Hidden on every enable (not just Awake) so a revealed wall resets when the level is
+        // Hidden on every enable (not just Awake) so the wall resets when the level is
         // re-activated (restart / revisit) — Awake does not run again on re-enable. The anchor
         // spheres are re-shown for the same reason: Reveal() turned them off last round.
         private void OnEnable()
         {
-            if (wallSegment != null) wallSegment.SetActive(false);
+            Wall?.HideImmediate();
             if (anchorA != null) anchorA.gameObject.SetActive(true);
             if (anchorB != null) anchorB.gameObject.SetActive(true);
             ApplyDropColor();
         }
 
 #if UNITY_EDITOR
-        // Live preview in the editor when tweaking the wall color or the override.
+        // Live preview in the editor when tweaking the wall/drop color.
         private void OnValidate() => ApplyDropColor();
 #endif
 
-        /// <summary>Tints both endpoint drops to this edge's color: the wall color by default,
-        /// or <see cref="dropColor"/> when <see cref="overrideDropColor"/> is on. Applied via a
-        /// MaterialPropertyBlock so the shared drop material isn't mutated. Both drops always
-        /// share one color (one edge = one color).</summary>
+        /// <summary>Tints both endpoint drops to this edge's color (wall color by default, or
+        /// dropColor when overridden), via a MaterialPropertyBlock. Both drops share one color.</summary>
         public void ApplyDropColor()
         {
-            Color c = overrideDropColor ? dropColor : WallColor(dropColor);
+            Color c = overrideDropColor ? dropColor : wallColor;
             TintDrop(anchorA, c);
             TintDrop(anchorB, c);
         }
@@ -82,63 +90,30 @@ namespace Studios208.DrawRush.Drawing
             r.GetPropertyBlock(_mpb);
             _mpb.SetColor(BaseColorId, c);
             _mpb.SetColor(ColorId, c);
-            _mpb.SetColor(EmissionId, c * 0.45f);   // self-glow in its own color → pops off the ground
+            _mpb.SetColor(EmissionId, c * 0.45f);
             r.SetPropertyBlock(_mpb);
         }
 
-        /// <summary>Show this edge's wall segment (its Animator plays the reveal), clear the
-        /// painted line, and hide the two endpoint spheres — once the edge is painted they have
-        /// no further use and walking into them shouldn't re-attach the rail. Called by
-        /// EdgeNetwork the moment the edge fills.</summary>
-        public void Reveal()
+        /// <summary>Build + raise this edge's procedural wall along the edge geometry, clear the
+        /// painted line, and hide the two endpoint drops. Called by EdgeNetwork when the edge
+        /// fills.</summary>
+        public void Reveal(DrawEdge edge)
         {
-            if (wallSegment != null) wallSegment.SetActive(true);
+            if (Wall != null)
+            {
+                Wall.Build(edge, wallHeight, wallThickness, wallMaterial, wallColor);
+                Wall.Reveal();
+            }
             View.Hide();
             if (anchorA != null) anchorA.gameObject.SetActive(false);
             if (anchorB != null) anchorB.gameObject.SetActive(false);
         }
 
-        /// <summary>The wall's color, so the painted line can match it. Falls back to
-        /// <paramref name="fallback"/> when the wall has no readable color.</summary>
-        public Color WallColor(Color fallback)
-        {
-            if (wallSegment == null) return fallback;
-            Renderer r = wallSegment.GetComponentInChildren<Renderer>(includeInactive: true);
-            Material m = r != null ? r.sharedMaterial : null;
-            if (m == null) return fallback;
-            if (m.HasProperty("_Color")) return m.GetColor("_Color");
-            if (m.HasProperty("_BaseColor")) return m.GetColor("_BaseColor");
-            return fallback;
-        }
+        /// <summary>This edge's color (for the painted line / corner). Fallback kept for
+        /// call-site compatibility.</summary>
+        public Color WallColor(Color fallback) => wallColor;
 
-        /// <summary>The wall's material, so a corner filler can match the wall's look.
-        /// Null when there is no wall renderer.</summary>
-        public Material WallMaterial()
-        {
-            if (wallSegment == null) return null;
-            Renderer r = wallSegment.GetComponentInChildren<Renderer>(includeInactive: true);
-            return r != null ? r.sharedMaterial : null;
-        }
-
-        /// <summary>World bounds of the wall segment, so a corner filler can match its height
-        /// and base. Temporarily activates the (hidden) wall to read renderer bounds, then
-        /// restores it. Returns false when there's no wall.</summary>
-        public bool TryGetWallBounds(out Bounds bounds)
-        {
-            bounds = default;
-            if (wallSegment == null) return false;
-            bool wasActive = wallSegment.activeSelf;
-            if (!wasActive) wallSegment.SetActive(true);
-            var rends = wallSegment.GetComponentsInChildren<Renderer>(includeInactive: true);
-            bool any = false;
-            for (int i = 0; i < rends.Length; i++)
-            {
-                if (rends[i] == null) continue;
-                if (!any) { bounds = rends[i].bounds; any = true; }
-                else bounds.Encapsulate(rends[i].bounds);
-            }
-            if (!wasActive) wallSegment.SetActive(false);
-            return any;
-        }
+        /// <summary>Material for a corner cap to match the wall. May be null (generated).</summary>
+        public Material WallMaterial() => wallMaterial;
     }
 }
