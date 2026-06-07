@@ -176,24 +176,36 @@ namespace Studios208.DrawRush.Drawing
             var col = go.GetComponent<Collider>();
             if (col != null) SafeDestroy(col);
 
-            go.transform.SetParent(_cornerRoot, worldPositionStays: false);
-            go.transform.position = new Vector3(corner.x, cornerBaseY + cornerHeight * 0.5f, corner.z);
-            go.transform.localScale = new Vector3(cornerThickness, cornerHeight, cornerThickness);
-
-            // Match the wall material/color of one of the meeting edges.
+            // Derive height + base + thickness from the meeting wall so the post lines up
+            // with the walls instead of floating or towering. Fall back to inspector values.
+            float height = cornerHeight;
+            float baseY = cornerBaseY;
+            float thickness = cornerThickness;
             Material wallMat = null;
             Color wallCol = fallbackLineColor;
             if (edges.Count > 0 && _authors.TryGetValue(edges[0], out DrawEdgeAuthor a))
             {
                 wallMat = a.WallMaterial();
                 wallCol = a.WallColor(fallbackLineColor);
+                if (a.TryGetWallBounds(out Bounds wb))
+                {
+                    height = wb.size.y;
+                    baseY = wb.min.y;
+                    // wall thickness = its shorter horizontal extent, slightly padded to seal the gap
+                    thickness = Mathf.Min(wb.size.x, wb.size.z) + 0.05f;
+                }
             }
+
+            go.transform.SetParent(_cornerRoot, worldPositionStays: false);
+            go.transform.position = new Vector3(corner.x, baseY + height * 0.5f, corner.z);
+            go.transform.localScale = new Vector3(thickness, height, thickness);
+
             var rend = go.GetComponent<Renderer>();
             if (wallMat != null) rend.sharedMaterial = wallMat;
             else rend.material.color = wallCol;
 
             var post = go.AddComponent<CornerPost>();
-            post.Init(cornerRiseSeconds, cornerHeight + 0.2f);
+            post.Init(cornerRiseSeconds, height + 0.2f);
             return post;
         }
 

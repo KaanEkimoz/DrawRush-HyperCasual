@@ -114,5 +114,26 @@ namespace Studios208.DrawRush.Drawing
             Renderer r = wallSegment.GetComponentInChildren<Renderer>(includeInactive: true);
             return r != null ? r.sharedMaterial : null;
         }
+
+        /// <summary>World bounds of the wall segment, so a corner filler can match its height
+        /// and base. Temporarily activates the (hidden) wall to read renderer bounds, then
+        /// restores it. Returns false when there's no wall.</summary>
+        public bool TryGetWallBounds(out Bounds bounds)
+        {
+            bounds = default;
+            if (wallSegment == null) return false;
+            bool wasActive = wallSegment.activeSelf;
+            if (!wasActive) wallSegment.SetActive(true);
+            var rends = wallSegment.GetComponentsInChildren<Renderer>(includeInactive: true);
+            bool any = false;
+            for (int i = 0; i < rends.Length; i++)
+            {
+                if (rends[i] == null) continue;
+                if (!any) { bounds = rends[i].bounds; any = true; }
+                else bounds.Encapsulate(rends[i].bounds);
+            }
+            if (!wasActive) wallSegment.SetActive(false);
+            return any;
+        }
     }
 }
