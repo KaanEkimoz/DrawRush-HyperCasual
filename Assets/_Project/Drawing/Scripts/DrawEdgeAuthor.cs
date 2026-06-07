@@ -16,6 +16,10 @@ namespace Studios208.DrawRush.Drawing
         [SerializeField] private DrawPart anchorA;
         [SerializeField] private DrawPart anchorB;
 
+        [Tooltip("Optional. Drop a Transform where the edge should bow; the edge becomes a " +
+                 "circular arc through A → this point → B. Leave empty for a straight edge.")]
+        [SerializeField] private Transform waypoint;
+
         [Header("Wall")]
         [Tooltip("Wall piece revealed (Animator plays) when this edge is fully painted. " +
                  "Starts hidden.")]
@@ -36,6 +40,7 @@ namespace Studios208.DrawRush.Drawing
 
         public DrawPart AnchorA => anchorA;
         public DrawPart AnchorB => anchorB;
+        public Transform Waypoint => waypoint;
         public DrawEdgeView View => _view != null ? _view : (_view = GetComponent<DrawEdgeView>());
 
         public bool IsValid => anchorA != null && anchorB != null && anchorA != anchorB;

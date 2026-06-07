@@ -104,5 +104,51 @@ namespace Studios208.DrawRush.Tests.EditMode
             Assert.AreEqual(Vector3.zero, edge.PointAt(0f));
             Assert.AreEqual(new Vector3(2, 0, 0), edge.PointAt(1f));
         }
+
+        [Test]
+        public void NoWaypoint_StaysStraight()
+        {
+            DrawPart a = NewPart(Vector3.zero);
+            DrawPart b = NewPart(new Vector3(4, 0, 0));
+            var edge = new DrawEdge(a, b);
+
+            Assert.IsFalse(edge.IsArc);
+            Assert.AreEqual(4f, edge.Length, 1e-4f);
+            Assert.AreEqual(new Vector3(2, 0, 0), edge.PointAt(0.5f));
+        }
+
+        [Test]
+        public void Waypoint_FormsCircularArcThroughAllThree()
+        {
+            // A(-1,0,0), B(1,0,0), waypoint(0,0,1): a semicircle of radius 1 bowing +Z.
+            DrawPart a = NewPart(new Vector3(-1, 0, 0));
+            DrawPart b = NewPart(new Vector3(1, 0, 0));
+            var wp = NewPart(new Vector3(0, 0, 1));   // reuse DrawPart's transform as the waypoint
+            var edge = new DrawEdge(a, b) { Waypoint = wp.transform };
+
+            Assert.IsTrue(edge.IsArc);
+            // Endpoints preserved.
+            Assert.AreEqual(new Vector3(-1, 0, 0), edge.PointAt(0f), "A");
+            Assert.AreEqual(new Vector3(1, 0, 0), edge.PointAt(1f), "B");
+            // Midpoint passes through the waypoint.
+            Vector3 mid = edge.PointAt(0.5f);
+            Assert.AreEqual(0f, mid.x, 1e-3f);
+            Assert.AreEqual(1f, mid.z, 1e-3f);
+            // Arc length of a unit semicircle is π.
+            Assert.AreEqual(Mathf.PI, edge.Length, 1e-2f);
+        }
+
+        [Test]
+        public void CollinearWaypoint_FallsBackToStraight()
+        {
+            DrawPart a = NewPart(new Vector3(-1, 0, 0));
+            DrawPart b = NewPart(new Vector3(1, 0, 0));
+            var wp = NewPart(Vector3.zero);   // on the A–B line → degenerate
+            var edge = new DrawEdge(a, b) { Waypoint = wp.transform };
+
+            Assert.IsFalse(edge.IsArc);
+            Assert.AreEqual(2f, edge.Length, 1e-4f);
+            Assert.AreEqual(Vector3.zero, edge.PointAt(0.5f));
+        }
     }
 }

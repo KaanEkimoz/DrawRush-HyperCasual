@@ -83,7 +83,7 @@ namespace Studios208.DrawRush.Drawing
                 DrawEdgeAuthor author = authors[i];
                 if (!author.IsValid) continue;
 
-                var edge = new DrawEdge(author.AnchorA, author.AnchorB);
+                var edge = new DrawEdge(author.AnchorA, author.AnchorB) { Waypoint = author.Waypoint };
                 edge.Completed += OnEdgeCompleted;
                 _edges.Add(edge);
                 _authors[edge] = author;
