@@ -102,3 +102,7 @@ Secrets.cs
 
 # Local Claude Code config / plans (machine-local, not project content)
 .claude/
+
+# Editor screenshots (MCP manage_camera output)
+Assets/Screenshots/
+Assets/Screenshots.meta
