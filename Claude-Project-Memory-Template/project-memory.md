@@ -14,13 +14,19 @@ Aynı anda **3 Unity editörü açık**: DrawRush@4ff3b85c (port 6400), Mini Fan
 ---
 
 ## 🏗️ LEVEL BUILD DURUMU (2026-06-08, capital UnityMCP'de yapıldı)
-**18 level** var (`===LEVELS===`, hepsi C=(1.79,-0.47) merkezli, ===ARENA=== border içinde):
-- 0 Tutorial, 1 kare, 2 üçgen, 3 altıgen(düzeltildi R=4.5), 4 çember, 5 beşgen, 6 quad, 7 yedigen, 8 sekizgen, 9 quad, 10 oval, 11 çember6
-- **YENİ:** 12 yıldız(10), 13 artı(12), 14 uçurtma(4), 15 hexagram(12), 16 **kalp**(4 yay), 17 **hilal**(2 yay).
-- **KRİTİK BULGU:** centroid-outward yöntemi **TÜM içbükey şekilleri doğru render ediyor** (kalp+hilal play-verified) → **winding-upgrade GEREKSİZ**, PDF'teki "UPGRADE" şekilleri de mevcut pipeline'la kurulabilir.
-- **BUILD PIPELINE (kanıtlı):** Level_01'i klonla → Edges'i temizle → Kenar.prefab'tan N adet `InstantiatePrefab` → anchorA/B'yi şekil noktalarına koy (2-drop/köşe için chord boyunca `inset≈0.3`) → yay için child "WP" + `wallThickness`... `wallColor`'ı SerializedObject ile set → NavMeshSurface.navMeshData = Level_01'inkiyle PAYLAŞ (zemin aynı, bake gerekmez). Save.
-- **KALAN (kur):** ok, şimşek, çiçek(yay), yonca(yay), çark/dişli, kalkan, damla + **emoji/meyve = çok-parçalı** (her parça ayrı Kenar grubu, EdgeNetwork hepsi boyanınca win). Hedef ~41 (PDF).
-- **TEST NOTU:** Build = edit-mode; render-test = play (capital server'da çalışır). Force-toggle yerine `LevelManager.ActivateLevel(idx)` kullan (temiz Rebuild); post/wall sayımını ayrı frame'de yap (deferred Destroy).
+**35 level** var (`===LEVELS===`, hepsi C=(1.79,-0.47) merkezli, ===ARENA=== border içinde; Level_N index N'de — `ActivateLevel(index)` İSME değil INDEX'e göre çalışır, çocuk sırası korunmalı):
+- 0 Tutorial, 1 kare, 2 üçgen, 3 altıgen, 4 çember, 5 beşgen, 6 quad, 7 yedigen, 8 sekizgen, 9 quad, 10 oval, 11 çember6
+- 12 yıldız, 13 artı, 14 uçurtma, 15 hexagram, 16 kalp, 17 hilal
+- 18 elmas, 19 ok, 20 damla(v2 sivri-üst/yuvarlak-alt), 21 şimşek, 22 kalkan, 23 çiçek(5 yaprak), 24 yonca(4, koyu-yeşil)
+- **EMOJI:** 25 smiley, 26 grin(açık ağız), 27 üzgün(frown), 28 şaşkın(O ağız) = yüz(4yay)+2göz(2yay)+ağız
+- **MEYVE:** 29 limon(lens), 30 muz(hilal), 31 armut(damla yeşil), 32 elma(çukurlu çember+sap), 33 karpuz-dilimi(düz üst+yay), 34 kiraz(2× çember+sap)
+- **2 KRİTİK BULGU:**
+  1. centroid-outward **tüm içbükey tek-döngüleri** doğru render eder → winding-upgrade gereksiz.
+  2. **ÇOK-PARÇALI** için EdgeNetwork'e **per-component interior** eklendi (commit a424fc7c): union-find, paylaşılan corner'la bağlı kenarlar=bir bileşen, her bileşen kendi centroid'ini interior alır → ayrık döngüler (göz/ağız) ters dönmez. 40/40 EditMode yeşil. **Kiraz kuralı:** 2 kirazı BİRBİRİNE bağlama (tek bileşen→centroid dışarı→flip); her "kiraz+kendi kısa sapı" ayrı bileşen, centroid kirazın içinde.
+- **BUILD PIPELINE (kanıtlı):** Level_01 klonla → Edges temizle → Kenar.prefab'tan N `InstantiatePrefab` → anchorA=A+dir*inset / anchorB=B-dir*inset (`inset≈0.3-0.42`, cornerMergeDistance=1.5) → yay için child "WP" + author.waypoint ata → `wallColor` SerializedObject. Çok-parçalı: tüm parça kenarları tek Edges altında, tek EdgeNetwork hepsi boyanınca win.
+- **🚨 NAVMESH:** Level_01 şablonunun `navMeshData=NULL`'du → klonlar NavMesh'siz (düşman spawn edemez: "no valid NavMesh"). DÜZELTİLDİ: L01+L12-L34 her biri `NavMeshSurface.BuildNavMesh()` ile bake (geçici SetActive(true)→bake→eski state). Açık zemin bake'lenir, duvarlar runtime carving ile oyulur. **Yeni level → MUTLAKA bake + AssetDatabase.SaveAssets.**
+- **RENDER-TEST (play):** `ActivateLevel(idx)`; duvarları görmek için reflection: EdgeNetwork `_edges/_authors/_edgeInterior/CornerEndFor` → her author.Reveal(edge, _edgeInterior[edge], CornerEndFor(A), CornerEndFor(B)). Top-down screenshot: view_position=[1.79,15,-0.47] view_rotation=[90,0,0]. Play-modda klon kurup INDEX aktive etme (sıra kayar) — preview'de İSME göre aktive et.
+- **KALAN:** her level'a PDF dalga-eğrisine göre düşman sayısı (şu an hepsi L01'in 2 düşmanını miras alıyor). Opsiyonel: çark/dişli, daha çok emoji/meyve.
 
 ---
 
