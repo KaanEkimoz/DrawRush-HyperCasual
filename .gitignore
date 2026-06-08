@@ -106,3 +106,6 @@ Secrets.cs
 # Editor screenshots (MCP manage_camera output)
 Assets/Screenshots/
 Assets/Screenshots.meta
+
+# Unity Recorder output (gameplay/showcase mp4s)
+/Recordings/
