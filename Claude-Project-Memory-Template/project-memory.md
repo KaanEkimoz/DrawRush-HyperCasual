@@ -5,6 +5,14 @@
 
 ---
 
+## 🚨 MCP ROUTING (önce BUNU oku — yoksa yanlış projeye yazarsın!)
+Aynı anda **3 Unity editörü açık**: DrawRush@4ff3b85c (port 6400), Mini Fantasy Defense@6b0c8e78 (6700), Brick-Game@71b6f67c (6702).
+- **DrawRush'a ulaşmak için CAPITAL `mcp__UnityMCP__*` tool'larını kullan** + `set_active_instance("DrawRush@4ff3b85c")`. Bu oturumda capital server doğru route etti.
+- **lowercase `mcp__unityMCP__*` server Brick-Game'e KİLİTLENDİ** (`set_active_instance` + `unity_instance` param'ı bile yok saydı). Sahte "Studios208 not found / ref-loss" hataları aslında bu yüzdendi (Brick-Game'de o assembly yok).
+- **HER build/save/play öncesi DOĞRULA:** `execute_code` → `Application.dataPath` `/DrawRush/` içermeli + `productName==DrawAndRush2`. Değilse DUR, server/instance'ı düzelt. (instances listesi: `ReadMcpResourceTool server=UnityMCP uri=mcpforunity://instances`.)
+
+---
+
 ## 📄 ÖNEMLİ — Level Tasarım Planı PDF'i (yeni session BUNA bak)
 
 **Dosya: `Design-Docs/DrawRush-Level-Design-Plan.pdf`** (16 sayfa, **41 level**) — Kaan ile birlikte hazırlanan, görselli, çok detaylı geometrik level tasarım planı.
