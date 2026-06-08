@@ -18,7 +18,12 @@
 - **Kaan'ın "en yüksek etki" önerim olarak vurguladığım 3'lü:** (1) skin'ler (coin meta), (2) win-juice (gerçek-görsel parlama + konfeti + paylaşım), (3) çizgi-üstü coin toplama.
 - ⚠️ Bu PDF/PNG'ler `Design-Docs/` altında (Assets dışında, Unity import etmez). Git'e commit edildi mi diye `git log -- Design-Docs/` ile bak.
 
-**Sıradaki seçenekler (Kaan'a soruldu, bekliyor):** (a) Design-Docs'u commit/push, (b) fikirlerden birini kodla (önerim: win-juice), (c) daha çok şekil/meyve veya eğri ince ayarı, (d) emoji/meyveyi Unity'de çok-parçalı level olarak prototiple.
+**🏗️ LEVEL İNŞASI BAŞLADI (2026-06-08, `claude-dev`):** Kaan "levelleri kur, kalite > hız, çift dikiş test et, hepsini bensiz tamamla" dedi. Plandaki şekilleri yeni level olarak ekliyorum.
+- **TAMAM + commit `2b61d587`:** Level_05 beşgen, 06 elmas, 07 yedigen, 08 sekizgen, 09 uçurtma. Hepsi play-verified (edges=walls, IsComplete, köşe 1/post, düşman onNavMesh). Toplam 10 level (Tutorial+01-09).
+- **İnşa deseni (tekrarlanabilir):** Level_01'i `Object.Instantiate` ile klonla → Edges'i temizle → her kenar için Kenar prefab'ı `PrefabUtility.InstantiatePrefab` + AnchorA/B world pos (köşeden ~0.6 inset = 2 damla/köşe) + arc ise Waypoint child + `wallColor` set → düşman sayısı (ring'e yerleştir, gerekirse `Instantiate` ile çoğalt) → **taze NavMesh bake** (`surf.navMeshData=null; BuildNavMesh; CreateAsset NavMesh_Level_XX.asset`) → save. Hepsi merkez **C=(1.79,-0.47), y=0.42, R~4**. Kenar prefab: `Assets/_Project/Drawing/Prefabs/Kenar.prefab`.
+- **⚠️ DOĞRULAMA KURALI:** Level'ı test ederken **iki-geçişli** aktive et — önce `foreach SetActive(false)` HEPSİNİ kapat, SONRA hedefi aç (LevelManager böyle yapar). Tek-geçiş `SetActive(l.name==x)` yaparsan sonraki-indeks level hâlâ aktifken hedefin EdgeNetwork'ü onun author'larını toplar (tüm leveller aynı merkezde) → köşe-postları karışık renk olur. Bu sadece test artefaktı, oyunda olmaz.
+- **SIRADA (devam et):** arc-convex (oval, stadyum, D, kemer, çember-6, damla), star-convex (yıldız, artı, hexagram, çark, dev-yıldız), **içbükeyler → ÖNCE ProceduralWall winding-upgrade'i** (kalp, hilal, çiçek, yonca, muz), emoji çok-parçalı (gülücük/sırıt/üzgün/şaşkın), meyveler (elma/armut/limon/karpuz/muz/kiraz). Boyut/enemy değerleri PDF planındaki WAVE'e göre. Sonra: kampanya sırasını WAVE'e göre sibling-reorder + tema/renk.
+- Origin'e PUSH yok (main Kaan onayı ister) — sadece claude-dev commit.
 
 ---
 
