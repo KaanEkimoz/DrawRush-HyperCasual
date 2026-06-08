@@ -13,6 +13,17 @@ Aynı anda **3 Unity editörü açık**: DrawRush@4ff3b85c (port 6400), Mini Fan
 
 ---
 
+## 🏗️ LEVEL BUILD DURUMU (2026-06-08, capital UnityMCP'de yapıldı)
+**18 level** var (`===LEVELS===`, hepsi C=(1.79,-0.47) merkezli, ===ARENA=== border içinde):
+- 0 Tutorial, 1 kare, 2 üçgen, 3 altıgen(düzeltildi R=4.5), 4 çember, 5 beşgen, 6 quad, 7 yedigen, 8 sekizgen, 9 quad, 10 oval, 11 çember6
+- **YENİ:** 12 yıldız(10), 13 artı(12), 14 uçurtma(4), 15 hexagram(12), 16 **kalp**(4 yay), 17 **hilal**(2 yay).
+- **KRİTİK BULGU:** centroid-outward yöntemi **TÜM içbükey şekilleri doğru render ediyor** (kalp+hilal play-verified) → **winding-upgrade GEREKSİZ**, PDF'teki "UPGRADE" şekilleri de mevcut pipeline'la kurulabilir.
+- **BUILD PIPELINE (kanıtlı):** Level_01'i klonla → Edges'i temizle → Kenar.prefab'tan N adet `InstantiatePrefab` → anchorA/B'yi şekil noktalarına koy (2-drop/köşe için chord boyunca `inset≈0.3`) → yay için child "WP" + `wallThickness`... `wallColor`'ı SerializedObject ile set → NavMeshSurface.navMeshData = Level_01'inkiyle PAYLAŞ (zemin aynı, bake gerekmez). Save.
+- **KALAN (kur):** ok, şimşek, çiçek(yay), yonca(yay), çark/dişli, kalkan, damla + **emoji/meyve = çok-parçalı** (her parça ayrı Kenar grubu, EdgeNetwork hepsi boyanınca win). Hedef ~41 (PDF).
+- **TEST NOTU:** Build = edit-mode; render-test = play (capital server'da çalışır). Force-toggle yerine `LevelManager.ActivateLevel(idx)` kullan (temiz Rebuild); post/wall sayımını ayrı frame'de yap (deferred Destroy).
+
+---
+
 ## 📄 ÖNEMLİ — Level Tasarım Planı PDF'i (yeni session BUNA bak)
 
 **Dosya: `Design-Docs/DrawRush-Level-Design-Plan.pdf`** (16 sayfa, **41 level**) — Kaan ile birlikte hazırlanan, görselli, çok detaylı geometrik level tasarım planı.
