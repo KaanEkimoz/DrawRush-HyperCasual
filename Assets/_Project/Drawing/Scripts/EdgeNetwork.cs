@@ -46,9 +46,15 @@ namespace Studios208.DrawRush.Drawing
         private readonly List<DrawEdge> _edges = new();
         private readonly Dictionary<DrawEdge, DrawEdgeAuthor> _authors = new();
         private readonly List<Corner> _corners = new();
+        // Per-edge "inside" point. For a single-loop shape every edge maps to the one shape
+        // centroid (identical to the old global behavior). For a MULTI-PART shape (emoji face +
+        // separate eye/mouth loops, cherry, apple+leaf) each disjoint loop gets ITS OWN centroid,
+        // so a small loop sitting off-centre still winds its walls outward from its own middle
+        // instead of flipping inside-out toward the global average.
+        private readonly Dictionary<DrawEdge, Vector3> _edgeInterior = new();
         private int _remaining;
         private Transform _cornerRoot;
-        private Vector3 _centroid;   // shape interior point — tells each wall which way is "out"
+        private Vector3 _centroid;   // global fallback interior point (lone/unconnected edges)
 
         /// <summary>The edges built for the active level (read-only).</summary>
         public IReadOnlyList<DrawEdge> Edges => _edges;
@@ -76,6 +82,7 @@ namespace Studios208.DrawRush.Drawing
             _edges.Clear();
             _authors.Clear();
             _corners.Clear();
+            _edgeInterior.Clear();
             _remaining = 0;
 
             var authors = UnityEngine.Object.FindObjectsByType<DrawEdgeAuthor>(FindObjectsSortMode.None);
@@ -94,6 +101,53 @@ namespace Studios208.DrawRush.Drawing
             _centroid = ComputeCentroid();
 
             BuildCorners();
+            ComputeComponentInteriors();
+        }
+
+        // Group edges into connected components (two edges are connected when they share a
+        // corner where 2+ edges meet) and give every edge the centroid of its OWN component.
+        // A single closed loop is one component → its centroid equals the global centroid, so
+        // existing single-shape levels are unchanged. Disjoint loops each get a local centroid.
+        private void ComputeComponentInteriors()
+        {
+            if (_edges.Count == 0) return;
+
+            // Union-find over edges, keyed by reference.
+            var parent = new Dictionary<DrawEdge, DrawEdge>(_edges.Count);
+            foreach (DrawEdge e in _edges) parent[e] = e;
+
+            DrawEdge Find(DrawEdge e)
+            {
+                DrawEdge root = e;
+                while (!ReferenceEquals(parent[root], root)) root = parent[root];
+                while (!ReferenceEquals(parent[e], root)) { DrawEdge next = parent[e]; parent[e] = root; e = next; }
+                return root;
+            }
+            void Union(DrawEdge a, DrawEdge b) { parent[Find(a)] = Find(b); }
+
+            for (int i = 0; i < _corners.Count; i++)
+            {
+                Corner c = _corners[i];
+                for (int k = 1; k < c.Edges.Count; k++) Union(c.Edges[0], c.Edges[k]);
+            }
+
+            // Accumulate each component's endpoint sum, then assign the average to every member.
+            var sum = new Dictionary<DrawEdge, Vector3>();
+            var count = new Dictionary<DrawEdge, int>();
+            foreach (DrawEdge e in _edges)
+            {
+                DrawEdge r = Find(e);
+                Vector3 s = sum.TryGetValue(r, out Vector3 sv) ? sv : Vector3.zero;
+                int n = count.TryGetValue(r, out int nv) ? nv : 0;
+                if (e.A != null) { s += e.A.Transform.position; n++; }
+                if (e.B != null) { s += e.B.Transform.position; n++; }
+                sum[r] = s; count[r] = n;
+            }
+            foreach (DrawEdge e in _edges)
+            {
+                DrawEdge r = Find(e);
+                _edgeInterior[e] = count[r] > 0 ? sum[r] / count[r] : _centroid;
+            }
         }
 
         // Average of every edge endpoint — a point inside the shape, so each wall can tell which
@@ -136,7 +190,8 @@ namespace Studios208.DrawRush.Drawing
             {
                 Vector3 endA = CornerEndFor(edge, edge.A);
                 Vector3 endB = CornerEndFor(edge, edge.B);
-                author.Reveal(edge, _centroid, endA, endB);
+                Vector3 interior = _edgeInterior.TryGetValue(edge, out Vector3 ip) ? ip : _centroid;
+                author.Reveal(edge, interior, endA, endB);
             }
             if (_remaining > 0) _remaining--;
 
