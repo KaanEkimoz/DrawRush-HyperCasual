@@ -5,6 +5,38 @@
 
 ---
 
+## 📄 ÖNEMLİ — Level Tasarım Planı PDF'i (yeni session BUNA bak)
+
+**Dosya: `Design-Docs/DrawRush-Level-Design-Plan.pdf`** (16 sayfa, **41 level**) — Kaan ile birlikte hazırlanan, görselli, çok detaylı geometrik level tasarım planı.
+- **Kaynak script:** `Design-Docs/generate_plan.py` (PIL ile oyun-stili şekil thumbnail'ları + reportlab ile düzen). Düzenleyip tekrar üretmek için: `cd Design-Docs && python3 generate_plan.py` (reportlab + PIL kurulu; matplotlib YOK, kullanma).
+- **İçerik:** (1) Tasarım felsefesi + **zorluk DALGASI** (testere eğrisi — sürekli yükselmez!), (2) düşman tasarımı (kademe başına sayı/hız/spawn), (3) 41 level kartı (şekil çizimi + spec + HAZIR/UPGRADE), (4) **Çeşitlilik & Eğlence Fikirleri** (power-up/engel/düşman-varyant/mod/meta/juice), (5) yol haritası.
+- **Kademeler:** 1 Öğren (çiftlik) → 2 Kur → 3 Eğlence/İkonlar (kalp/yıldız/hilal/damla/çiçek/artı/ok/şimşek) → 4 Usta → 5 **Emoji/Çok-Parçalı** (gülücük/üzgün/şaşkın) → 6 **Meyveler** (elma/armut/limon/karpuz/muz/kiraz).
+- **Önemli içgörüler (dokümanda):**
+  - **Zorluk dalgası:** Sürekli yükselme = duyarsızlaşma = sıkılma. Yeni mekanik tanıt → zorluğu kısa süre DÜŞÜR (öğrensin) → tırmandır → ani spike'tan kaçın. (Kaan bir video paylaştı, prensip ondan.)
+  - **Çok-parçalı level mümkün:** Bir level birden çok AYRIK parça içerebilir (yüz+gözler+ağız; 2 kiraz+sap) — `EdgeNetwork` hepsi boyanınca win verir. Emoji/meyve = yeni level tipi.
+  - **İçbükey duvar upgrade'i gerekli:** Kalp/yıldız gibi içbükey şekillerde `ProceduralWall` dış-yönü centroid yerine **polygon winding**'den hesaplanmalı (tek seferlik). Dokümanda "UPGRADE" işaretli şekiller bunu bekliyor.
+- **Kaan'ın "en yüksek etki" önerim olarak vurguladığım 3'lü:** (1) skin'ler (coin meta), (2) win-juice (gerçek-görsel parlama + konfeti + paylaşım), (3) çizgi-üstü coin toplama.
+- ⚠️ Bu PDF/PNG'ler `Design-Docs/` altında (Assets dışında, Unity import etmez). Git'e commit edildi mi diye `git log -- Design-Docs/` ile bak.
+
+**Sıradaki seçenekler (Kaan'a soruldu, bekliyor):** (a) Design-Docs'u commit/push, (b) fikirlerden birini kodla (önerim: win-juice), (c) daha çok şekil/meyve veya eğri ince ayarı, (d) emoji/meyveyi Unity'de çok-parçalı level olarak prototiple.
+
+---
+
+## 🎯 Mevcut Durum — 2026-06-08 (çember level + arc bug + bug-avı + tasarım dokümanı)
+
+**Bu oturumda master'a push edilenler (`master`=`claude-dev`, origin'de):**
+- **`v0.28-arc-procedural-walls`** milestone (yay kenarlar + procedural modular duvar + 1.2× şekil) — detay aşağıda 2026-06-07 bölümünde.
+- **Duvar polish** (`484760ec`): kenar duvarı 0.4→**0.7** kalınlık (köşe 1.2×), inside-out yüz fix (centroid'den dışa + alt kapak), köşe-gap fix (duvar uçları köşe-posta uzar). EndWallParts temizliği de (`43922d7d`, chip'ten).
+- **Damla dizimi** (`4411cb96`): Level_02 üçgen + Level_03 altıgen damlaları **regular + her köşede 2 droplet** olacak şekilde yeniden dizildi (L3 düz-tabanlı altıgen).
+- **Arc bug fix** (`31146c38`): yay sonuna doğru karakter çizginin yanında kalıyordu — `arrivalDistance` snap'i aktif çizimde 0.15'e gated edildi (bırakılınca 0.6 korunur). *(Kaan cihazda feel-test edecek.)*
+- **Level_04 = 4 yaydan ÇEMBER** (`8b670f2f`): L1'den klonlandı, 4 çeyrek-yay R=4 çember, taze `NavMesh_Level_04.asset` bake + Enemies grubu aktivasyonu (düşmanlar onNavMesh). Index 4, L3'ten sonra oynar.
+- **Bug-avı fix** (`5105ee44`): (1) `EnemyFollow.Update` `SetDestination` off-mesh guard'ı eklendi (agent mesh dışındayken her frame exception atıyordu) — **HIGH**; (2) `EdgeNetwork` köşe kesişimi ~2 birime sınırlandı (near-parallel'de uzağa post). EditMode **40/40**.
+- **Tasarım dokümanı PDF'i** (yukarıdaki bölüm) — `Design-Docs/`, henüz repo'ya commit EDİLMEDİ (Kaan'a soruldu).
+
+**Açık konular:** Tutorial'da hâlâ aktif eski `Walls/EndWall` (statik dekor); içbükey-duvar winding upgrade'i (kalp/yıldız için); per-level renk/yükseklik; emoji/meyve çok-parçalı prototip.
+
+---
+
 ## 🎯 Mevcut Durum — 2026-06-07 (yay kenarlar + procedural modular duvar + şekil büyütme, `claude-dev`)
 
 **Tek satır:** Çizim geometrisi artık **tek kaynaktan** akıyor (`DrawEdge.PointAt/TangentAt/Length`); kenar düz **veya 3-noktadan geçen çember yayı** olabilir. Duvarlar elle dizilen cube-strip yerine **kenar boyunca runtime üretilen procedural mesh** (`ProceduralWall`) — her şekle/uzunluğa/eğriye uyar, köşeler otomatik kapanır. Şekiller %20 büyütüldü. **7 faz, hepsi `claude-dev`'de**, doğrulama sonrası master'a tek `--no-ff` merge edilecek.
