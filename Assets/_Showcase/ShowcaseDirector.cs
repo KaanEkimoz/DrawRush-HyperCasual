@@ -186,13 +186,20 @@ public class ShowcaseDirector : MonoBehaviour
         if (lm == null) { Debug.LogError("[Playlist] No LevelManager."); yield break; }
         MethodInfo activate = lm.GetType().GetMethod("ActivateLevel");
 
+        // Suppress the win presentation so the win panel can't pop up and BLOCK play —
+        // we sequence levels ourselves. Disabling fires its OnDisable (unsubscribes from
+        // GameWonChanged), so no panel and no confetti during the playlist.
+        var wsd = FindByTypeName("WinSequenceDirector") as Behaviour;
+        if (wsd != null) wsd.enabled = false;
+
         for (int i = 0; i < playlist.Length; i++)
         {
             activate.Invoke(lm, new object[] { playlist[i] });
             Debug.Log("[Playlist] Level " + playlist[i] + " (" + (i + 1) + "/" + playlist.Length + ") — draw it!");
-            yield return new WaitForSeconds(1.2f);   // countdown grace; avoids reading stale state
+            // Realtime waits: countdown sets Time.timeScale=0, so scaled waits would hang here.
+            yield return new WaitForSecondsRealtime(1.4f);   // countdown grace; avoid stale state
             yield return WaitLevelComplete();
-            yield return new WaitForSeconds(2.0f);    // admire the win
+            yield return new WaitForSecondsRealtime(1.5f);    // brief beat after the shape closes
         }
         Debug.Log("[Playlist] DONE — all levels played. Press Stop in Recorder to finish.");
     }
