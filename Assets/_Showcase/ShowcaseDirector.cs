@@ -84,6 +84,7 @@ public class ShowcaseDirector : MonoBehaviour
 
         SetupCamera();
         HidePlayer();
+        SuppressCountdown();   // no 3-2-1 in the showcase — just shapes rising
         if (!StartRecorder())
         {
             Debug.LogError("[Showcase] Recorder failed to start. Aborting.");
@@ -232,6 +233,23 @@ public class ShowcaseDirector : MonoBehaviour
         // which is ===SHARED=== itself and would also kill LevelManager/Camera.
         var rpc = FindByTypeName("RailPaintController") as Component;
         if (rpc != null) rpc.gameObject.SetActive(false);
+    }
+
+    // Stop the 3-2-1 start countdown from showing/freezing during the montage: null the
+    // LevelManager's countdown ref AND deactivate the countdown object so ActivateLevel can't
+    // re-find it, then force timeScale=1 (GameManager.Awake set it to 0 expecting the countdown
+    // to restore it).
+    private void SuppressCountdown()
+    {
+        Time.timeScale = 1f;
+        object lm = FindByTypeName("LevelManager");
+        if (lm != null)
+        {
+            var f = lm.GetType().GetField("countdown", FL);
+            if (f != null) f.SetValue(lm, null);
+        }
+        var cd = FindByTypeName("LevelStartCountdown") as Component;
+        if (cd != null) cd.gameObject.SetActive(false);
     }
 
     // Deactivate the active level's enemies so they don't chase/kill during the montage.
