@@ -26,6 +26,9 @@ public class ShowcaseDirector : MonoBehaviour
     private object _controller;     // RecorderController
     private MethodInfo _stop;
     [System.NonSerialized] public bool gameplayMode; // true = passively record real gameplay
+    [System.NonSerialized] public bool playlistMode; // true = drive a custom level order for live play
+    // Custom play order for the gameplay clip: easy(square) -> heart -> smiley(emoji) -> star.
+    public int[] playlist = { 1, 16, 25, 12 };
 
     private static readonly BindingFlags FL =
         BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance;
@@ -39,12 +42,15 @@ public class ShowcaseDirector : MonoBehaviour
     {
         bool show = UnityEditor.EditorPrefs.GetBool("DR_RunShowcase", false);
         bool game = UnityEditor.EditorPrefs.GetBool("DR_RunGameplayRec", false);
-        if (!show && !game) return;
+        bool plist = UnityEditor.EditorPrefs.GetBool("DR_RunGameplayPlaylist", false);
+        if (!show && !game && !plist) return;
         UnityEditor.EditorPrefs.SetBool("DR_RunShowcase", false);
         UnityEditor.EditorPrefs.SetBool("DR_RunGameplayRec", false);
+        UnityEditor.EditorPrefs.SetBool("DR_RunGameplayPlaylist", false);
         var go = new GameObject("ShowcaseDirector_GO");
         var d = go.AddComponent<ShowcaseDirector>();
-        if (game && !show) { d.gameplayMode = true; d.outputName = "gameplay"; }
+        if (plist && !show && !game) d.playlistMode = true;          // drive level order, recorder window captures
+        else if (game && !show) { d.gameplayMode = true; d.outputName = "gameplay"; }
     }
 
     // Exiting Play fires OnApplicationQuit — finalize the passive gameplay recording here.
@@ -58,6 +64,13 @@ public class ShowcaseDirector : MonoBehaviour
     {
 #if UNITY_EDITOR
         yield return null; // let the scene settle one frame
+
+        if (playlistMode)
+        {
+            // Live gameplay in a custom order. Recorder WINDOW captures; we only drive levels.
+            yield return RunPlaylist();
+            yield break;
+        }
 
         if (gameplayMode)
         {
@@ -162,6 +175,40 @@ public class ShowcaseDirector : MonoBehaviour
         foreach (var mb in UnityEngine.Object.FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None))
             if (mb.GetType().Name == "EdgeNetwork") return mb;
         return null;
+    }
+
+    // Walk the custom playlist: activate each level, wait until the PLAYER finishes drawing it
+    // (EdgeNetwork.IsComplete), hold a moment for the win juice, then advance. The recorder
+    // window is doing the actual capture — this only sequences levels for a tidy clip.
+    private IEnumerator RunPlaylist()
+    {
+        object lm = FindByTypeName("LevelManager");
+        if (lm == null) { Debug.LogError("[Playlist] No LevelManager."); yield break; }
+        MethodInfo activate = lm.GetType().GetMethod("ActivateLevel");
+
+        for (int i = 0; i < playlist.Length; i++)
+        {
+            activate.Invoke(lm, new object[] { playlist[i] });
+            Debug.Log("[Playlist] Level " + playlist[i] + " (" + (i + 1) + "/" + playlist.Length + ") — draw it!");
+            yield return new WaitForSeconds(1.2f);   // countdown grace; avoids reading stale state
+            yield return WaitLevelComplete();
+            yield return new WaitForSeconds(2.0f);    // admire the win
+        }
+        Debug.Log("[Playlist] DONE — all levels played. Press Stop in Recorder to finish.");
+    }
+
+    private IEnumerator WaitLevelComplete()
+    {
+        while (true)
+        {
+            object en = FindActiveEdgeNetwork();
+            if (en != null)
+            {
+                var p = en.GetType().GetProperty("IsComplete");
+                if (p != null && (bool)p.GetValue(en)) yield break;
+            }
+            yield return null;
+        }
     }
 
     private object FindByTypeName(string name)
