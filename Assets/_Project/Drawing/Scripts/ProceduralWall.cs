@@ -104,10 +104,15 @@ namespace Studios208.DrawRush.Drawing
         }
 
         /// <summary>Rise into view. Idempotent.</summary>
+        /// <summary>Raised when any wall starts rising. A hook for feedback systems (audio/VFX)
+        /// so this class keeps knowing nothing about them.</summary>
+        public static event System.Action Revealed;
+
         public void Reveal()
         {
             if (_revealed || _wall == null) return;
             _revealed = true;
+            Revealed?.Invoke();
             _ = RiseAsync();
         }
 
