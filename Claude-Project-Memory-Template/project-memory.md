@@ -14,6 +14,25 @@ Aynı anda **3 Unity editörü açık**: DrawRush@4ff3b85c (port 6400), Mini Fan
 
 ---
 
+## 🔎 5-AJANLI DENETİM + DÜZELTMELER (2026-07-16)
+5 paralel ajan taradı (bug / Unity-runtime / tasarım-boşluk / release / kalite). **Düzeltilenler (hepsi commit'li, 44/44 test yeşil):**
+- **Kalıcılık:** `LevelFlow` PlayerPrefs'e yazıyordu ama **kimse okumuyordu** → oyuncu her açılışta L1'e dönüyordu. Artık `PlayerProgress.LastLevelIndex` + `LevelManager.ResolveResumeIndex()`.
+- **`timeScale` kilidi:** `GameManager.Awake` 0 yapar, geri açan TEK şey countdown (`FindFirstObjectByType` inaktifi atlar) → countdown yoksa oyun **donmuş açılır**. `ActivateLevel`'a `else Time.timeScale=1f` eklendi.
+- **Magenta duvarlar (ship bug):** WallMesh runtime'da yaratılıyor (materyal null) + `Kenar.wallMaterial` boş → her duvar `Shader.Find`'a düşüyordu; **stripped IL2CPP'de null** → telefonda hepsi magenta. `ProceduralWall.fallbackMaterial` + `ProceduralWall.mat` asset'i prefab'a bağlandı (asset ref shader'ı build'de tutar). Materyal sızıntısı da kapandı.
+- **Yerçekimi:** `isGrounded` reset'i yoktu → dakikalar sonra oyuncu düşmüyor, **zeminden geçiyordu**.
+- **Soft-lock:** `LevelManager.Reset`'te GameServices fallback yoktu → `IsGameWon` sonraki levele taşınıp oyuncuyu kalıcı donduruyordu.
+- **Rail %95'te bırakma:** komşu kenarın drop'una değince kenar iptal oluyordu → artık `_localT>=0.5` sonrası yabancı drop'lar yok sayılıyor.
+- **Bayat win paneli:** `WinSequenceDirector`'a run-token eklendi.
+- **🚨 `cornerMergeDistance` (10 level):** kural **`dropGap < merge < enKısaKenar`**. Hepsi 1.5 default'uyla geliyordu ama inset kenarları 0.68'e kadar kısaltmıştı → kenarın kendi iki ucu tek köşeye düşüyor, **simetri bozuluyordu** (çiçek 5 yerine 3 köşe). Her level için pencere ölçülüp orta nokta yazıldı. **`LevelIntegrityTests` bunu artık kalıcı koruyor.**
+
+**Yeni:** `SfxPlayer`+`SfxLibrary` (event-driven ses, ffmpeg placeholder klipler — **kulakla test edilmedi**), gerçek 3D render'dan **app ikonu** (18/18 Android slot), `ShowcaseDirector` artık `#if UNITY_EDITOR`.
+
+### ⚠️ KALAN (denetimin bulduğu, henüz YAPILMADI)
+Coin **hiçbir şeye harcanmıyor** (plan skin'i #1 öneriyor) · **power-up yok** (5 planlı) · **tek düşman tipi, boss yok** · **Perfect/yıldız/combo skor yok** · **tutorial hiçbir şey öğretmiyor** · **6 level eksik** (çark, Dev Kalp, Dev Gülücük…) · `EnemyFollow` her karede `SetDestination` (5-10 Hz'e düş) · `ProceduralWall` runtime NavMesh carving (hitch kaynağı) · PlayMode testi yok · `LevelFlow`'un "Level" PlayerPrefs'i artık atıl.
+**Planın "içbükey şekiller winding-upgrade ister" varsayımı GEÇERSİZ** — per-component çözümü hallediyor, PDF'teki ~20 "UPGRADE" kartı aslında HAZIR.
+
+---
+
 ## 🏗️ LEVEL BUILD DURUMU (2026-06-08, capital UnityMCP'de yapıldı)
 **35 level** var (`===LEVELS===`, hepsi C=(1.79,-0.47) merkezli, ===ARENA=== border içinde; Level_N index N'de — `ActivateLevel(index)` İSME değil INDEX'e göre çalışır, çocuk sırası korunmalı):
 - 0 Tutorial, 1 kare, 2 üçgen, 3 altıgen, 4 çember, 5 beşgen, 6 quad, 7 yedigen, 8 sekizgen, 9 quad, 10 oval, 11 çember6
