@@ -99,6 +99,15 @@ namespace Studios208.DrawRush.Player
                 return;
             }
 
+            // Every edge owns its own drops, so a corner holds two of them a drop-gap apart:
+            // painting toward one, the player clips the NEIGHBOUR edge's trigger first. Falling
+            // through to the re-anchor below would silently discard an almost-finished edge —
+            // it freezes at ~95%, AllCompleted never fires, and the player has to walk back and
+            // repaint it. Past the halfway mark the edge is committed, so ignore foreign drops
+            // and let the arrival check in FixedUpdate finish it properly. Near the start,
+            // re-picking a different edge from the same corner is still legitimate.
+            if (_edge != null && _localT >= 0.5f) return;
+
             // Fresh attach, or re-pick from the same corner: lock to this anchor and wait for
             // a stick direction to choose an edge.
             _currentPart = part;

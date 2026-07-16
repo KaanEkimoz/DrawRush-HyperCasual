@@ -20,6 +20,10 @@ namespace Studios208.DrawRush.Core
         [SerializeField] private GameObject winParticles;
 
         private GameState _bound;
+        // Bumped on every win/reset so an in-flight delay can tell it has been superseded —
+        // same guard LevelStartCountdown uses. Without it the win panel from a finished level
+        // pops up in the middle of the NEXT one.
+        private int _runToken;
 
         /// <summary>Late-binds inspector fields. Non-null arguments overwrite the
         /// existing serialized refs; nulls are ignored.</summary>
@@ -43,6 +47,9 @@ namespace Studios208.DrawRush.Core
 
         private async void OnGameWonChanged(bool won)
         {
+            // Every transition invalidates any delay still counting down from a previous win.
+            int token = ++_runToken;
+
             // Restart fires won=false on a state that was just true — turn the celebratory
             // particles back off so the next level doesn't start with them already on.
             if (!won)
@@ -68,6 +75,9 @@ namespace Studios208.DrawRush.Core
             {
                 return;
             }
+            // A newer win/reset happened while we waited (player hit Restart/Next, or the level
+            // switched) — that run owns the UI now, so don't slam a stale panel over it.
+            if (token != _runToken) return;
             if (hudPanels != null) hudPanels.ShowWinPanel();
         }
     }
