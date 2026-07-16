@@ -45,6 +45,11 @@ namespace Studios208.DrawRush.Player
         // released. A FixedUpdate step is ~0.05 world units, well under this, so it never skips.
         private const float ArrivalSnap = 0.15f;
 
+        // How much of the stick must point along the rail before it counts as "go". Below this the
+        // player is pushing across the rail, where the forward/back sign is ambiguous and would
+        // jitter. 0.2 ≈ within 78° of the rail axis, so any sane input still reads as intent.
+        private const float AlignmentDeadzone = 0.2f;
+
         private CharacterController _characterController;
         private EdgeNetwork _network;
         private DrawPart _currentPart;
@@ -177,7 +182,14 @@ namespace Studios208.DrawRush.Player
             // Heading along current→target: TangentAt is in the A→B sense; flip if we entered from B.
             Vector3 heading = _currentPart == _edge.A ? _edge.TangentAt(edgeTNow) : -_edge.TangentAt(edgeTNow);
 
-            float along = Vector3.Dot(worldInput, heading);
+            // The stick picks WHICH WAY along the rail — never how fast. Dot(worldInput, heading)
+            // used to fold in both the stick's deflection AND cos(angle to the rail), so a
+            // half-pushed or off-axis stick crawled, and on an arc the heading turns under the
+            // player while they hold a fixed direction — so the speed sagged and recovered by
+            // itself mid-curve. Normalising first makes it purely a direction decision.
+            float alignment = Vector3.Dot(worldInput.normalized, heading);   // -1..1
+            if (Mathf.Abs(alignment) < AlignmentDeadzone) return;            // pushed across the rail, not along it
+            float along = Mathf.Sign(alignment);
             float speed = railSpeed > 0f
                 ? railSpeed
                 : (GameServices.Config != null ? GameServices.Config.playerSpeed : 2.7f);
@@ -195,12 +207,10 @@ namespace Studios208.DrawRush.Player
             delta.y = 0f;
             _characterController.Move(delta);
 
-            if (Mathf.Abs(along) > 0.01f)
-            {
-                // Re-evaluate heading at the new point so the player visibly curves along the arc.
-                Vector3 headNow = _currentPart == _edge.A ? _edge.TangentAt(edgeT) : -_edge.TangentAt(edgeT);
-                transform.rotation = Quaternion.LookRotation(headNow * Mathf.Sign(along), Vector3.up);
-            }
+            // Re-evaluate heading at the new point so the player visibly curves along the arc.
+            // (No magnitude check needed any more — below the deadzone we already returned.)
+            Vector3 headNow = _currentPart == _edge.A ? _edge.TangentAt(edgeT) : -_edge.TangentAt(edgeT);
+            transform.rotation = Quaternion.LookRotation(headNow * along, Vector3.up);
         }
 
         // Pick the authored edge touching the current anchor that is best aligned with the

@@ -27,6 +27,10 @@ namespace Studios208.DrawRush.Player
         [SerializeField] private int idleArmsLayer = 1;
         [SerializeField] private float idleArmsBlend = 10f;
 
+        // Minimum raw stick deflection that counts as input. Direction is normalised afterwards,
+        // so anything past this moves at the SAME speed — the stick steers, it never throttles.
+        private const float InputDeadzone = 0.1f;
+
         private PlayerControls _controls;
         private Vector2 _move;
         private float _turnSmoothVelocity;
@@ -101,8 +105,11 @@ namespace Studios208.DrawRush.Player
 
         private void Move()
         {
+            // Dead-zone the RAW stick, then normalise. The check used to run on the already
+            // normalised vector, whose magnitude is only ever 1 or 0 — so it gated nothing and
+            // the faintest touch or stick drift launched the player at full speed.
+            if (_move.sqrMagnitude < InputDeadzone * InputDeadzone) return;
             var direction = new Vector3(_move.x, 0f, _move.y).normalized;
-            if (direction.magnitude < 0.1f) return;
 
             var camera = GameServices.MainCamera;
             float cameraY = camera != null ? camera.eulerAngles.y : 0f;
