@@ -14,6 +14,20 @@ Aynı anda **3 Unity editörü açık**: DrawRush@4ff3b85c (port 6400), Mini Fan
 
 ---
 
+## 🎨 OK, İŞARET ETTİĞİ KENARIN RENGİNİ GİYİYOR (2026-07-17) — **62/62 yeşil**
+Kaan: "kafasındaki okun rengi çizdiği kenarın rengi olsa". Ok artık yön DEĞİL, **hangi kenar** diyor — o kenarın boyasıyla ve olacağı duvarla aynı renkte.
+- `EdgeNetwork.ColorOf(edge)` eklendi (bağ zaten vardı: `Dictionary<DrawEdge, DrawEdgeAuthor> _authors`, sadece kapalıydı).
+- `RailPaintController.TryGetGuidance(out heading, out color)`. `ResolveNextHeading` → `ResolveNextEdge(out heading)`: yön ve renk **aynı kenardan** gelmeli, yoksa ok bir kenarı gösterip başkasının rengini giyer.
+- `RailDirectionArrow`: **MaterialPropertyBlock** ile boyanıyor (`_BaseColor` + `_Color`), renk değişince. Paylaşılan materyal hiç kopyalanmıyor — doğrulandı: block koyu renkteyken asset hâlâ sarı.
+- Oyunda **26 farklı kenar rengi**; 7 level (suratlar/elma/karpuz/kiraz) **kendi içinde 2 renk** taşıyor → özellik gerçekten anlam kazanıyor. Suratların göz rengi `RGBA(0.12,0.10,0.18)` (22 kenar) neredeyse siyah; yeşil zeminde **iyi okunuyor**, ekran görüntüsüyle doğrulandı.
+- 🪤 `bool show = rail != null && rail.TryGetGuidance(out Vector3 d, out Color c);` **derlenmez** — `&&` kısa devre yapınca out'lar atanmamış sayılır. Değişkenleri önce tanımla. (Eski tek-out'lu hâli bunu gizliyordu, o yüzden `TryGetGuidance` iki kez çağrılıyordu; o da temizlendi.)
+
+### 🪤 Test ederken kendi kurallarım engel oldu (ürün hatası DEĞİL)
+- Ok **düz yatay** (XZ). Sığ açıdan bakınca kenarından görünür = ince şerit. Ekran görüntüsü için **tepeden** (75-90°) bak.
+- Düşmanlar temas edince `Detach()` çağırıyor → rehberlik sıfırlanıyor → ok kayboluyor. Level_25'te 3 düşman oyuncunun üstündeydi. Test için düşmanları kapat (play mode değişiklikleri çıkışta geri alınır — 110/110 doğrulandı).
+
+---
+
 ## 👻 YERDE ÖNİZLEME + İNCE DUVAR + HİLAL ONARIMI (2026-07-17) — **62/62 yeşil**
 
 **1. Noktalı hayalet iz (`DrawEdgeView`).** Kaan: "çizeceği yer önceden yerde belli olsa". Kritik nokta: hayalet **tüm kenarı değil, SADECE boyanmamış aralığı** (`fill.PaintedLow` → `PaintedHigh`) çiziyor. Boya iki uçtan noktaları yiyor → z-fighting yok, çift çizgi yok, ve anlamı doğru: "kalan yol". Duvar yükselince `Hide()` hepsini kapatıyor.

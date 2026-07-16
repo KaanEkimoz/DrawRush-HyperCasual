@@ -8,6 +8,10 @@ namespace DrawRush.Player
     /// <see cref="RailPaintController.TryGetGuidance"/> — so it never nags during free movement,
     /// and it reads the same heading the player's body turns to, rather than deciding its own.
     ///
+    /// It also wears the target edge's colour, so it says WHICH edge rather than merely which way —
+    /// matching the paint that edge is about to be drawn in, and the wall it becomes. The tint goes
+    /// through a MaterialPropertyBlock so the one shared material is never instanced.
+    ///
     /// The arrow lies flat in the XZ plane like the painted trail does: under this game's
     /// third-person camera a horizontal arrow reads as a direction on the ground, where an
     /// upright billboard would just read as a symbol facing the lens.
@@ -23,9 +27,10 @@ namespace DrawRush.Player
         [Header("Refs (auto-resolved from this GameObject if empty)")]
         [SerializeField] private RailPaintController rail;
 
-        [Tooltip("Material for the arrow. Assign a real asset — do not rely on the Shader.Find " +
-                 "fallback, which only works in the editor and leaves the arrow invisible or " +
-                 "magenta in a build.")]
+        [Tooltip("Material for the arrow. Its colour is overridden per-edge at runtime, so this is " +
+                 "about the shader, not the tint. Assign a real asset — do not rely on the " +
+                 "Shader.Find fallback, which only works in the editor and leaves the arrow " +
+                 "invisible or magenta in a build.")]
         [SerializeField] private Material arrowMaterial;
 
         [Header("Placement")]
@@ -45,9 +50,17 @@ namespace DrawRush.Player
         [SerializeField] private float turnSpeed = 720f;
 
         private Transform _arrow;
+        private MeshRenderer _renderer;
         private Mesh _mesh;
         private Material _runtimeMaterial;   // only when the fallback had to build one
         private float _bobPhase;
+
+        // Tint per edge without instancing the material (that would leak one Material per colour
+        // change). URP/Unlit reads _BaseColor; _Color is set too so the fallback path also tints.
+        private MaterialPropertyBlock _tint;
+        private Color _lastColor = Color.clear;
+        private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
+        private static readonly int ColorId = Shader.PropertyToID("_Color");
 
         private void Awake()
         {
@@ -66,7 +79,11 @@ namespace DrawRush.Player
         {
             if (_arrow == null) return;
 
-            bool show = rail != null && rail.TryGetGuidance(out Vector3 heading) && heading.sqrMagnitude > 0.0001f;
+            // Declared up front: with `&&` short-circuiting, a null rail would leave the out
+            // params unassigned and the compiler rightly refuses to let them be read below.
+            Vector3 dir = Vector3.zero;
+            Color edgeColor = Color.white;
+            bool show = rail != null && rail.TryGetGuidance(out dir, out edgeColor);
             if (_arrow.gameObject.activeSelf != show) _arrow.gameObject.SetActive(show);
             if (!show) { _bobPhase = 0f; return; }
 
@@ -75,9 +92,24 @@ namespace DrawRush.Player
 
             // World rotation, so the arrow keeps pointing along the rail while the player's body
             // turns underneath it (it is parented to the player and would otherwise inherit).
-            rail.TryGetGuidance(out Vector3 dir);
             _arrow.rotation = Quaternion.RotateTowards(
                 _arrow.rotation, Quaternion.LookRotation(dir, Vector3.up), turnSpeed * Time.deltaTime);
+
+            ApplyTint(edgeColor);
+        }
+
+        // Wear the colour of the edge being pointed at, so the arrow says WHICH edge, not just
+        // which way — it matches the paint that edge is about to be drawn in. Only pushed when it
+        // actually changes; setting a property block every frame is pure overhead.
+        private void ApplyTint(Color c)
+        {
+            if (_renderer == null || c == _lastColor) return;
+            _lastColor = c;
+            _tint ??= new MaterialPropertyBlock();
+            _renderer.GetPropertyBlock(_tint);
+            _tint.SetColor(BaseColorId, c);
+            _tint.SetColor(ColorId, c);
+            _renderer.SetPropertyBlock(_tint);
         }
 
         private void BuildArrow()
@@ -90,10 +122,10 @@ namespace DrawRush.Player
             _mesh = BuildMesh(size);
             go.AddComponent<MeshFilter>().sharedMesh = _mesh;
 
-            var mr = go.AddComponent<MeshRenderer>();
-            mr.sharedMaterial = ResolveMaterial();
-            mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            mr.receiveShadows = false;
+            _renderer = go.AddComponent<MeshRenderer>();
+            _renderer.sharedMaterial = ResolveMaterial();
+            _renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            _renderer.receiveShadows = false;
 
             go.SetActive(false);   // nothing to point at until the player is on the rail
         }

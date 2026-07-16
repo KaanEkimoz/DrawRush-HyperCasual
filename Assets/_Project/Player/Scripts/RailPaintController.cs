@@ -67,6 +67,7 @@ namespace DrawRush.Player
         // point at. Cached rather than recomputed on demand so the overhead arrow reading it every
         // frame doesn't re-query the network (and doesn't stomp _edgeBuffer mid-selection).
         private Vector3 _guidance;
+        private Color _guidanceColor = Color.white;
 
         /// <summary>
         /// The direction the rail wants the player to travel: along the edge being painted (toward
@@ -75,10 +76,14 @@ namespace DrawRush.Player
         ///
         /// Note this points at the TARGET even when the player is currently sliding backwards, so
         /// it stays a hint about where to go rather than a mirror of which way they happen to face.
+        ///
+        /// <paramref name="color"/> is that edge's authored colour, so a hint can name the edge it
+        /// means the same way the level already does — by colour, not just by direction.
         /// </summary>
-        public bool TryGetGuidance(out Vector3 heading)
+        public bool TryGetGuidance(out Vector3 heading, out Color color)
         {
             heading = _guidance;
+            color = _guidanceColor;
             return _guidance.sqrMagnitude > 0.0001f;
         }
 
@@ -200,7 +205,7 @@ namespace DrawRush.Player
             // still with the stick untouched is the case this exists for.
             if (_edge == null)
             {
-                _guidance = ResolveNextHeading();
+                _guidanceColor = ColorOf(ResolveNextEdge(out _guidance));
                 if (_guidance.sqrMagnitude > 0.0001f)
                     transform.rotation = Quaternion.RotateTowards(
                         transform.rotation, Quaternion.LookRotation(_guidance, Vector3.up),
@@ -256,21 +261,27 @@ namespace DrawRush.Player
             // shows the arrow ahead of the player rather than following them backwards.
             Vector3 hint = headNow; hint.y = 0f;
             _guidance = hint.sqrMagnitude > 0.0001f ? hint.normalized : Vector3.zero;
+            _guidanceColor = ColorOf(_edge);
         }
 
-        // Direction out of the current anchor along an edge that still needs paint. On a closed
-        // loop this is normally unambiguous: you arrive at a corner having just painted the edge
-        // behind you, leaving exactly one open. Only the very first anchor has two, and there the
-        // player's own facing breaks the tie so the hint agrees with them instead of spinning them.
-        private Vector3 ResolveNextHeading()
+        // The edge the hint refers to, and the direction out of the current anchor along it. Both
+        // come from the same edge on purpose: the arrow's colour has to name the edge its direction
+        // points at, or it would be pointing at one edge while wearing another's colour.
+        //
+        // On a closed loop the choice is normally unambiguous: you arrive at a corner having just
+        // painted the edge behind you, leaving exactly one open. Only the very first anchor has two,
+        // and there the player's own facing breaks the tie so the hint agrees with them instead of
+        // spinning them.
+        private DrawEdge ResolveNextEdge(out Vector3 heading)
         {
-            if (_currentPart == null) return Vector3.zero;
+            heading = Vector3.zero;
+            if (_currentPart == null) return null;
             if (_network == null || !_network.isActiveAndEnabled) _network = ResolveNetwork(_currentPart);
-            if (_network == null) return Vector3.zero;
+            if (_network == null) return null;
 
             _network.GetEdgesTouching(_currentPart, _edgeBuffer);
 
-            Vector3 best = Vector3.zero;
+            DrawEdge best = null;
             float bestDot = float.NegativeInfinity;
             Vector3 facing = transform.forward;
             for (int i = 0; i < _edgeBuffer.Count; i++)
@@ -286,10 +297,15 @@ namespace DrawRush.Player
                 dir.Normalize();
 
                 float dot = Vector3.Dot(facing, dir);
-                if (dot > bestDot) { bestDot = dot; best = dir; }
+                if (dot > bestDot) { bestDot = dot; best = e; heading = dir; }
             }
             return best;
         }
+
+        // An edge's authored colour — what its paint and wall are drawn in. White when there is no
+        // edge, so a hint never inherits a stale colour from the last one.
+        private Color ColorOf(DrawEdge edge)
+            => edge != null && _network != null ? _network.ColorOf(edge) : Color.white;
 
         // Pick the authored edge touching the current anchor that is best aligned with the
         // stick, and slide along it. Edges come from EdgeNetwork (authored Kenar prefabs), so

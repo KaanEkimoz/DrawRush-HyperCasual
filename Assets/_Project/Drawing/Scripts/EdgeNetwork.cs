@@ -62,6 +62,14 @@ namespace DrawRush.Drawing
         /// <summary>True once every edge is painted. False when there are no edges yet.</summary>
         public bool IsComplete => _edges.Count > 0 && _remaining == 0;
 
+        /// <summary>The authored colour of <paramref name="edge"/> — the same one its paint and
+        /// wall use. Lets anything pointing AT an edge (the overhead arrow) say which edge it
+        /// means by colour rather than by position alone. Unknown edges get the fallback.</summary>
+        public Color ColorOf(DrawEdge edge)
+            => edge != null && _authors.TryGetValue(edge, out DrawEdgeAuthor author) && author != null
+                ? author.WallColor(fallbackLineColor)
+                : fallbackLineColor;
+
         private void OnEnable() => Rebuild();
 
         private void OnDisable() => UnsubscribeAll();
