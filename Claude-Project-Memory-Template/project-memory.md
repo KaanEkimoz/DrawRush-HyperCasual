@@ -14,6 +14,23 @@ Aynı anda **3 Unity editörü açık**: DrawRush@4ff3b85c (port 6400), Mini Fan
 
 ---
 
+## 👻 YERDE ÖNİZLEME + İNCE DUVAR + HİLAL ONARIMI (2026-07-17) — **62/62 yeşil**
+
+**1. Noktalı hayalet iz (`DrawEdgeView`).** Kaan: "çizeceği yer önceden yerde belli olsa". Kritik nokta: hayalet **tüm kenarı değil, SADECE boyanmamış aralığı** (`fill.PaintedLow` → `PaintedHigh`) çiziyor. Boya iki uçtan noktaları yiyor → z-fighting yok, çift çizgi yok, ve anlamı doğru: "kalan yol". Duvar yükselince `Hide()` hepsini kapatıyor.
+- Assetler: `Drawing/Textures/GhostDash.png` (wrap=**Repeat** şart) + `Drawing/Materials/GhostPath.mat` (URP/Unlit transparent, alpha 0.30, tiling **1.6**). `Kenar.prefab`'a bağlı → 192 kenarın 188'i miras aldı, 4'ü elle.
+- 🪤 **`LineTextureMode.Tile` zaten dünya birimi başına tekrarlıyor.** İlk yazdığımda uzunlukla ayrıca çarpıyordum (çift uygulama) **ve** `_ghostSpan.material` ile kenar başına materyal kopyası sızdırıyordum. İkisi de kaldırıldı: desen sıklığı **materyal asset'inin tiling'inde** yaşıyor, kodda değil.
+
+**2. Duvarlar %10 ince:** `wallThickness` 0.7 → **0.63** (192 kenar + prefab + script default). Köşe direkleri `EdgeNetwork`'te `WallThickness * 1.2` olduğu için kendiliğinden takip etti (0.756).
+- 🪤 **Kesilebilecek toplu işlemde ÇARPMA kullanma, MUTLAK değer yaz.** MCP sınıflandırıcısı "servis yok" hatası verdi ama çağrı aslında çalışmıştı: 192 kenarın 174'ü 0.63 oldu, sonra tekrar denedim ve onlar 0.567'ye (0.7×0.9×0.9) düştü. Doğrulama yakaladı. `= 0.63` idempotenttir, `*= 0.9` değil.
+
+**3. Hilal (Level_17) — oyunun en kötü leveliydi, ölçüldü.** 2 kenar: **16.82** ve 10.17 birim (yıldızın kenarı 2.6, üçgen 5.4). 4 anchor ama sadece **2 farklı konumda** → ekranda 2 küre ve aralarında görünmeyen iki yay, üstüne 5 düşman. 16.8 birim boyunca inilemeyen ray.
+- **Çözüm:** dış yay 3'e (5.60 ×3), iç yay 2'ye (5.08 ×2) bölündü → **5 kenar, 5 küre**. Tüm yeni noktalar **orijinal iki çemberin üstünde** → siluet hiç değişmedi, sadece ray parçalandı. Şekil puanı 3.0 → 7.5 (otomatik, `ShapeScore` sahneyi okuyor).
+- Değişmez kural korunuyor: merge 1.5 < en kısa kenar 5.08 ✓ · en yakın **farklı** anchor 3.27 > 1.5 ✓ (yanlış birleşme yok).
+- 🪤 **`Kenar.prefab`'da `WP` çocuğu YOK** — waypoint opsiyonel, yay olan kenarlara elle eklenir. Yeni instance'larda `Find("WP")` null döner; yoksa yaratmak gerekir.
+- ⚠️ Kaan'ın asıl teşhisi ("aynı yöne bakan 2 kenar") doğruydu ama sebep teğet belirsizliği DEĞİLDİ: `GetEdgesTouching` sadece kenarın KENDİ anchor'larını döndürüyor, yani seçim belirsizliği yok. Gerçek sorun uzunluk + görünmezlikti.
+
+---
+
 ## 🔇 SESSİZLİĞİN SEBEBİ: LFS SMUDGE TUZAĞI (2026-07-17) — **çözüldü**
 Kaan "hiç ses duymadım" dedi. Mute değildi, mixer değildi, kablo değildi: **5 WAV'ın her biri 130 baytlık git-LFS pointer METNİYDİ**, ses değil.
 

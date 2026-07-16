@@ -28,7 +28,10 @@ namespace DrawRush.Drawing
         [Tooltip("Wall (and drop) color for this edge.")]
         [SerializeField] private Color wallColor = new Color(0.85f, 0.2f, 0.18f);
         [SerializeField] private float wallHeight = 0.9f;
-        [SerializeField] private float wallThickness = 0.7f;
+        [Tooltip("Wall thickness across its width. 0.63 = the old 0.7 thinned 10% (Kaan) — the " +
+                 "walls read as drawn lines, not as masonry. Corner posts follow automatically: " +
+                 "EdgeNetwork sizes them from this value.")]
+        [SerializeField] private float wallThickness = 0.63f;
 
         [Header("Drop color")]
         [Tooltip("When off, both drops take this edge's wall color. When on, use dropColor below.")]

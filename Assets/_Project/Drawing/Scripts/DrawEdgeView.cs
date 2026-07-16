@@ -21,9 +21,22 @@ namespace DrawRush.Drawing
         [SerializeField] private int arcSegments = 24;
         [SerializeField] private Color color = new Color(0.1f, 1f, 0.8f, 1f);
 
+        [Header("Ghost path (what is still to be drawn)")]
+        [Tooltip("Dashed, faint material for the not-yet-painted stretch. Assign the real asset — " +
+                 "the Shader.Find fallback only works in the editor.")]
+        [SerializeField] private Material ghostMaterial;
+        [Tooltip("Ghost width as a fraction of the painted line. Thinner reads as a hint rather " +
+                 "than as a second, competing line.")]
+        [SerializeField] private float ghostWidthScale = 0.55f;
+        [Tooltip("Ghost Y. Just under the painted line so the two never z-fight at the boundary. " +
+                 "Dash density lives in GhostPath.mat's tiling, not here — LineTextureMode.Tile " +
+                 "already repeats by world length.")]
+        [SerializeField] private float ghostY = 0.012f;
+
         private DrawEdge _edge;
         private LineRenderer _lowSpan;
         private LineRenderer _highSpan;
+        private LineRenderer _ghostSpan;
         private bool _hidden;
 
         /// <summary>Wire this view to an edge with the given line color (EdgeNetwork passes the
@@ -48,6 +61,7 @@ namespace DrawRush.Drawing
             _hidden = true;
             if (_lowSpan != null) _lowSpan.enabled = false;
             if (_highSpan != null) _highSpan.enabled = false;
+            if (_ghostSpan != null) _ghostSpan.enabled = false;
         }
 
         private void ApplyColor()
@@ -65,6 +79,48 @@ namespace DrawRush.Drawing
         {
             if (_lowSpan == null) _lowSpan = CreateSpan("LowSpan");
             if (_highSpan == null) _highSpan = CreateSpan("HighSpan");
+            if (_ghostSpan == null) _ghostSpan = CreateGhost();
+        }
+
+        // The dashed hint showing where this edge still has to be drawn. Deliberately NOT the whole
+        // edge: it renders only the unpainted stretch, so paint eats into it from either end rather
+        // than being layered on top of it — no z-fighting, no double line, and the dots always mean
+        // "what's left" instead of "what exists".
+        private LineRenderer CreateGhost()
+        {
+            var go = new GameObject("GhostSpan");
+            go.transform.SetParent(transform, false);
+
+            var lr = go.AddComponent<LineRenderer>();
+            lr.useWorldSpace = true;
+            lr.positionCount = 2;
+            lr.numCapVertices = 0;   // caps would fill in the gaps between dashes
+            float w = ResolveWidth() * Mathf.Max(0.05f, ghostWidthScale);
+            lr.startWidth = w;
+            lr.endWidth = w;
+            // Tile, not Stretch: the dash pattern has to repeat at a fixed rate along the line, or a
+            // long edge would show one enormous dash and a short one a sliver of it.
+            lr.textureMode = LineTextureMode.Tile;
+            lr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            lr.receiveShadows = false;
+            lr.material = ResolveGhostMaterial();
+            lr.enabled = false;
+            return lr;
+        }
+
+        private Material ResolveGhostMaterial()
+        {
+            if (ghostMaterial != null) return ghostMaterial;
+            // Editor-only net. In a build URP/Unlit is stripped unless referenced, so this returns
+            // null and the ghost renders magenta — the exact failure the walls once shipped with.
+            Shader s = Shader.Find("Universal Render Pipeline/Unlit");
+            if (s == null)
+            {
+                Debug.LogError("DrawEdgeView has no ghostMaterial and URP/Unlit was not found — " +
+                               "assign GhostPath.mat in the Inspector.", this);
+                return null;
+            }
+            return new Material(s) { name = "Auto_GhostPath" };
         }
 
         private LineRenderer CreateSpan(string spanName)
@@ -102,6 +158,7 @@ namespace DrawRush.Drawing
             {
                 SetSpan(_lowSpan, 0f, 1f);
                 _highSpan.enabled = false;
+                _ghostSpan.enabled = false;   // nothing left to hint at
                 return;
             }
 
@@ -110,6 +167,27 @@ namespace DrawRush.Drawing
 
             if (fill.PaintedHigh < 0.9999f) SetSpan(_highSpan, fill.PaintedHigh, 1f);
             else _highSpan.enabled = false;
+
+            // Whatever the two painted ends have not claimed yet.
+            SetGhost(fill.PaintedLow, fill.PaintedHigh);
+        }
+
+        private void SetGhost(float t0, float t1)
+        {
+            if (t1 - t0 < 0.001f) { _ghostSpan.enabled = false; return; }
+
+            int segs = _edge.IsArc ? Mathf.Max(2, arcSegments) : 1;
+            _ghostSpan.positionCount = segs + 1;
+            for (int i = 0; i <= segs; i++)
+            {
+                Vector3 p = _edge.PointAt(Mathf.Lerp(t0, t1, (float)i / segs));
+                p.y = ghostY;
+                _ghostSpan.SetPosition(i, p);
+            }
+            _ghostSpan.enabled = true;
+            // Dash density is NOT set here: LineTextureMode.Tile already repeats the pattern by
+            // world length, and the rate lives in GhostPath.mat's tiling. Driving it from here
+            // would both double-apply the length and force a material instance per edge.
         }
 
         private void SetSpan(LineRenderer lr, float t0, float t1)
