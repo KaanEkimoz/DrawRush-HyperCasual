@@ -1,8 +1,8 @@
 using NUnit.Framework;
 using UnityEngine;
-using Studios208.DrawRush.Core;
+using DrawRush.Core;
 
-namespace Studios208.DrawRush.Tests.EditMode
+namespace DrawRush.Tests.EditMode
 {
     [TestFixture]
     public sealed class GameStateTests

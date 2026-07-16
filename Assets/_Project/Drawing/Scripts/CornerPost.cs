@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Studios208.DrawRush.Drawing
+namespace DrawRush.Drawing
 {
     /// <summary>
     /// A corner filler that rises from below ground when both edges meeting at the corner are

@@ -1,7 +1,7 @@
 using UnityEngine;
-using Studios208.DrawRush.Core;
+using DrawRush.Core;
 
-namespace Studios208.DrawRush.Drawing
+namespace DrawRush.Drawing
 {
     /// <summary>
     /// Flips <see cref="GameState.IsGameWon"/> when the level's <see cref="EdgeNetwork"/>

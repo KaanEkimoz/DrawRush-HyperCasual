@@ -1,8 +1,8 @@
 {
-    "name": "Studios208.DrawRush.Tests.EditMode",
-    "rootNamespace": "Studios208.DrawRush.Tests.EditMode",
+    "name": "DrawRush.Tests.EditMode",
+    "rootNamespace": "DrawRush.Tests.EditMode",
     "references": [
-        "Studios208.DrawRush",
+        "DrawRush",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],

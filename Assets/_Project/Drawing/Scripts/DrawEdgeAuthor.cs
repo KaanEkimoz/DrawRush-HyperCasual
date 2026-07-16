@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Studios208.DrawRush.Drawing
+namespace DrawRush.Drawing
 {
     /// <summary>
     /// Authoring component for one paintable edge — the reusable "Kenar" prefab. It owns the

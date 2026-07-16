@@ -1,7 +1,7 @@
 using TMPro;
 using UnityEngine;
 
-namespace Studios208.DrawRush.Core
+namespace DrawRush.Core
 {
     /// <summary>
     /// Shows the player's coin total (<see cref="PlayerProgress.Coins"/>) on a HUD label and

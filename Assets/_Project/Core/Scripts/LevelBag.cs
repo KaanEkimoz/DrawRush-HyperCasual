@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Studios208.DrawRush.Core
+namespace DrawRush.Core
 {
     /// <summary>
     /// Draws levels without repeats: shuffle every level into a bag, pull them out one at a

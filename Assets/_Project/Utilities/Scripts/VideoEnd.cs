@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace Studios208.DrawRush.Utilities
+namespace DrawRush.Utilities
 {
     /// <summary>
     /// Waits a fixed delay (default 2.1s) on the splash scene then loads the next

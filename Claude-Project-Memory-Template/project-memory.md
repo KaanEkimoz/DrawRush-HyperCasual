@@ -14,6 +14,44 @@ Aynı anda **3 Unity editörü açık**: DrawRush@4ff3b85c (port 6400), Mini Fan
 
 ---
 
+## 🔇 SESSİZLİĞİN SEBEBİ: LFS SMUDGE TUZAĞI (2026-07-17) — **çözüldü**
+Kaan "hiç ses duymadım" dedi. Mute değildi, mixer değildi, kablo değildi: **5 WAV'ın her biri 130 baytlık git-LFS pointer METNİYDİ**, ses değil.
+
+**Sebep:** LFS kilitlenmesini aşmak için kullanılan `git ... -c filter.lfs.smudge= -c filter.lfs.process= merge` komutu. O bayraklar tam olarak *"pointer'ı gerçek dosyaya çevirme"* demek → o merge **tüm LFS dosyalarını pointer metni olarak çalışma ağacına yazdı**. Workaround'un bedeli fark edilmemişti.
+
+### 🪤 Neden sessiz: `git status` bunu TEMİZ gösterir
+LFS'te index zaten pointer tutar. Çalışma ağacındaki dosya pointer metni olunca `clean` filtresi onu "zaten pointer" diye aynen geçirir → index'le eşleşir → **git hiçbir fark görmez**. Tarama şart:
+```bash
+git ls-files -z | while IFS= read -r -d '' f; do
+  head -c 45 "$f" 2>/dev/null | grep -q "^version https://git-lfs" && echo "$f"
+done          # ⚠️ `for f in $(git ls-files)` KULLANMA — "Epic Toon FX" gibi boşluklu yolları sessizce atlar
+```
+**Onarım:** `git lfs checkout` mevcut dosyanın üstüne YAZMAZ. Çalışan tek yol:
+```bash
+rm <dosya> && git checkout HEAD -- <dosya>     # silince smudge filtresi devreye girer
+```
+**Kapsam:** 741 dosya bozuktu. Oyunu etkileyenler sadece `_Project` altındaki 8'di → **5 ses + 3 app ikonu** (ikonlar bozuk build'e girecekti!). Kalan 733 (`Mega Hyper Casual GUI Pack` 576, `beach` 39…) **kullanılmıyor** — sahnedeki 13 UI Image'ın 12'si sprite'lı, tek sprite'sız olan Joystick zaten şeffaf dokunma alanı. Dokunulmadı.
+**Commit gerekmedi** — repo hep doğruydu, bozuk olan sadece çalışma ağacıydı. Ama build o ağaçtan alınır, o yüzden önemliydi.
+**Ses zinciri sağlam:** `AddCoins(1)` → `CoinsChanged` → `SfxPlayer` → `PlayOneShot` → `isPlaying=True` ile uçtan uca doğrulandı (`source.Play()` ile değil).
+
+---
+
+## 🏷️ NAMESPACE: `Studios208.DrawRush.*` → `DrawRush.*` (2026-07-17) — **62/62 yeşil, 0 eksik script**
+Kaan'ın seçimi: şirket adı **bilerek** koda girmedi (marka değişirse kod etkilenmesin). 55 `.cs` + 2 asmdef.
+
+**Neden güvenliydi (önce ölçüldü):** projede **`[SerializeReference]` yok** → tüm script referansları dosya GUID'i üzerinden. Namespace/assembly adı serialize veriye girmiyor. Doğrulandı: 26.796 sahne bileşeni, **0 eksik script**; tüm SO'lar yeni tiplere bağlandı.
+- `.asset`/`.prefab`'taki `m_EditorClassIdentifier: Studios208.DrawRush::...` sadece önbellek, yetkili değil — Unity yeniden yazar.
+- asmdef dosyaları `.meta` ile **birlikte** `git mv` edildi → GUID korundu.
+
+### 🪤 `[MovedFrom]`'a DOKUNMA
+`PersistentObject.cs`'te:
+```csharp
+[MovedFrom(sourceNamespace: "Studios208.DrawRush.Core", sourceAssembly: "Studios208.DrawRush", sourceClassName: "DontDestroyOnLoad")]
+```
+Bu bir **tarihî kayıt** — "bu tip eskiden şuydu" deyip eski veriyi eşliyor. Toplu bul-değiştir bunu da vurdu, geri alındı. İçindeki isim yeniden adlandırılırsa eşleme kopar ve satır olmamış bir taşımayı anlatır. **Kodda `Studios208` geçen tek meşru yer burası.**
+
+---
+
 ## 🎲 ZORLUK EĞRİSİ + ÇANTA SİSTEMİ (2026-07-16) — **62/62 test yeşil**
 Kaan tutorial'dan sonra **3 düşmanlı yıldız** yedi. Suçlu: `WinPanel/I_NextLevel → GameManager.LoadRandomLevel` — level sırası diye bir şey yoktu, **düpedüz rastgele**ydi. (Kaan'ın save'i bunu kanıtladı: `LastLevelIndex=12` = yıldız.)
 
@@ -315,11 +353,11 @@ Kaan ile interaktif polish oturumu. Hepsi master'a `--no-ff` merge + push (her c
 
 | Özellik | Değer |
 |---|---|
-| **İsim** | DrawRush (productName: `DrawAndRush2`) |
+| **İsim** | DrawRush (productName: `DrawRush`, paket `com.ekimozgames.drawrush`) |
 | **Tür** | Hyper-casual mobile drawing puzzle + chase combat |
 | **Platform** | Android öncelik (mobile portrait), PC fallback |
 | **Engine / Stack** | Unity 6000.3.12f1 LTS + URP 17.3.0 |
-| **Stüdyo** | Studios208 |
+| **Stüdyo** | Ekimoz Games |
 | **Mevcut version** | 0.27 (`v0.27-authored-edges` tag) |
 | **Repo** | https://github.com/KaanEkimoz/DrawRush-HyperCasual (public, 39★, 6 fork) |
 | **Default branch** | `master` |
@@ -345,7 +383,7 @@ Kaan ile interaktif polish oturumu. Hepsi master'a `--no-ff` merge + push (her c
 
 - **Scripts:** 22 first-party (`Assets/_Project/<Feature>/Scripts/`) + `PlayerControls.cs` (auto-generated)
 - **Tests:** 35 EditMode tests in `Assets/_Project/Tests/EditMode/`
-- **Asmdef:** `Studios208.DrawRush` + `Studios208.DrawRush.Tests.EditMode`
+- **Asmdef:** `DrawRush` + `DrawRush.Tests.EditMode` (2026-07-17'de `Studios208.*`'tan taşındı; aşağıdaki Faz tablosu o günkü isimleri tarihî olarak korur)
 - **ScriptableObject asset'ler:**
   - `Assets/_Project/Core/Data/GameConfig.asset` — playerSpeed=2.7, enemyTouchDamage=1, lineWidth=0.4, etc.
   - `Assets/_Project/Core/Data/GameState.asset` — IsGameWon flag

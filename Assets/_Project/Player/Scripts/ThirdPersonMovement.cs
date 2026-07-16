@@ -1,7 +1,7 @@
 using UnityEngine;
-using Studios208.DrawRush.Core;
+using DrawRush.Core;
 
-namespace Studios208.DrawRush.Player
+namespace DrawRush.Player
 {
     /// <summary>
     /// CharacterController-based third-person movement. Camera-relative direction

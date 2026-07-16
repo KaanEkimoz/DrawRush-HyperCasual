@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using Studios208.DrawRush.Core;
-using Studios208.DrawRush.Drawing;
+using DrawRush.Core;
+using DrawRush.Drawing;
 
-namespace Studios208.DrawRush.Player
+namespace DrawRush.Player
 {
     /// <summary>
     /// Edge-painting movement. Touching an anchor sphere attaches the player to that

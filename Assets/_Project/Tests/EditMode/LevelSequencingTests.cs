@@ -2,9 +2,9 @@ using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
-using Studios208.DrawRush.Core;
+using DrawRush.Core;
 
-namespace Studios208.DrawRush.Tests.EditMode
+namespace DrawRush.Tests.EditMode
 {
     /// <summary>
     /// Guards the level sequencer: the shuffle-bag's no-repeat promise, and the shape of the

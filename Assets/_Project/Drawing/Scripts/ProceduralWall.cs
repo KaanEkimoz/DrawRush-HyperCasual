@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.AI;
 
-namespace Studios208.DrawRush.Drawing
+namespace DrawRush.Drawing
 {
     /// <summary>
     /// Builds a wall mesh extruded along an edge's geometry (straight OR arc) and raises it from

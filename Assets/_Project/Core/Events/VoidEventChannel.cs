@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace Studios208.DrawRush.Core
+namespace DrawRush.Core
 {
     /// <summary>
     /// Parameterless event channel. ScriptableObject so multiple systems can

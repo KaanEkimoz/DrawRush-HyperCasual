@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using NUnit.Framework;
 using UnityEngine;
-using Studios208.DrawRush.Drawing;
+using DrawRush.Drawing;
 
-namespace Studios208.DrawRush.Tests.EditMode
+namespace DrawRush.Tests.EditMode
 {
     public sealed class DrawEdgeTests
     {

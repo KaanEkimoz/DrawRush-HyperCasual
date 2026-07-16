@@ -1,8 +1,8 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using Studios208.DrawRush.Player;
+using DrawRush.Player;
 
-namespace Studios208.DrawRush.Core
+namespace DrawRush.Core
 {
     /// <summary>
     /// Wires up runtime services for each loaded scene.

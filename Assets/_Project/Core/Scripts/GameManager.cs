@@ -1,8 +1,8 @@
 using UnityEngine;
 using UnityEngine.Serialization;
-using Studios208.DrawRush.Player;
+using DrawRush.Player;
 
-namespace Studios208.DrawRush.Core
+namespace DrawRush.Core
 {
     /// <summary>
     /// Thin facade kept for backwards-compatibility with UI Button OnClick references

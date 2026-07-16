@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Studios208.DrawRush.Drawing
+namespace DrawRush.Drawing
 {
     /// <summary>
     /// Collects the active level's authored edges (<see cref="DrawEdgeAuthor"/> "Kenar" prefabs)

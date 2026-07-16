@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Studios208.DrawRush.Core
+namespace DrawRush.Core
 {
     /// <summary>
     /// Scores how hard a level is and shapes the campaign's difficulty curve.

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Studios208.DrawRush.Drawing
+namespace DrawRush.Drawing
 {
     /// <summary>
     /// Pure paint-progress state for one edge. The edge runs from end A (t=0) to end B

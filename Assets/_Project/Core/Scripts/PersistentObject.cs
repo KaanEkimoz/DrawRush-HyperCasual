@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.Scripting.APIUpdating;
 
-namespace Studios208.DrawRush.Core
+namespace DrawRush.Core
 {
     /// <summary>
     /// Marks a GameObject as persistent across scene loads. Duplicate detection by
@@ -11,6 +11,11 @@ namespace Studios208.DrawRush.Core
     /// Class was previously named <c>DontDestroyOnLoad</c>, which shadowed the
     /// Unity API of the same name. <see cref="MovedFromAttribute"/> preserves
     /// existing serialized references on scenes and prefabs.
+    ///
+    /// The names below are deliberately the ORIGINAL ones and must not be renamed along with the
+    /// namespace: this attribute is a record of where the type came from, so old data can still be
+    /// matched. Rewriting it to the current name would describe a move that never happened and
+    /// break the mapping it exists for.
     /// </summary>
     [MovedFrom(autoUpdateAPI: true, sourceNamespace: "Studios208.DrawRush.Core", sourceAssembly: "Studios208.DrawRush", sourceClassName: "DontDestroyOnLoad")]
     [DefaultExecutionOrder(-500)]

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Studios208.DrawRush.Drawing
+namespace DrawRush.Drawing
 {
     /// <summary>
     /// A corner anchor for the edge-painting puzzle — the sphere the player touches to start

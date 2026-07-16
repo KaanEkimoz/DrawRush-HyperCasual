@@ -5,7 +5,7 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace Studios208.DrawRush.Tests.EditMode
+namespace DrawRush.Tests.EditMode
 {
     /// <summary>
     /// Authoring guards for the mega-scene. These assert properties of the LEVEL DATA that no

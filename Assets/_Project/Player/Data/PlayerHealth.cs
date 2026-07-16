@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace Studios208.DrawRush.Player
+namespace DrawRush.Player
 {
     /// <summary>
     /// Player health as a ScriptableObject so it can be referenced by UI, enemies,

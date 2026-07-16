@@ -1,8 +1,8 @@
 using NUnit.Framework;
 using UnityEngine;
-using Studios208.DrawRush.Player;
+using DrawRush.Player;
 
-namespace Studios208.DrawRush.Tests.EditMode
+namespace DrawRush.Tests.EditMode
 {
     [TestFixture]
     public sealed class PlayerHealthTests

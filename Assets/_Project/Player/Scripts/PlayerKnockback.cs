@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Studios208.DrawRush.Player
+namespace DrawRush.Player
 {
     /// <summary>
     /// Brief enemy-hit knockback. EnemyCombat calls <see cref="ApplyKnockback"/> with a

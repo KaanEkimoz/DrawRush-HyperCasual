@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Studios208.DrawRush.Player
+namespace DrawRush.Player
 {
     /// <summary>
     /// Little arrow floating over the player's head pointing where the rail wants them to go.

@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace Studios208.DrawRush.Core
+namespace DrawRush.Core
 {
     [CreateAssetMenu(fileName = "IntEventChannel", menuName = "DrawRush/Events/Int Channel", order = 11)]
     public sealed class IntEventChannel : ScriptableObject

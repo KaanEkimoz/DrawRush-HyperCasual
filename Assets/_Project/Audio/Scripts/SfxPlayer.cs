@@ -1,9 +1,9 @@
 using UnityEngine;
-using Studios208.DrawRush.Core;
-using Studios208.DrawRush.Drawing;
-using Studios208.DrawRush.Player;
+using DrawRush.Core;
+using DrawRush.Drawing;
+using DrawRush.Player;
 
-namespace Studios208.DrawRush.Audio
+namespace DrawRush.Audio
 {
     /// <summary>
     /// Plays the game's SFX purely by listening to events the systems already raise — no

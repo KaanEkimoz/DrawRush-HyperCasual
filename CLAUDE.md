@@ -20,7 +20,9 @@ Ek referans (lazım oldukça aç):
 ## Proje
 
 - **Ad:** DrawRush (Unity productName: `DrawRush`, Company: `Ekimoz Games`, paket: `com.ekimozgames.drawrush`)
-  - ⚠️ 2026-07 rebrand: eski `Studios208` / `DrawAndRush2` isimleri **kullanılmayacak** (Kaan o stüdyodan ayrıldı, haklar kendisinde). Kodda kalan `Studios208.DrawRush.*` namespace'i sadece iç isimlendirme.
+  - ⚠️ 2026-07 rebrand: eski `Studios208` / `DrawAndRush2` isimleri **kullanılmayacak** (Kaan o stüdyodan ayrıldı, haklar kendisinde).
+  - **Namespace `DrawRush.*`** (2026-07-17'de `Studios208.DrawRush.*`'tan taşındı), asmdef'ler `DrawRush` + `DrawRush.Tests.EditMode`. Şirket adı bilerek koda girmedi — marka değişse kod etkilenmesin.
+  - Kodda `Studios208` geçen **tek yer** `PersistentObject.cs`'teki `[MovedFrom]` satırı: o bir tarihî kayıt, eski serialize veriyi eşliyor. **Yeniden adlandırma.**
 - **Tür:** Hyper-casual mobile drawing/puzzle + chase combat
 - **Engine / Stack:** Unity 6000.3.12f1 LTS + URP 17.3.0 + Input System + AI Navigation + Cinemachine 2.10.7
 - **Hedef:** Android öncelik (mobile portrait), kullanıcı parmak çizimiyle parçaları birleştirip duvarı/şekli tamamlar; bu sırada düşmanlardan kaçar/onlarla çarpışır

@@ -1,9 +1,9 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.Serialization;
-using Studios208.DrawRush.Core;
+using DrawRush.Core;
 
-namespace Studios208.DrawRush.Player
+namespace DrawRush.Player
 {
     /// <summary>
     /// Wires <see cref="PlayerHealth"/> (ScriptableObject) to the HUD label and to

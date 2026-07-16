@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Studios208.DrawRush.Audio
+namespace DrawRush.Audio
 {
     /// <summary>
     /// Every sound effect in one asset, so clips and levels tune without touching code or

@@ -1,9 +1,9 @@
 using UnityEngine;
 using UnityEngine.Serialization;
-using Studios208.DrawRush.Core;
-using Studios208.DrawRush.Player;
+using DrawRush.Core;
+using DrawRush.Player;
 
-namespace Studios208.DrawRush.Enemy
+namespace DrawRush.Enemy
 {
     /// <summary>
     /// Damages the player on contact, plays death anim when the game is won.

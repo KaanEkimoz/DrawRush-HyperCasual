@@ -1,8 +1,8 @@
 using System;
 using UnityEngine;
-using Studios208.DrawRush.Drawing;
+using DrawRush.Drawing;
 
-namespace Studios208.DrawRush.Player
+namespace DrawRush.Player
 {
     /// <summary>
     /// Tracks which anchor sphere the player most recently touched and raises

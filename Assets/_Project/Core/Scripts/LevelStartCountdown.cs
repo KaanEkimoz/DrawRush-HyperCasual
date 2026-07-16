@@ -1,7 +1,7 @@
 using TMPro;
 using UnityEngine;
 
-namespace Studios208.DrawRush.Core
+namespace DrawRush.Core
 {
     /// <summary>
     /// Freezes the game and shows a 3-2-1 countdown before play begins. LevelManager calls

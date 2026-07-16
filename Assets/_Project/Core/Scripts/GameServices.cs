@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace Studios208.DrawRush.Core
+namespace DrawRush.Core
 {
     /// <summary>
     /// Lightweight runtime service locator. Avoids classic singleton MonoBehaviour pattern.

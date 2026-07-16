@@ -2,7 +2,7 @@ using System;
 using System.Reflection;
 using UnityEditor;
 
-namespace Studios208.DrawRush.EditorTools
+namespace DrawRush.EditorTools
 {
     /// <summary>
     /// Keeps Google EDM4U (External Dependency Manager) quiet. EDM4U rewrites

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Studios208.DrawRush.Utilities
+namespace DrawRush.Utilities
 {
     [RequireComponent(typeof(Renderer))]
     public sealed class RandomMaterial : MonoBehaviour

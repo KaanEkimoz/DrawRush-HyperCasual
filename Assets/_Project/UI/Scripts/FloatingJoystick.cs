@@ -3,7 +3,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.OnScreen;
 
-namespace Studios208.DrawRush.UI
+namespace DrawRush.UI
 {
     /// <summary>
     /// A floating on-screen stick: instead of a fixed control, the joystick spawns where the

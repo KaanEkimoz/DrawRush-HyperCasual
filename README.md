@@ -77,7 +77,7 @@ Assets/_Project/                      ← all first-party code lives here, scope
 
 | Decision | Rationale |
 |---|---|
-| **Single `Studios208.DrawRush.asmdef`** instead of one per feature | 14 scripts is too small to justify N assemblies. Feature isolation is achieved at the namespace level (`Studios208.DrawRush.<Feature>`). When the project grows past ~50 scripts, split the asmdef by feature. |
+| **Single `DrawRush.asmdef`** instead of one per feature | 14 scripts is too small to justify N assemblies. Feature isolation is achieved at the namespace level (`DrawRush.<Feature>`). When the project grows past ~50 scripts, split the asmdef by feature. |
 | **Service Locator over Singleton** | `GameObject.FindWithTag("Player")` in every Awake() is fragile (additive scene loads, prefab placeholders). `GameServices` resolved **once** in `GameBootstrap.Awake()` and read everywhere else. |
 | **ScriptableObject for runtime state** (`GameState`, `PlayerHealth`) | UI labels, enemy damage handlers, save systems all reference the same asset. No "find the manager and read its field" coupling. |
 | **Event channels (SO)** for cross-feature signaling | `GameState.IsGameWon` change → `Action<bool>` → all listeners (movement, manager, enemy) react. Replaces 5+ poll-every-frame `if (GameManager.isGameWon)` checks. |
@@ -148,7 +148,7 @@ This repo ships with MCP for Unity (`com.coplaydev.unity-mcp`) in the manifest. 
 - [x] Faz 2 — Dead code purge (`OldVersion/` A* stub, `Scenes/Test/`, legacy `.sln`)
 - [x] Faz 3 — Feature folder migration (flat `Scripts/` → `_Project/<Feature>/Scripts/`)
 - [x] Faz 4 — Clean architecture refactor (ServiceLocator, SO state, event-driven)
-- [x] Faz 5 — Project-level asmdef (`Studios208.DrawRush`)
+- [x] Faz 5 — Project-level asmdef (`DrawRush`)
 - [x] Faz 6 — Build settings (applicationIdentifier, IL2CPP, target SDK 34)
 - [x] Faz 7 — README rebuild (this document)
 - [ ] Faz 8 — First EditMode tests (DrawPart.Completed firing, PlayerHealth.Apply edges, PartManager event subscription)
@@ -159,7 +159,7 @@ This repo ships with MCP for Unity (`com.coplaydev.unity-mcp`) in the manifest. 
 
 ## Studio
 
-[Studios208](https://github.com/KaanEkimoz) (a.k.a. 208 Studios) — Kaan Ekimoz. Hyper-casual mobile games on Unity 6 LTS.
+[Ekimoz Games](https://github.com/KaanEkimoz) — Kaan Ekimoz. Hyper-casual mobile games on Unity 6 LTS.
 
 ## License
 

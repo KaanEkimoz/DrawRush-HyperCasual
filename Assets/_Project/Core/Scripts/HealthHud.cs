@@ -1,8 +1,8 @@
 using TMPro;
 using UnityEngine;
-using Studios208.DrawRush.Player;
+using DrawRush.Player;
 
-namespace Studios208.DrawRush.Core
+namespace DrawRush.Core
 {
     /// <summary>
     /// Binds a HUD label to the player's remaining health (<see cref="PlayerHealth.Current"/>)

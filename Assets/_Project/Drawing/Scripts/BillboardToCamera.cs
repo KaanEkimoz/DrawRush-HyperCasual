@@ -1,7 +1,7 @@
 using UnityEngine;
-using Studios208.DrawRush.Core;
+using DrawRush.Core;
 
-namespace Studios208.DrawRush.Drawing
+namespace DrawRush.Drawing
 {
     /// <summary>
     /// Keeps a mesh facing the camera so its silhouette stays readable regardless of the

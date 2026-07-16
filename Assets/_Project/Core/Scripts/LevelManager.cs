@@ -1,7 +1,7 @@
 using UnityEngine;
-using Studios208.DrawRush.Player;
+using DrawRush.Player;
 
-namespace Studios208.DrawRush.Core
+namespace DrawRush.Core
 {
     /// <summary>
     /// Drives in-scene level switching for the mega-scene architecture. All levels
@@ -207,7 +207,7 @@ namespace Studios208.DrawRush.Core
             // The paint controller lives on the persistent Player, so its disable/enable
             // never fires on a level switch. Detach explicitly so stale _currentPart /
             // _edge refs from the previous level don't re-engage the rail at the new spawn.
-            playerTf.GetComponent<Studios208.DrawRush.Player.RailPaintController>()?.Detach();
+            playerTf.GetComponent<DrawRush.Player.RailPaintController>()?.Detach();
         }
 
         private Transform ResolveSpawn(Transform activeLevel)

@@ -1,8 +1,8 @@
 using UnityEngine;
 using UnityEngine.AI;
-using Studios208.DrawRush.Core;
+using DrawRush.Core;
 
-namespace Studios208.DrawRush.Enemy
+namespace DrawRush.Enemy
 {
     /// <summary>
     /// Chases the player via NavMeshAgent. Subscribes to GameState.GameWonChanged

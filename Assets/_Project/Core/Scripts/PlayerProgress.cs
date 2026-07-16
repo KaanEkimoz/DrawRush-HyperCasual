@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace Studios208.DrawRush.Core
+namespace DrawRush.Core
 {
     /// <summary>
     /// Player-local persistent progress, backed by <see cref="PlayerPrefs"/> so it survives

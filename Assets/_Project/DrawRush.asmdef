@@ -1,6 +1,6 @@
 {
-    "name": "Studios208.DrawRush",
-    "rootNamespace": "Studios208.DrawRush",
+    "name": "DrawRush",
+    "rootNamespace": "DrawRush",
     "references": [
         "Unity.TextMeshPro",
         "Unity.InputSystem",

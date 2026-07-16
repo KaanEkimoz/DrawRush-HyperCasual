@@ -1,7 +1,7 @@
 using NUnit.Framework;
-using Studios208.DrawRush.Drawing;
+using DrawRush.Drawing;
 
-namespace Studios208.DrawRush.Tests.EditMode
+namespace DrawRush.Tests.EditMode
 {
     public sealed class EdgeFillTests
     {
