@@ -1,4 +1,4 @@
-# Proje Hafızası — DrawRush (DrawAndRush2)
+# Proje Hafızası — DrawRush (Ekimoz Games)
 
 > Projenin **canlı durumu**. Her önemli ilerlemeden sonra güncellenir.
 > Yeni oturumda buraya bakıp "nerede kaldık" sorusuna cevap alabilmelisin.
@@ -8,8 +8,9 @@
 ## 🚨 MCP ROUTING (önce BUNU oku — yoksa yanlış projeye yazarsın!)
 Aynı anda **3 Unity editörü açık**: DrawRush@4ff3b85c (port 6400), Mini Fantasy Defense@6b0c8e78 (6700), Brick-Game@71b6f67c (6702).
 - **DrawRush'a ulaşmak için CAPITAL `mcp__UnityMCP__*` tool'larını kullan** + `set_active_instance("DrawRush@4ff3b85c")`. Bu oturumda capital server doğru route etti.
-- **lowercase `mcp__unityMCP__*` server Brick-Game'e KİLİTLENDİ** (`set_active_instance` + `unity_instance` param'ı bile yok saydı). Sahte "Studios208 not found / ref-loss" hataları aslında bu yüzdendi (Brick-Game'de o assembly yok).
-- **HER build/save/play öncesi DOĞRULA:** `execute_code` → `Application.dataPath` `/DrawRush/` içermeli + `productName==DrawAndRush2`. Değilse DUR, server/instance'ı düzelt. (instances listesi: `ReadMcpResourceTool server=UnityMCP uri=mcpforunity://instances`.)
+- **lowercase `mcp__unityMCP__*` server Brick-Game'e KİLİTLENDİ** (`set_active_instance` + `unity_instance` param'ı bile yok saydı). Sahte "assembly not found / ref-loss" hataları aslında bu yüzdendi (Brick-Game'de o assembly yok).
+- **HER build/save/play öncesi DOĞRULA:** `execute_code` → `Application.dataPath` `/DrawRush/` içermeli. Değilse DUR, server/instance'ı düzelt. (instances listesi: `ReadMcpResourceTool server=UnityMCP uri=mcpforunity://instances`.)
+  ⚠️ **productName ile doğrulama YAPMA** — 2026-07'de `DrawAndRush2` → **`DrawRush`** olarak değişti (rebrand). Tek güvenilir guard `dataPath.Contains("DrawRush")`.
 
 ---
 

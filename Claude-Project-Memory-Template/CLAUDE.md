@@ -20,7 +20,7 @@ Ek referans (lazım oldukça aç):
 
 ## Proje
 
-- **Ad:** DrawRush (Unity ProductName: `DrawAndRush2`, Company: `Studios208`)
+- **Ad:** DrawRush (Unity ProductName: `DrawRush`, Company: `Ekimoz Games`, paket: `com.ekimozgames.drawrush`)
 - **Tür:** Hyper-casual mobile drawing/puzzle oyunu
 - **Engine / Stack:** Unity 6000.3.12f1 (LTS) — URP 17.3.0, Input System 1.19.0, Cinemachine 2.10.7, AI Navigation 2.0.11, Test Framework 1.6.0
 - **Hedef:** Mobil (Android öncelik, portrait orientation) — kullanıcı parmak çizimiyle parçaları birleştirerek duvarı/şekli tamamlar, düşmanlarla çatışır

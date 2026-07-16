@@ -1,13 +1,13 @@
-# CLAUDE.md — DrawRush (DrawAndRush2)
+# AGENTS.md — DrawRush (DrawAndRush2)
 
-Bu proje ile çalışırken **her konuşmanın başında** aşağıdaki dosyaları okuman zorunludur. Bunlar `Claude-Project-Memory-Template/` klasöründe yaşıyor:
+Bu proje ile çalışırken **her konuşmanın başında** aşağıdaki dosyaları okuman zorunludur. Bunlar `Codex-Project-Memory-Template/` klasöründe yaşıyor:
 
-1. **[Claude-Project-Memory-Template/rules.md](Claude-Project-Memory-Template/rules.md)** — Kaan'ın koyduğu, her zaman uyman gereken kurallar. Kod yazmadan, öneri sunmadan önce mutlaka oku. **En üstteki Quick Reference tablosu 30 saniyede taranır.**
-2. **[Claude-Project-Memory-Template/memory.md](Claude-Project-Memory-Template/memory.md)** — Kaan ile yaptığın genel konuşmaların hafızası. Kaan'ın tercihleri, çalışma stili, default tercihler tablosu (Render Pipeline, Input System, vs.).
-3. **[Claude-Project-Memory-Template/project-memory.md](Claude-Project-Memory-Template/project-memory.md)** — Projenin güncel durumu, yapılacaklar listesi, aşamalar, nerede kaldığımız.
+1. **[Codex-Project-Memory-Template/rules.md](Codex-Project-Memory-Template/rules.md)** — Kaan'ın koyduğu, her zaman uyman gereken kurallar. Kod yazmadan, öneri sunmadan önce mutlaka oku. **En üstteki Quick Reference tablosu 30 saniyede taranır.**
+2. **[Codex-Project-Memory-Template/memory.md](Codex-Project-Memory-Template/memory.md)** — Kaan ile yaptığın genel konuşmaların hafızası. Kaan'ın tercihleri, çalışma stili, default tercihler tablosu (Render Pipeline, Input System, vs.).
+3. **[Codex-Project-Memory-Template/project-memory.md](Codex-Project-Memory-Template/project-memory.md)** — Projenin güncel durumu, yapılacaklar listesi, aşamalar, nerede kaldığımız.
 
 Ek referans (lazım oldukça aç):
-- **[Claude-Project-Memory-Template/recipes/asset-pipelines.md](Claude-Project-Memory-Template/recipes/asset-pipelines.md)** — Meshy / Mixamo / Stitch asset üretim tarifleri.
+- **[Codex-Project-Memory-Template/recipes/asset-pipelines.md](Codex-Project-Memory-Template/recipes/asset-pipelines.md)** — Meshy / Mixamo / Stitch asset üretim tarifleri.
 
 ## Kurallar
 
@@ -25,6 +25,6 @@ Ek referans (lazım oldukça aç):
 - **Engine / Stack:** Unity 6000.3.12f1 LTS + URP 17.3.0 + Input System + AI Navigation + Cinemachine 2.10.7
 - **Hedef:** Android öncelik (mobile portrait), kullanıcı parmak çizimiyle parçaları birleştirip duvarı/şekli tamamlar; bu sırada düşmanlardan kaçar/onlarla çarpışır
 - **Repo:** https://github.com/KaanEkimoz/DrawRush-HyperCasual (public, 39★, 6 fork)
-- **Default branch:** `master` — Claude `claude-dev` branch'inde çalışmalı
+- **Default branch:** `master` — Codex `Codex-dev` branch'inde çalışmalı
 
-Detaylar `Claude-Project-Memory-Template/project-memory.md` içinde.
+Detaylar `Codex-Project-Memory-Template/project-memory.md` içinde.

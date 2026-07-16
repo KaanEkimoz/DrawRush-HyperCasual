@@ -1,7 +1,7 @@
 # Draw Rush
 
 > **Hyper-casual mobile drawing puzzle** — connect the dots, raise the wall, dodge the chasers.
-> A [Studios208](https://github.com/KaanEkimoz) production, originally a 2022 prototype, rebuilt on Unity 6 LTS with a modern Service Locator + ScriptableObject architecture.
+> An [Ekimoz Games](https://github.com/KaanEkimoz) production, originally a 2022 prototype, rebuilt on Unity 6 LTS with a modern Service Locator + ScriptableObject architecture.
 
 ![Unity](https://img.shields.io/badge/Unity-6000.3.12f1_LTS-000000?logo=unity)
 ![URP](https://img.shields.io/badge/Render-URP_17.3-blue)
@@ -109,9 +109,9 @@ Assets/_Project/                      ← all first-party code lives here, scope
 
 | Setting | Value |
 |---|---|
-| applicationIdentifier | `com.Studios208.DrawAndRush2` |
+| applicationIdentifier | `com.ekimozgames.drawrush` |
 | AndroidMinSdkVersion | 26 |
-| AndroidTargetSdkVersion | 34 (Play Store 2024+ requirement) |
+| AndroidTargetSdkVersion | 35 (Play Store requirement since Aug 2025) |
 | Scripting Backend | IL2CPP |
 | Architectures | ARMv7 + ARM64 (Play Store 64-bit requirement) |
 | Managed Stripping | Low |
