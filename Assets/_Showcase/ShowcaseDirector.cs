@@ -2,7 +2,15 @@
 // montage and records it with Unity Recorder to an MP4. Uses reflection for both the gameplay
 // types (EdgeNetwork/LevelManager/DrawEdgeAuthor) and the Recorder API so it compiles in plain
 // Assembly-CSharp with no asmdef/editor-assembly references. Attach to a GameObject, press Play.
-// NOT shipped — delete the _Showcase folder when done.
+//
+// The whole file is editor-only: it sits in Assembly-CSharp (a RUNTIME assembly), so without
+// this guard the class — and its reflection into gameplay internals — would compile into player
+// builds. It is a promo tool; delete the _Showcase folder once the trailer is cut.
+//
+// Caveat: every gameplay member it touches is resolved by STRING (private fields _authors /
+// _edgeInterior / _corners, nested Corner.Post/Revealed, CornerEndFor, LevelManager.countdown).
+// Renaming any of them still compiles and only fails at runtime, here.
+#if UNITY_EDITOR
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -341,3 +349,4 @@ public class ShowcaseDirector : MonoBehaviour
         catch (Exception e) { Debug.LogError("[Showcase] StopRecorder error: " + e); }
     }
 }
+#endif

@@ -150,5 +150,53 @@ namespace Studios208.DrawRush.Tests.EditMode
             Assert.AreEqual(2f, edge.Length, 1e-4f);
             Assert.AreEqual(Vector3.zero, edge.PointAt(0.5f));
         }
+
+        [Test]
+        public void Waypoint_BeyondCentre_TakesTheMajorArc()
+        {
+            // The sweep picks short-way vs long-way round the circle. Here the only path from A
+            // to B that actually passes through the waypoint is the LONG one (~270°): the short
+            // 90° hop would cut under the circle and miss it entirely. Getting this branch wrong
+            // is what sends the player around the outside of a heart lobe instead of along it.
+            // A(-0.5,0) B(0.5,0) W(0,2). Circumcentre (0, 0.9375), R = 1.0625. Let θ =
+            // atan(1.875): A sits at -(π-θ), B at -θ, the waypoint at +π/2. Going A→B the direct
+            // way is only π-2θ ≈ 0.98 rad (~56°) and misses the waypoint, so the arc must take
+            // the rest of the circle: 2π-(π-2θ) = π+2θ ≈ 5.303 rad (~304°).
+            DrawPart a = NewPart(new Vector3(-0.5f, 0, 0));
+            DrawPart b = NewPart(new Vector3(0.5f, 0, 0));
+            var wp = NewPart(new Vector3(0, 0, 2f));
+            var edge = new DrawEdge(a, b) { Waypoint = wp.transform };
+
+            Assert.IsTrue(edge.IsArc);
+            Vector3 mid = edge.PointAt(0.5f);
+            Assert.AreEqual(0f, mid.x, 1e-2f, "major-arc midpoint x");
+            Assert.AreEqual(2f, mid.z, 1e-2f, "midpoint must land ON the waypoint, not the short way round");
+
+            const float radius = 1.0625f;
+            float sweep = Mathf.PI + 2f * Mathf.Atan(1.875f);
+            Assert.AreEqual(radius * sweep, edge.Length, 5e-2f, "length must be the major arc");
+            Assert.Greater(edge.Length, radius * Mathf.PI, "a major arc is longer than a semicircle");
+        }
+
+        [Test]
+        public void TangentAt_RunsFromAtowardsB_AndIsUnitLength()
+        {
+            // Same semicircle bowing +Z. At the start the tangent must head +Z (up and over),
+            // at the end it must head -Z (coming back down) — i.e. it follows A→B, and the sign
+            // is what RailPaintController uses to convert stick input into progress.
+            DrawPart a = NewPart(new Vector3(-1, 0, 0));
+            DrawPart b = NewPart(new Vector3(1, 0, 0));
+            var wp = NewPart(new Vector3(0, 0, 1));
+            var edge = new DrawEdge(a, b) { Waypoint = wp.transform };
+
+            Vector3 atA = edge.TangentAt(0f);
+            Vector3 atMid = edge.TangentAt(0.5f);
+            Vector3 atB = edge.TangentAt(1f);
+
+            Assert.AreEqual(1f, atA.magnitude, 1e-3f, "tangent should be normalised");
+            Assert.Greater(atA.z, 0.5f, "leaving A the arc climbs +Z");
+            Assert.Greater(atMid.x, 0.5f, "at the top the arc travels +X");
+            Assert.Less(atB.z, -0.5f, "arriving at B the arc drops -Z");
+        }
     }
 }
