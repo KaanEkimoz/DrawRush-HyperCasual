@@ -109,3 +109,10 @@ Assets/Screenshots.meta
 
 # Unity Recorder output (gameplay/showcase mp4s)
 /Recordings/
+
+# Signing keys — NEVER commit (public repo)
+*.keystore
+*.jks
+*.p12
+*.pepk
+keystore.properties
