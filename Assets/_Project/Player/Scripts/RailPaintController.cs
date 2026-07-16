@@ -39,6 +39,10 @@ namespace Studios208.DrawRush.Player
                  "release the stick right at the end).")]
         [SerializeField] private float arrivalDistance = 0.6f;
 
+        [Tooltip("Degrees per second the player turns to face the edge that still needs painting " +
+                 "while anchored and undecided. Snapping instantly reads as a glitch.")]
+        [SerializeField] private float aimTurnSpeed = 540f;
+
         // While actively drawing, only snap-complete once the player is essentially on the far
         // drop, so the last stretch of an arc is not chopped off (which left the body beside the
         // finished line near the end). The larger arrivalDistance still applies when the stick is
@@ -58,6 +62,25 @@ namespace Studios208.DrawRush.Player
         private float _localT;          // 0 = at current anchor, 1 = at target anchor
         private bool _detached;
         private readonly List<DrawEdge> _edgeBuffer = new();
+
+        // Where the rail wants the player to go, refreshed each FixedUpdate; zero = nothing to
+        // point at. Cached rather than recomputed on demand so the overhead arrow reading it every
+        // frame doesn't re-query the network (and doesn't stomp _edgeBuffer mid-selection).
+        private Vector3 _guidance;
+
+        /// <summary>
+        /// The direction the rail wants the player to travel: along the edge being painted (toward
+        /// its far anchor), or — while anchored and undecided — out along the edge that still needs
+        /// paint. False when off the rail or nothing is left to paint here.
+        ///
+        /// Note this points at the TARGET even when the player is currently sliding backwards, so
+        /// it stays a hint about where to go rather than a mirror of which way they happen to face.
+        /// </summary>
+        public bool TryGetGuidance(out Vector3 heading)
+        {
+            heading = _guidance;
+            return _guidance.sqrMagnitude > 0.0001f;
+        }
 
         private void Awake()
         {
@@ -88,6 +111,7 @@ namespace Studios208.DrawRush.Player
             _targetPart = null;
             _currentPart = null;
             _localT = 0f;
+            _guidance = Vector3.zero;
             if (movement != null) movement.MovementLocked = false;
         }
 
@@ -128,12 +152,14 @@ namespace Studios208.DrawRush.Player
             if (interact == null) return;
 
             // Knockback owns movement for its brief duration — don't touch MovementLocked
-            // or try to drive the rail until it's done.
-            if (knockback != null && knockback.IsActive) return;
+            // or try to drive the rail until it's done. Drop the hint too: being flung away from
+            // an enemy is not the moment to be told to walk back into it.
+            if (knockback != null && knockback.IsActive) { _guidance = Vector3.zero; return; }
 
             // Not painting: no anchor visited yet, or detached to flee.
             if (_currentPart == null || _detached)
             {
+                _guidance = Vector3.zero;
                 if (movement != null) movement.MovementLocked = false;
                 return;
             }
@@ -165,6 +191,20 @@ namespace Studios208.DrawRush.Player
                     Detach();
                     return;
                 }
+            }
+
+            // Anchored with no edge chosen is exactly when the player is asking "where now?" — the
+            // rail has them locked in place with nothing on screen saying which way it wants them
+            // to go. Turn to face the edge that still needs paint; RailDirectionArrow puts the same
+            // heading over their head. Must run BEFORE the released-input gate below, since standing
+            // still with the stick untouched is the case this exists for.
+            if (_edge == null)
+            {
+                _guidance = ResolveNextHeading();
+                if (_guidance.sqrMagnitude > 0.0001f)
+                    transform.rotation = Quaternion.RotateTowards(
+                        transform.rotation, Quaternion.LookRotation(_guidance, Vector3.up),
+                        aimTurnSpeed * Time.deltaTime);
             }
 
             if (released) return;   // no input → hold position
@@ -211,6 +251,44 @@ namespace Studios208.DrawRush.Player
             // (No magnitude check needed any more — below the deadzone we already returned.)
             Vector3 headNow = _currentPart == _edge.A ? _edge.TangentAt(edgeT) : -_edge.TangentAt(edgeT);
             transform.rotation = Quaternion.LookRotation(headNow * along, Vector3.up);
+
+            // The hint keeps pointing at the far anchor (no `along`), so backing up along the edge
+            // shows the arrow ahead of the player rather than following them backwards.
+            Vector3 hint = headNow; hint.y = 0f;
+            _guidance = hint.sqrMagnitude > 0.0001f ? hint.normalized : Vector3.zero;
+        }
+
+        // Direction out of the current anchor along an edge that still needs paint. On a closed
+        // loop this is normally unambiguous: you arrive at a corner having just painted the edge
+        // behind you, leaving exactly one open. Only the very first anchor has two, and there the
+        // player's own facing breaks the tie so the hint agrees with them instead of spinning them.
+        private Vector3 ResolveNextHeading()
+        {
+            if (_currentPart == null) return Vector3.zero;
+            if (_network == null || !_network.isActiveAndEnabled) _network = ResolveNetwork(_currentPart);
+            if (_network == null) return Vector3.zero;
+
+            _network.GetEdgesTouching(_currentPart, _edgeBuffer);
+
+            Vector3 best = Vector3.zero;
+            float bestDot = float.NegativeInfinity;
+            Vector3 facing = transform.forward;
+            for (int i = 0; i < _edgeBuffer.Count; i++)
+            {
+                DrawEdge e = _edgeBuffer[i];
+                if (e.IsComplete || e.Other(_currentPart) == null) continue;
+
+                // Leave along the tangent AT this anchor — on an arc that differs from the straight
+                // line to the far sphere, and pointing at the chord would aim off the rail.
+                Vector3 dir = _currentPart == e.A ? e.TangentAt(0f) : -e.TangentAt(1f);
+                dir.y = 0f;
+                if (dir.sqrMagnitude < 0.0001f) continue;
+                dir.Normalize();
+
+                float dot = Vector3.Dot(facing, dir);
+                if (dot > bestDot) { bestDot = dot; best = dir; }
+            }
+            return best;
         }
 
         // Pick the authored edge touching the current anchor that is best aligned with the
