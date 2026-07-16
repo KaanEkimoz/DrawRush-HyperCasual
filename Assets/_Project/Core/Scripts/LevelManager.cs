@@ -79,10 +79,18 @@ namespace Studios208.DrawRush.Core
                 return;
             }
 #endif
-            int index = startLevelIndex >= 0
-                ? startLevelIndex
-                : (PlayerProgress.TutorialCompleted ? firstLevelIndex : tutorialLevelIndex);
-            ActivateLevel(index);
+            ActivateLevel(startLevelIndex >= 0 ? startLevelIndex : ResolveResumeIndex());
+        }
+
+        // Where a launching player belongs: the level they last reached, else the tutorial for
+        // a newcomer, else the first level. The saved index is bounds-checked so a value left
+        // by an older build (or pointing at a level that no longer exists) can never boot the
+        // game into nothing.
+        private int ResolveResumeIndex()
+        {
+            int saved = PlayerProgress.LastLevelIndex;
+            if (saved >= 0 && saved < LevelCount) return saved;
+            return PlayerProgress.TutorialCompleted ? firstLevelIndex : tutorialLevelIndex;
         }
 
 #if UNITY_EDITOR
@@ -122,10 +130,18 @@ namespace Studios208.DrawRush.Core
             levelsRoot.GetChild(index).gameObject.SetActive(true);
             _currentIndex = index;
 
+            // Remember where the player is so the next launch resumes here. The tutorial is
+            // tracked by its own completed-flag, so don't pin a returning player to it.
+            if (index != tutorialLevelIndex) PlayerProgress.LastLevelIndex = index;
+
             Transform activeLevel = levelsRoot.GetChild(index);
 
-            // Reset shared state that a scene reload used to clear implicitly.
-            if (gameState != null) gameState.Reset();
+            // Reset shared state that a scene reload used to clear implicitly. Resolve through
+            // the locator the same way OnEnable does: if the inspector ref is unset — or points
+            // at a different asset than the one WinCondition writes to — the win flag would
+            // survive into the next level and freeze the player there permanently.
+            GameState state = gameState != null ? gameState : GameServices.State;
+            if (state != null) state.Reset();
             if (playerHealth != null) playerHealth.ResetToStarting();
 
             UpdateLevelLabel(index);
@@ -134,6 +150,10 @@ namespace Studios208.DrawRush.Core
             // Freeze + 3-2-1 before the player can move (every activation: start/next/restart).
             if (countdown == null) countdown = FindFirstObjectByType<LevelStartCountdown>();
             if (countdown != null) countdown.Begin();
+            // GameManager.Awake parks timeScale at 0 and the countdown is the ONLY thing that
+            // restores it — and FindFirstObjectByType skips inactive objects. Without this the
+            // game boots permanently frozen, silently, whenever the countdown is missing.
+            else Time.timeScale = 1f;
         }
 
         // Keep the HUD level label in sync with the actually-active level (the old label read

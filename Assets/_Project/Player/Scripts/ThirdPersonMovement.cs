@@ -120,6 +120,11 @@ namespace Studios208.DrawRush.Player
         private void ApplyGravity()
         {
             float gravity = GameServices.Config != null ? GameServices.Config.gravity : -9.81f;
+            // Clamp the accumulator while grounded. Without this velocity.y grows every frame
+            // for the whole session (minutes in, it passes -2000), so the player no longer
+            // falls off a ledge — one step sweeps them straight through the floor. The small
+            // negative bias keeps isGrounded stable instead of jittering.
+            if (_characterController.isGrounded && _velocity.y < 0f) _velocity.y = -2f;
             _velocity.y += gravity * Time.deltaTime;
             _characterController.Move(_velocity * Time.deltaTime);
         }

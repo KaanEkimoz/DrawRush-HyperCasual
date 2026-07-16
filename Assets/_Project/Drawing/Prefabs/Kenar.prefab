@@ -369,3 +369,4 @@ MonoBehaviour:
   arcSegments: 24
   riseSeconds: 0.5
   baseY: 0
+  fallbackMaterial: {fileID: 2100000, guid: 72dfdc68b49884d0885212fc2d430124, type: 2}

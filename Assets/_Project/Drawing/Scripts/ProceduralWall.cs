@@ -20,6 +20,10 @@ namespace Studios208.DrawRush.Drawing
         [SerializeField] private float riseSeconds = 0.5f;
         [Tooltip("World Y of the wall base (ground level).")]
         [SerializeField] private float baseY = 0f;
+        [Tooltip("Material used only when the edge author supplies none. Serialized on purpose: " +
+                 "a direct reference keeps the shader in the build, whereas Shader.Find resolves " +
+                 "to null in a stripped player and paints every wall magenta on device.")]
+        [SerializeField] private Material fallbackMaterial;
 
         private Transform _wall;
         private MeshFilter _mf;
@@ -43,6 +47,20 @@ namespace Studios208.DrawRush.Drawing
         private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
         private static readonly int ColorId = Shader.PropertyToID("_Color");
 
+        // Last-resort material when no author material is wired. Prefers the serialized
+        // reference (survives shader stripping); the Shader.Find path only ever succeeds in the
+        // editor, so shout loudly instead of silently shipping magenta walls.
+        private Material ResolveFallbackMaterial()
+        {
+            if (fallbackMaterial != null) return fallbackMaterial;
+            Shader lit = Shader.Find("Universal Render Pipeline/Lit");
+            if (lit != null) return new Material(lit);
+            Debug.LogError("[ProceduralWall] No wall material: author material unset, no " +
+                           "fallbackMaterial assigned, and URP/Lit was stripped from the build. " +
+                           "Walls will render magenta.", this);
+            return null;
+        }
+
         /// <summary>(Re)build the wall mesh along <paramref name="edge"/> and place it hidden
         /// below ground, ready to rise.</summary>
         public void Build(DrawEdge edge, float height, float thickness, Material mat, Color color, Vector3 interiorPoint, Vector3 endA, Vector3 endB)
@@ -58,8 +76,7 @@ namespace Studios208.DrawRush.Drawing
 
             // Material + color (MaterialPropertyBlock so we don't mutate the shared material).
             if (mat != null) _mr.sharedMaterial = mat;
-            else if (_mr.sharedMaterial == null)
-                _mr.sharedMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit"));
+            else if (_mr.sharedMaterial == null) _mr.sharedMaterial = ResolveFallbackMaterial();
             _mpb ??= new MaterialPropertyBlock();
             _mr.GetPropertyBlock(_mpb);
             _mpb.SetColor(BaseColorId, color);
