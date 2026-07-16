@@ -54,6 +54,16 @@ namespace Studios208.DrawRush.Core
         public int LevelCount => levelsRoot != null ? levelsRoot.childCount : 0;
         public int CurrentIndex => _currentIndex;
 
+        /// <summary>Index of the tutorial group, which the sequencer excludes from the bag.</summary>
+        public int TutorialIndex => tutorialLevelIndex;
+
+        /// <summary>The level group at <paramref name="index"/>, or null if out of range. Lets the
+        /// sequencer score a level's shape and tune its enemies before activating it.</summary>
+        public Transform GetLevel(int index)
+            => levelsRoot != null && index >= 0 && index < levelsRoot.childCount
+                ? levelsRoot.GetChild(index)
+                : null;
+
         private void OnEnable()
         {
             _boundState = gameState != null ? gameState : GameServices.State;
@@ -79,7 +89,19 @@ namespace Studios208.DrawRush.Core
                 return;
             }
 #endif
-            ActivateLevel(startLevelIndex >= 0 ? startLevelIndex : ResolveResumeIndex());
+            int resume = startLevelIndex >= 0 ? startLevelIndex : ResolveResumeIndex();
+            RestoreEnemyBudget(resume);
+            ActivateLevel(resume);
+        }
+
+        // A level's enemy count is picked per playthrough by LevelFlow rather than baked into the
+        // level, so on a relaunch the group would come back with every authored enemy switched on.
+        // Re-apply the count the player actually left, and only to the level it was saved for.
+        private void RestoreEnemyBudget(int index)
+        {
+            int saved = PlayerProgress.LastLevelEnemies;
+            if (saved < 0 || index != PlayerProgress.LastLevelIndex) return;
+            LevelDifficulty.ApplyEnemyBudget(GetLevel(index), saved);
         }
 
         // Where a launching player belongs: the level they last reached, else the tutorial for

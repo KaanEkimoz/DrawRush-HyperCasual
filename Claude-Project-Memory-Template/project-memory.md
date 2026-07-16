@@ -14,6 +14,31 @@ Aynı anda **3 Unity editörü açık**: DrawRush@4ff3b85c (port 6400), Mini Fan
 
 ---
 
+## 🎲 ZORLUK EĞRİSİ + ÇANTA SİSTEMİ (2026-07-16) — **62/62 test yeşil**
+Kaan tutorial'dan sonra **3 düşmanlı yıldız** yedi. Suçlu: `WinPanel/I_NextLevel → GameManager.LoadRandomLevel` — level sırası diye bir şey yoktu, **düpedüz rastgele**ydi. (Kaan'ın save'i bunu kanıtladı: `LastLevelIndex=12` = yıldız.)
+
+**Zorluk puanı:** `kenar×1.0 + yay×0.5 + düşman×3.0`. **Düşman ağırlığı Kaan'ın kararı** ("gerçekten zorlayıcı bir etmen") — kenar sadece çizimi *uzatır*, düşman ise rail'den kopmaya zorlar ve run'ı bitirebilir. Yan etkisi kasıtlı: düşman artık **kaba bir kadran**, ekleme = gerçek sıçrama. `AnEnemyOutweighsThreeEdges` testi bu kararı kilitliyor.
+
+**Mimari — çanta ŞEKLİ seçer, düşman sayısı HEDEFİ tutturur.** İkisi çatışıyordu (tekrarsız çanta + testere eğrisi: kolay şekiller bitince düşük hedef karşılanamaz). Çözüm Kaan'ın kendi kaldıracı: *"gerekirse düşmanı çıkart"*.
+- `LevelBag.cs` — saf C#, Unity tipi yok, unit-test edilebilir. Tekrarsız çekiliş + otomatik refill. Level ekledikçe çanta kendiliğinden büyür.
+- `LevelDifficulty.cs` — `ShapeScore` / `EnemyBudget` / `SawtoothTarget` / `ApplyEnemyBudget`. Düşmanlar **spawn edilmez**, yazarındakiler açılıp kapanır (el konumları korunur).
+- `LevelFlow.NextLevel` — testere hedefi → çantadan çek → düşman bütçesi → `ActivateLevel`. `LoadRandomLevel` artık `NextLevel`'e delege (sahne/prefab kablosu için emniyet); buton yine de dürüstçe `NextLevel`'e bağlandı.
+
+### 🪤 Bu sistemde iki ölçülmüş tuzak (tekrar düşmeyin)
+1. **Çantayı çıplak şekil puanına göre sıralamak.** Hedef düşmanı içerir, şekil puanı içermez → her yüksek hedef en karmaşık şekli çeker, düşman sadece *artık* kalır. Doğrusu `AttainableScore` = şekil + o hedefte açılacak düşmanlar. Orta bir şekil + düşman, yüksek hedefe cevap verebilmeli.
+2. **Tabanı deneyimle yükseltmek** (ilk versiyonum böyleydi). ~30 level sonra taban 14.6'ya çakılıyordu: nefes molaları yok oluyor **ve** levellerin yarısı (üçgen tavan 3.0, altıgen 6.0, kare 10.0) o tabana çıkamıyor bile → testere düzleşiyor, kampanyanın yarısı kalıcı hedef-altı. Doğrusu: **taban sabit, TEPE yükselir.** Ölçüm: ort.|sapma| **3.40 → 0.83**. `EveryToothStartsBackAtTheFloor` testi koruyor.
+
+**Ayar:** min 3 · max **21** · period 5 · ramp 30. Max 24 denendi, **çöp**: 34 levelin sadece 4'ü 24'e çıkabiliyor (9'u ≥20). **Tavanı içeriğin ulaşabildiği yerin üstüne koyma** — tepeler kalıcı hedef-altı kalır.
+**Denenip ELENEN:** "eşit adaylar arasında en ağır şekli harca" (kolay şekilleri molalara sakla) → molalar +0.86→+0.63 iyileşti ama genel isabet 0.89→1.03 bozuldu, en kötü durum aynı. Ali'den alıp Veli'ye vermek — **eklenmedi**.
+
+**Kalıcılık:** `LevelsPlayed` (eğri konumu) · `LevelBag` (CSV, cycle ortası çıkışta tekrar yememek için) · **`LastLevelEnemies`** — bu bir *bug fix*'ti: düşman sayısı artık levele gömülü değil, oyunu kapatıp açan oyuncu 1 düşmanlı molasını **4 düşmanla** geri alıyordu. `-1` = bilinmiyor, yazarındaki gibi bırak.
+
+**Gerçek sahnede doğrulandı** (play mode'a girmeden, gerçek `DrawEdgeAuthor` verisiyle, 34 çekiliş): played=0 → **Level_02 (üçgen), 0 düşman, 3.0** · yıldız (L12) 30. sıraya düştü · **34/34 tekrarsız** · ort.|sapma| 0.94. Kuyrukta 1-2 level sapıyor (çantada sadece ağır şekiller kalır, şekil kendi puanının altına inemez) — **tekrarsızlığın kaçınılmaz bedeli**, kabul edildi.
+
+⚠️ Kaan'ın save'i sıfırlandı (sıfırdan playtest için). Sahnede pasif duran **2 düşman aktif edildi** — normal akışta hükümsüz (`ApplyEnemyBudget` hepsini baştan yazar), ama bilinçli bir authoring'se söyle.
+
+---
+
 ## 🔎 5-AJANLI DENETİM + DÜZELTMELER (2026-07-16)
 5 paralel ajan taradı (bug / Unity-runtime / tasarım-boşluk / release / kalite). **Düzeltilenler (hepsi commit'li, 44/44 test yeşil):**
 - **Kalıcılık:** `LevelFlow` PlayerPrefs'e yazıyordu ama **kimse okumuyordu** → oyuncu her açılışta L1'e dönüyordu. Artık `PlayerProgress.LastLevelIndex` + `LevelManager.ResolveResumeIndex()`.

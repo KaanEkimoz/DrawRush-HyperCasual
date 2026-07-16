@@ -14,6 +14,9 @@ namespace Studios208.DrawRush.Core
         private const string TutorialCompletedKey = "TutorialCompleted";
         private const string CoinsKey = "Coins";
         private const string LastLevelIndexKey = "LastLevelIndex";
+        private const string LevelsPlayedKey = "LevelsPlayed";
+        private const string LevelBagKey = "LevelBag";
+        private const string LastLevelEnemiesKey = "LastLevelEnemies";
 
         /// <summary>Raised whenever the coin total changes, with the new total.</summary>
         public static event Action<int> CoinsChanged;
@@ -37,6 +40,45 @@ namespace Studios208.DrawRush.Core
             set
             {
                 PlayerPrefs.SetInt(LastLevelIndexKey, value);
+                PlayerPrefs.Save();
+            }
+        }
+
+        /// <summary>How many non-tutorial levels the player has been served. Drives the position
+        /// along the difficulty curve — not the same as LastLevelIndex, which is only *which*
+        /// level, and which the shuffle-bag hands out in a different order every cycle.</summary>
+        public static int LevelsPlayed
+        {
+            get => PlayerPrefs.GetInt(LevelsPlayedKey, 0);
+            set
+            {
+                PlayerPrefs.SetInt(LevelsPlayedKey, Mathf.Max(0, value));
+                PlayerPrefs.Save();
+            }
+        }
+
+        /// <summary>Levels left in the current shuffle-bag cycle, comma-separated, so quitting
+        /// mid-cycle doesn't hand the player shapes they have already seen. Empty = draw refills.</summary>
+        public static string LevelBag
+        {
+            get => PlayerPrefs.GetString(LevelBagKey, string.Empty);
+            set
+            {
+                PlayerPrefs.SetString(LevelBagKey, value ?? string.Empty);
+                PlayerPrefs.Save();
+            }
+        }
+
+        /// <summary>Enemies the sequencer switched on for <see cref="LastLevelIndex"/>. Levels no
+        /// longer carry a fixed enemy count — it is chosen per playthrough — so without this a
+        /// relaunch would restore the level with every authored enemy live, turning a breather the
+        /// player quit on into the hardest version of itself. -1 = unknown, leave the level as authored.</summary>
+        public static int LastLevelEnemies
+        {
+            get => PlayerPrefs.GetInt(LastLevelEnemiesKey, -1);
+            set
+            {
+                PlayerPrefs.SetInt(LastLevelEnemiesKey, value);
                 PlayerPrefs.Save();
             }
         }
