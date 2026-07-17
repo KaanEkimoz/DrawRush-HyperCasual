@@ -28,6 +28,9 @@ namespace DrawRush.Drawing
         [Tooltip("Ghost width as a fraction of the painted line. Thinner reads as a hint rather " +
                  "than as a second, competing line.")]
         [SerializeField] private float ghostWidthScale = 0.55f;
+        [Tooltip("Ghost opacity. It wears the edge's own colour at this alpha — a plain white ghost " +
+                 "vanished entirely on the pale grounds (the tutorial's is nearly white).")]
+        [SerializeField, Range(0.1f, 1f)] private float ghostAlpha = 0.4f;
         [Tooltip("Ghost Y. Just under the painted line so the two never z-fight at the boundary. " +
                  "Dash density lives in GhostPath.mat's tiling, not here — LineTextureMode.Tile " +
                  "already repeats by world length.")]
@@ -38,6 +41,9 @@ namespace DrawRush.Drawing
         private LineRenderer _highSpan;
         private LineRenderer _ghostSpan;
         private bool _hidden;
+        private MaterialPropertyBlock _ghostBlock;
+        private static readonly int GhostBaseColorId = Shader.PropertyToID("_BaseColor");
+        private static readonly int GhostColorId = Shader.PropertyToID("_Color");
 
         /// <summary>Wire this view to an edge with the given line color (EdgeNetwork passes the
         /// edge's wall color so the painted line matches the wall).</summary>
@@ -68,6 +74,25 @@ namespace DrawRush.Drawing
         {
             if (_lowSpan != null) { _lowSpan.startColor = color; _lowSpan.endColor = color; }
             if (_highSpan != null) { _highSpan.startColor = color; _highSpan.endColor = color; }
+            ApplyGhostColor();
+        }
+
+        // The ghost wears the edge's own colour, faded — so it says what this edge will BE, and so
+        // it stays visible on any ground. A flat white ghost disappeared completely against the
+        // pale sand of the tutorial; it only ever looked right over the green levels.
+        //
+        // Via a property block rather than the LineRenderer's vertex colours: the ghost material is
+        // URP/Unlit, which ignores vertex colour, and per-edge tinting must not instance the one
+        // shared material.
+        private void ApplyGhostColor()
+        {
+            if (_ghostSpan == null) return;
+            _ghostBlock ??= new MaterialPropertyBlock();
+            _ghostSpan.GetPropertyBlock(_ghostBlock);
+            var c = new Color(color.r, color.g, color.b, ghostAlpha);
+            _ghostBlock.SetColor(GhostBaseColorId, c);
+            _ghostBlock.SetColor(GhostColorId, c);
+            _ghostSpan.SetPropertyBlock(_ghostBlock);
         }
 
         private void OnDestroy()
