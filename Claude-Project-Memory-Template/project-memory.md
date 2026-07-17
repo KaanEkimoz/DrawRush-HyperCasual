@@ -61,7 +61,14 @@ done          # ⚠️ `for f in $(git ls-files)` KULLANMA — "Epic Toon FX" gi
 ```bash
 rm <dosya> && git checkout HEAD -- <dosya>     # silince smudge filtresi devreye girer
 ```
-**Kapsam:** 741 dosya bozuktu. Oyunu etkileyenler sadece `_Project` altındaki 8'di → **5 ses + 3 app ikonu** (ikonlar bozuk build'e girecekti!). Kalan 733 (`Mega Hyper Casual GUI Pack` 576, `beach` 39…) **kullanılmıyor** — sahnedeki 13 UI Image'ın 12'si sprite'lı, tek sprite'sız olan Joystick zaten şeffaf dokunma alanı. Dokunulmadı.
+**Kapsam:** 741 dosya bozuktu.
+
+### ❌ 2026-07-17: "Kalan 733 kullanılmıyor" TESPİTİM YANLIŞTI — hepsi geri yüklendi
+İlk taramada sadece `_Project` altındaki 8'i (5 ses + 3 app ikonu) onarıp kalanına "kullanılmıyor" dedim. **Dayanağım eksikti:** sahnedeki UI Image'ların sprite'ına baktım, ama **parçacık materyallerinin dokularına bakmadım**. Kaan "confettiler full beyaz" deyince çıktı: `confetti_AB` / `glow1_ADD` / `cloud_2x2_default_AB` materyallerinin `mainTexture`'ı NULL'dı → beyaz kare. Sebep yine aynı LFS pointer'ları. Geri yükleyince **plaj çevresi de geldi** (şemsiye, deniz, kumkale, palmiye) — `beach` paketi de kullanılıyormuş. **Oyunun tüm çevre sanatı bozuktu.**
+- **Ders:** "kullanılıyor mu" sorusunu sahne bileşenlerinin bir ALT KÜMESİNE bakarak cevaplama. Materyal→doku, parçacık, animasyon, prefab zincirleri gözden kaçar. Bozuksa onar; "kullanılmıyor" demek kanıt ister.
+- 🪤 **İki ayrı Epic Toon FX kopyası var:** `_ImportedAssets/Epic Toon FX/` ve `_ImportedAssets/TemelAssetler/Epic Toon FX/`. Confetti efekti **her ikisinden** doku çekiyor (confetti.png birinden, glow1/cloud diğerinden). Paket sayımını klasör adına göre yapınca kullanılan kopya gözden kaçar.
+- **Şu an:** `Assets/` altında **0 pointer** kaldı (690 dosya geri yüklendi). Commit gerekmedi — repo hep doğruydu. Tek diff: Unity'nin 2015 tarihli `confetti.png.meta`'yı serializedVersion 2→13'e yükseltmesi (GUID korundu, zararsız).
+- Confetti neden beyazdı: `confetti.png` bir **3×3 atlas**, içinde **9 doygun renk**; parçacık rastgele hücre seçiyor. `startColor` beyaz olması DOĞRU — renk dokudan gelir. Doku yoktu, o yüzden beyazdı.
 **Commit gerekmedi** — repo hep doğruydu, bozuk olan sadece çalışma ağacıydı. Ama build o ağaçtan alınır, o yüzden önemliydi.
 **Ses zinciri sağlam:** `AddCoins(1)` → `CoinsChanged` → `SfxPlayer` → `PlayOneShot` → `isPlaying=True` ile uçtan uca doğrulandı (`source.Play()` ile değil).
 
