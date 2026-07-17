@@ -14,6 +14,16 @@ Aynı anda **3 Unity editörü açık**: DrawRush@4ff3b85c (port 6400), Mini Fan
 
 ---
 
+## 🌱 ZEMİN RENGİ: DENENDİ, GERİ ALINDI (2026-07-17)
+Zemin (`Assets/Materials/grass.mat`, **tek materyal, 34 levelin hepsi**) neon yeşil: `RGBA(0.300, 0.906, 0.191)`. Ölçüm sorunu doğruluyor — çevre yeşilleri s=0.63/v=0.56 (çalı) ile s=0.72/**v=1.00** (açık yeşil) arasında; zemin **v=0.91** ile en parlak aksanla yarışıyor. Zemin, üstündeki nesnelerin altında kalmalı. Tek materyal olduğu için **en yüksek kaldıraçlı görsel iyileştirme burada.**
+
+### 🪤 `_BaseColor` bu materyalde İŞE YARAMAZ
+Shader **`Toony Colors Pro 2/Hybrid Shader`**. Neon'u dayatan `_BaseColor` değil, **`_HColor` (highlight) = `RGBA(0.157, 1.000, 0.000)`** — mavi kanalı 0, yeşil 1.0. `_BaseColor`'ı değiştirmek görüntüyü neredeyse hiç etkilemiyor (denendi, ekran görüntüsüyle doğrulandı).
+**AMA:** `_BaseColor=beyaz` + `_HColor=hedef` denemesi de **çuvalladı** — zemin krem/sarı oldu. Yani çarpım modeli (`albedo × HColor`) YANLIŞ; ışık/ramp başka türlü karışıyor. TCP2'nin ramp'ını anlamadan deneme yanılmayla ayarlamaya kalkma.
+**Durum:** `git checkout` ile birebir geri alındı, çalışma ağacı temiz. Yapılacaksa TCP2 dokümanı okunup `_HColor`/`_SColor`/ramp ilişkisi anlaşılarak yapılmalı — ve 34 levelin tamamında kontrol edilmeli.
+
+---
+
 ## 🎨 OK, İŞARET ETTİĞİ KENARIN RENGİNİ GİYİYOR (2026-07-17) — **62/62 yeşil**
 Kaan: "kafasındaki okun rengi çizdiği kenarın rengi olsa". Ok artık yön DEĞİL, **hangi kenar** diyor — o kenarın boyasıyla ve olacağı duvarla aynı renkte.
 - `EdgeNetwork.ColorOf(edge)` eklendi (bağ zaten vardı: `Dictionary<DrawEdge, DrawEdgeAuthor> _authors`, sadece kapalıydı).
