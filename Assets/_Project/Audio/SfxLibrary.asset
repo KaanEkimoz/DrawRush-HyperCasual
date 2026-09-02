@@ -27,3 +27,6 @@ MonoBehaviour:
   coin:
     clip: {fileID: 8300000, guid: 05cb4068e46214942b908e0084788b7b, type: 3}
     volume: 0.5
+  uiClick:
+    clip: {fileID: 8300000, guid: 7616b72f7b84d4cb1b7f7bb6d68e3784, type: 3}
+    volume: 0.55

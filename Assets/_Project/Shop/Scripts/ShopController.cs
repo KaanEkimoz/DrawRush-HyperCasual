@@ -172,6 +172,7 @@ namespace DrawRush.Shop
             label.raycastTarget = false;
 
             var btn = root.GetComponent<Button>();
+            root.AddComponent<DrawRush.UI.ButtonJuice>();   // press-pop + click sound like every other button
             var captured = item;
             btn.onClick.AddListener(() => OnCellTapped(captured));
 

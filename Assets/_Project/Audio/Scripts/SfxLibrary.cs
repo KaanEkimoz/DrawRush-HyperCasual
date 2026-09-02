@@ -28,5 +28,7 @@ namespace DrawRush.Audio
         public Cue hit = new();
         [Tooltip("Coins awarded.")]
         public Cue coin = new();
+        [Tooltip("A UI button was pressed.")]
+        public Cue uiClick = new();
     }
 }
