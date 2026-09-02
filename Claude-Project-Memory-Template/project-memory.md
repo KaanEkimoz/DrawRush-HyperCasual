@@ -5,6 +5,22 @@
 
 ---
 
+## 🎁 4 META ÖZELLİK — "yayına hazır" oturumu (2026-07, tam yetki) — **69/69 yeşil**
+Kaan'ın tasarım-eksik listesi (yıldız / dükkân / juice / düşman çeşitliliği) baştan sona kuruldu. Her biri play mode'da doğrulandı, ayrı commit'lendi, hiçbiri push edilmedi.
+
+**1. Yıldız derecesi (`747d5830`).** `LevelScore.Evaluate(can)` → 1-3 yıldız (3=hiç hasar yok, 2=yarıdan fazla can, 1=tamamladın). Coin ödülü yıldıza bağlı: **10/20/35**. `PlayerProgress.BestStars/RecordStars/TotalStars` (level index'e göre, çanta sırası önemsiz) + `TrySpendCoins`. `GameServices.Health` eklendi (WinCondition sağlığı per-level wire olmadan okusun). `GameState.LastStars/LastStarsWereRecord` — win paneli buradan okur. `WinPanelStars` yıldızları pop ile yakar. 🪤 Panel zaten aktifken tekrar `ShowWinPanel` OnEnable'ı tetiklemez — gerçek akışta panel önce gizlenip sonra gösterildiği için sorun değil.
+
+**2. Coin dükkânı (`e0d0469b`).** `CosmeticLibrary` (6 renk skini, data asset) → karakter gövdesi + iz rengini değiştirir. `PlayerProgress` owned-set + equipped + `CosmeticChanged`. `PlayerSkin` (kalıcı oyuncuda) MPB ile boyar — paylaşılan materyali kopyalamaz. 🪤 Karakterin `player.mat`'i TCP2 ama **bu sefer `_HColor` beyaz, mavi `_BaseColor`'dan** (grass'ın tersi) → `_BaseColor` boyaması çalışır. `ShopController` kartları runtime'da kütüphaneden üretir (UI wire yok); tap satın alır+kuşanır ya da kuşanır; açınca timeScale=0, kapanınca **eski değerine** döner (countdown atlanmaz). Kontrolcü **her zaman aktif** GeneralCanvas'ta (panel kapalıyken de Open dinleyicisi kurulsun).
+
+**3. Çekirdek juice (`4641c801`).** `ProceduralWall.Revealed` artık duvarı geçiriyor (+`Color` açıldı; SfxPlayer imzası güncellendi). `DrawJuice` her duvar belirince o rengin dünya-uzayı patlamasını atar. `ScreenFlash` tam ekran: hasar=kırmızı, kazanma=beyaz (unscaled fade, raycast off, panellerin altında). 🪤 Kamera punch'ı **bilerek ertelendi** — rig CM2-shim vcam (CM3 paketi altında), yanlış impulse tüm kamerayı bozabilir.
+
+**4. Düşman çeşitliliği (`ff94a9ec`).** Tek `EnemyFollow`'da 3 davranış (geriye uyumlu): `speedMultiplier` (hızlı=turuncu), `wakeRadius` (uyuyan nöbetçi=mor, yaklaşınca uyanır+renk değişir). Renk MPB ile (`EnemyMaterial` URP/Lit `_BaseColor`, TCP2 değil). Audit'in **her-kare SetDestination** sorunu da düzeldi (~10Hz throttle). Dağıtım: her levelin 2. düşmanı nöbetçi (31 adet, güvenli çünkü nöbetçi ≤ takipçi zorluğu), 25-34 levellerin 1. düşmanı hızlı (10 adet). Level 25 üçünü birden gösteriyor.
+
+**⚠️ Release için KALAN (kod değil, süreç):** imzalı AAB build (`play-console-release` skill'i var ama keystore şifresi Kaan'da — Claude giremez) · gerçek cihaz testi · Play Console listeleme · **denge playtesti** (yıldız eşikleri, dükkân fiyatları, hızlı-düşman adaleti Kaan'ın hissetmesini bekliyor). Ayrıca overlay UI ekran görüntüsüne düşmüyor → dükkân/panel yerleşimi **veriyle** doğrulandı, gözle değil.
+**Önceki oturumdan devreden:** çiçek/yonca yaprakları yeniden kesilmeli (ölçekleme çözmez, ray 20 birime çıkıyor) · zemin rengi TCP2 `_HColor` ile (grass tuzağı, project-memory'de).
+
+---
+
 ## 🚨 MCP ROUTING (önce BUNU oku — yoksa yanlış projeye yazarsın!)
 Aynı anda **3 Unity editörü açık**: DrawRush@4ff3b85c (port 6400), Mini Fantasy Defense@6b0c8e78 (6700), Brick-Game@71b6f67c (6702).
 - **DrawRush'a ulaşmak için CAPITAL `mcp__UnityMCP__*` tool'larını kullan** + `set_active_instance("DrawRush@4ff3b85c")`. Bu oturumda capital server doğru route etti.
