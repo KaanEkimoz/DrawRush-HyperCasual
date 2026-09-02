@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 6281296526979497774}
   - component: {fileID: 8878605407648098162}
   - component: {fileID: 4004556214058580686}
+  - component: {fileID: -1020376443384119644}
   m_Layer: 0
   m_Name: AnchorA
   m_TagString: Untagged
@@ -140,6 +141,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Studios208.DrawRush::Studios208.DrawRush.Drawing.BillboardToCamera
   offsetEuler: {x: -90, y: 0, z: 0}
+--- !u!114 &-1020376443384119644
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2876068110417507245}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 343e6f28be24e4479a17036ec66f3a74, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: DrawRush::DrawRush.Drawing.DropOutline
+  scale: 1.16
+  backOffset: 0.1
+  outlineMaterial: {fileID: 2100000, guid: 40711f8077c99456cb18665b93565ca8, type: 2}
 --- !u!1 &6659403366547357948
 GameObject:
   m_ObjectHideFlags: 0
@@ -154,6 +170,7 @@ GameObject:
   - component: {fileID: 790697452660945098}
   - component: {fileID: 5639379791754960929}
   - component: {fileID: 6325459264259864703}
+  - component: {fileID: 1497244656545285915}
   m_Layer: 0
   m_Name: AnchorB
   m_TagString: Untagged
@@ -280,6 +297,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Studios208.DrawRush::Studios208.DrawRush.Drawing.BillboardToCamera
   offsetEuler: {x: -90, y: 0, z: 0}
+--- !u!114 &1497244656545285915
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6659403366547357948}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 343e6f28be24e4479a17036ec66f3a74, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: DrawRush::DrawRush.Drawing.DropOutline
+  scale: 1.16
+  backOffset: 0.1
+  outlineMaterial: {fileID: 2100000, guid: 40711f8077c99456cb18665b93565ca8, type: 2}
 --- !u!1 &6770665978776919814
 GameObject:
   m_ObjectHideFlags: 0
@@ -335,6 +367,7 @@ MonoBehaviour:
   color: {r: 0.1, g: 1, b: 0.8, a: 1}
   ghostMaterial: {fileID: 2100000, guid: 4da558e7dae8c4634b5eced5b89a4dc0, type: 2}
   ghostWidthScale: 0.55
+  ghostAlpha: 0.4
   ghostY: 0.012
 --- !u!114 &7712792700407167178
 MonoBehaviour:
