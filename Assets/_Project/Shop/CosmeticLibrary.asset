@@ -17,23 +17,29 @@ MonoBehaviour:
     displayName: Classic
     price: 0
     color: {r: 0, g: 0.286, b: 1, a: 1}
+    preview: {fileID: 21300000, guid: 06a445ecdb17646a5b907a5e65fbc413, type: 3}
   - id: crimson
     displayName: Crimson
     price: 40
     color: {r: 0.9, g: 0.15, b: 0.15, a: 1}
+    preview: {fileID: 21300000, guid: 2cd0eff9bcf5645c89ce3afd1041a63e, type: 3}
   - id: lime
     displayName: Lime
     price: 60
     color: {r: 0.45, g: 0.85, b: 0.2, a: 1}
+    preview: {fileID: 21300000, guid: f62db5f3850974bb7bca5b75eda70ae7, type: 3}
   - id: grape
     displayName: Grape
     price: 90
     color: {r: 0.58, g: 0.3, b: 0.9, a: 1}
+    preview: {fileID: 21300000, guid: f0e1880add5de44849de525fc9bd6ddf, type: 3}
   - id: sunset
     displayName: Sunset
     price: 130
     color: {r: 1, g: 0.55, b: 0.1, a: 1}
+    preview: {fileID: 21300000, guid: d2352a4804e884ca8b9a1bdcf703ce16, type: 3}
   - id: gold
     displayName: Gold
     price: 200
     color: {r: 1, g: 0.82, b: 0.15, a: 1}
+    preview: {fileID: 21300000, guid: d3f60c6ead4444d7a88ac100fb941748, type: 3}

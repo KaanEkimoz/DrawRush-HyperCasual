@@ -17,6 +17,9 @@ namespace DrawRush.Shop
         public int price = 0;
         [Tooltip("Colour applied to the character body and the draw trail.")]
         public Color color = new Color(0f, 0.286f, 1f, 1f);
+        [Tooltip("Shop preview: a render of the actual character in this colour. Optional — the " +
+                 "cell falls back to a tinted silhouette if unset.")]
+        public Sprite preview;
     }
 
     /// <summary>

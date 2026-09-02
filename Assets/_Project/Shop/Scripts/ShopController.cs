@@ -32,6 +32,11 @@ namespace DrawRush.Shop
         [SerializeField] private float cellSize = 220f;
         [SerializeField] private Color affordText = Color.white;
         [SerializeField] private Color lockedText = new Color(1f, 0.85f, 0.2f, 1f);
+        [Tooltip("Character silhouette shown in each cell, tinted to the skin's colour — so the " +
+                 "player sees how the character will look, not just an abstract colour block.")]
+        [SerializeField] private Sprite characterSprite;
+        [Tooltip("Neutral cell background behind the tinted character.")]
+        [SerializeField] private Color cardColor = new Color(0.16f, 0.17f, 0.24f, 1f);
 
         private readonly List<Cell> _cells = new();
         private float _prevTimeScale = 1f;
@@ -101,11 +106,38 @@ namespace DrawRush.Shop
 
         private Cell BuildCell(CosmeticItem item)
         {
-            // Root: the coloured swatch is the button.
+            // Root: a neutral card is the button; the character silhouette on top wears the skin
+            // colour, so the cell shows how the CHARACTER will look, not just a colour block.
             var root = new GameObject("Cell_" + item.id, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
             root.transform.SetParent(content, false);
             var swatch = root.GetComponent<Image>();
-            swatch.color = item.color;
+            swatch.color = cardColor;
+
+            // Character preview, tinted to the skin colour.
+            var charGo = new GameObject("Char", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+            charGo.transform.SetParent(root.transform, false);
+            var chrt = charGo.GetComponent<RectTransform>();
+            chrt.anchorMin = new Vector2(0.5f, 1f); chrt.anchorMax = new Vector2(0.5f, 1f); chrt.pivot = new Vector2(0.5f, 1f);
+            chrt.anchoredPosition = new Vector2(0f, -14f);
+            chrt.sizeDelta = new Vector2(cellSize * 0.62f, cellSize * 0.62f);
+            var charImg = charGo.GetComponent<Image>();
+            charImg.preserveAspect = true;
+            charImg.raycastTarget = false;
+            if (item.preview != null)
+            {
+                // A real render of the character in this colour — already coloured, so no tint,
+                // and give it more of the cell since it's a full figure with the pencil.
+                charImg.sprite = item.preview;
+                charImg.color = Color.white;
+                chrt.anchoredPosition = new Vector2(0f, -4f);
+                chrt.sizeDelta = new Vector2(cellSize * 0.92f, cellSize * 0.92f);
+            }
+            else
+            {
+                // Fallback: a flat silhouette tinted to the colour.
+                charImg.sprite = characterSprite;
+                charImg.color = item.color;
+            }
 
             // Border (equipped highlight) — a white frame slightly larger, behind the swatch.
             var borderGo = new GameObject("Border", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
