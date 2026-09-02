@@ -5,6 +5,15 @@
 
 ---
 
+## 🔤 FONT (LilitaOne) + BUTON BOYUT + DAMLA OUTLINE (2026-07) — **`ab08691c`, 72/72**
+- **Font:** Comical Cartoon → **LilitaOne** (Mega Hyper Casual GUI Pack'te `LilitaOne-Regular.ttf`, referans stili yuvarlak-tombul). `TMP_FontAsset.CreateFontAsset(ttf,90,9,SDFAA,1024,1024,Dynamic)` + `AddObjectToAsset(material/atlas)` ile `Assets/Fonts/LilitaOne SDF.asset` üretildi. Tüm canvas yazıları buna çevrildi.
+- **Buton boyut tuzağı (yine 0.262):** I_Restart/I_NextLevel scale 0.262'deydi (SHOP scale 1) → aynı fontSize farklı render. Butonları scale 1 + gerçek rect'e normalize et, label'ları ortak autosize (30-64) yap. **Her buton pill'inin ölçeğini kontrol et.**
+- **Damla outline (`DropOutline.cs`):** damlalar rengi duvara/zemine denk gelince kayboluyordu. Billboardlı damlanın çocuğu olarak damlanın kendi mesh'inin %16 büyük kopyası, **-Z'ye** itilmiş (billboard +Z kameraya BAKAR, o yüzden arkaya = -Z), koyu `DropOutline.mat` (URP/Unlit). Runtime component (sahne şişmesin), 396 sahne damlası + Kenar prefab'ına eklendi.
+  - 🪤 Damlalar `GameServices.MainCamera`'ya billboard; **positioned screenshot yanıltır** (billboard oyun kamerasına dönük, senin çektiğin açıdan outline yana kaymış görünür). Gerçeği görmek için `capture_source game_view` (oyun kamerası) kullan.
+  - 🪤 Koyu > beyaz outline: bu oyunun zeminleri açık/parlak (yeşil, kum), beyaz outline kaybolur.
+
+---
+
 ## 🎨 CHATGPT İLE UI ASSET ÜRETME PIPELINE (2026-07) — **`86137cf9`, çalışıyor**
 Kaan referans hyper-casual UI attı, "butonları o parlak stile getir, ChatGPT ile PNG üret" dedi. `chatgpt-gorsel-uretme` skill'i + `claude-in-chrome` ile 4 renk buton (mavi/turuncu/yeşil/kırmızı) üretildi, cam-cilalı beyaz-kenarlı kapsül, şeffaf arka plan. Uygulandı: NEXT=mavi, RESTART=turuncu, SHOP=yeşil, CLOSE=kırmızı. Sonuç referans kalitesinde.
 
