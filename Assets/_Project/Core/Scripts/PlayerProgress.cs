@@ -18,9 +18,48 @@ namespace DrawRush.Core
         private const string LevelBagKey = "LevelBag";
         private const string LastLevelEnemiesKey = "LastLevelEnemies";
         private const string StarsKeyPrefix = "Stars_";
+        private const string OwnedCosmeticsKey = "OwnedCosmetics";
+        private const string EquippedCosmeticKey = "EquippedCosmetic";
 
         /// <summary>Raised whenever the coin total changes, with the new total.</summary>
         public static event Action<int> CoinsChanged;
+
+        /// <summary>Raised with the newly-equipped cosmetic id when the player changes skins, so the
+        /// player's visual can recolour without polling.</summary>
+        public static event Action<string> CosmeticChanged;
+
+        /// <summary>True if the player owns the skin with this id. The default skin (empty/asked-for
+        /// default id) is always owned — the caller passes the library's DefaultId to check it.</summary>
+        public static bool IsCosmeticOwned(string id, string defaultId)
+        {
+            if (string.IsNullOrEmpty(id) || id == defaultId) return true;
+            string csv = PlayerPrefs.GetString(OwnedCosmeticsKey, string.Empty);
+            foreach (var part in csv.Split(',')) if (part == id) return true;
+            return false;
+        }
+
+        /// <summary>Mark a skin owned (idempotent).</summary>
+        public static void OwnCosmetic(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return;
+            string csv = PlayerPrefs.GetString(OwnedCosmeticsKey, string.Empty);
+            foreach (var part in csv.Split(',')) if (part == id) return;   // already owned
+            csv = string.IsNullOrEmpty(csv) ? id : csv + "," + id;
+            PlayerPrefs.SetString(OwnedCosmeticsKey, csv);
+            PlayerPrefs.Save();
+        }
+
+        /// <summary>Currently-equipped skin id, or empty if none chosen yet (caller falls back to
+        /// the library default).</summary>
+        public static string EquippedCosmetic => PlayerPrefs.GetString(EquippedCosmeticKey, string.Empty);
+
+        /// <summary>Equip a skin and notify listeners. No ownership check here — the shop gates that.</summary>
+        public static void EquipCosmetic(string id)
+        {
+            PlayerPrefs.SetString(EquippedCosmeticKey, id ?? string.Empty);
+            PlayerPrefs.Save();
+            CosmeticChanged?.Invoke(id);
+        }
 
         /// <summary>Best star rating (0–3) the player has ever earned on a given level group.
         /// 0 means never cleared. Keyed by level index so the shuffle-bag order doesn't matter.</summary>
