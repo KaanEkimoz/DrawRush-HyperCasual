@@ -37,6 +37,8 @@ namespace DrawRush.Shop
         [SerializeField] private Sprite characterSprite;
         [Tooltip("Neutral cell background behind the tinted character.")]
         [SerializeField] private Color cardColor = new Color(0.16f, 0.17f, 0.24f, 1f);
+        [Tooltip("Ring colour for the currently-equipped skin's cell.")]
+        [SerializeField] private Color equippedColor = new Color(1f, 0.82f, 0.15f, 1f);
 
         private readonly List<Cell> _cells = new();
         private float _prevTimeScale = 1f;
@@ -44,8 +46,7 @@ namespace DrawRush.Shop
         private sealed class Cell
         {
             public CosmeticItem item;
-            public Image swatch;
-            public Image border;
+            public Image swatch;   // the frame image: cardColor, or equippedColor when equipped
             public TMP_Text label;
         }
 
@@ -110,8 +111,18 @@ namespace DrawRush.Shop
             // colour, so the cell shows how the CHARACTER will look, not just a colour block.
             var root = new GameObject("Cell_" + item.id, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
             root.transform.SetParent(content, false);
-            var swatch = root.GetComponent<Image>();
+            var swatch = root.GetComponent<Image>();   // the FRAME: cardColor normally, gold when equipped
             swatch.color = cardColor;
+
+            // Inner card sits 8px inside the frame, so an equipped cell reads as a gold RING around a
+            // dark card — never a solid white fill (the old "Border" image covered the whole cell).
+            var cardGo = new GameObject("Card", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+            cardGo.transform.SetParent(root.transform, false);
+            var cardRt = cardGo.GetComponent<RectTransform>();
+            cardRt.anchorMin = Vector2.zero; cardRt.anchorMax = Vector2.one;
+            cardRt.offsetMin = new Vector2(8f, 8f); cardRt.offsetMax = new Vector2(-8f, -8f);
+            var card = cardGo.GetComponent<Image>();
+            card.color = cardColor; card.raycastTarget = false;
 
             // Character preview, tinted to the skin colour.
             var charGo = new GameObject("Char", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
@@ -125,12 +136,13 @@ namespace DrawRush.Shop
             charImg.raycastTarget = false;
             if (item.preview != null)
             {
-                // A real render of the character in this colour — already coloured, so no tint,
-                // and give it more of the cell since it's a full figure with the pencil.
+                // A real render of the character in this colour — already coloured, so no tint.
+                // Sized to the TOP ~70% of the cell so the figure's legs never collide with the
+                // price/EQUIPPED plate at the bottom.
                 charImg.sprite = item.preview;
                 charImg.color = Color.white;
-                chrt.anchoredPosition = new Vector2(0f, -4f);
-                chrt.sizeDelta = new Vector2(cellSize * 0.92f, cellSize * 0.92f);
+                chrt.anchoredPosition = new Vector2(0f, -2f);
+                chrt.sizeDelta = new Vector2(cellSize * 0.70f, cellSize * 0.70f);
             }
             else
             {
@@ -139,26 +151,15 @@ namespace DrawRush.Shop
                 charImg.color = item.color;
             }
 
-            // Border (equipped highlight) — a white frame slightly larger, behind the swatch.
-            var borderGo = new GameObject("Border", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
-            borderGo.transform.SetParent(root.transform, false);
-            var brt = borderGo.GetComponent<RectTransform>();
-            brt.anchorMin = Vector2.zero; brt.anchorMax = Vector2.one;
-            brt.offsetMin = new Vector2(-8f, -8f); brt.offsetMax = new Vector2(8f, 8f);
-            borderGo.transform.SetAsFirstSibling();
-            var border = borderGo.GetComponent<Image>();
-            border.color = Color.white;
-            border.raycastTarget = false;
-
             // Label strip at the bottom: a dark plate so text reads on any swatch colour, with the
             // text as a child (Image and TMP are both Graphics and can't share one GameObject).
             var plateGo = new GameObject("LabelPlate", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
             plateGo.transform.SetParent(root.transform, false);
             var lrt = plateGo.GetComponent<RectTransform>();
-            lrt.anchorMin = new Vector2(0f, 0f); lrt.anchorMax = new Vector2(1f, 0.30f);
+            lrt.anchorMin = new Vector2(0f, 0f); lrt.anchorMax = new Vector2(1f, 0.25f);
             lrt.offsetMin = Vector2.zero; lrt.offsetMax = Vector2.zero;
             var plate = plateGo.GetComponent<Image>();
-            plate.color = new Color(0f, 0f, 0f, 0.45f);
+            plate.color = new Color(0f, 0f, 0f, 0.6f);
             plate.raycastTarget = false;
 
             var textGo = new GameObject("Text", typeof(RectTransform), typeof(CanvasRenderer));
@@ -168,15 +169,17 @@ namespace DrawRush.Shop
             trt.offsetMin = Vector2.zero; trt.offsetMax = Vector2.zero;
             var label = textGo.AddComponent<TextMeshProUGUI>();
             label.alignment = TextAlignmentOptions.Center;
-            label.enableAutoSizing = true; label.fontSizeMin = 18f; label.fontSizeMax = 40f;
+            label.enableAutoSizing = true; label.fontSizeMin = 16f; label.fontSizeMax = 32f;
             label.raycastTarget = false;
+            // Match the rest of the UI's font instead of falling back to the default TMP font.
+            if (coinText != null && coinText.font != null) label.font = coinText.font;
 
             var btn = root.GetComponent<Button>();
             root.AddComponent<DrawRush.UI.ButtonJuice>();   // press-pop + click sound like every other button
             var captured = item;
             btn.onClick.AddListener(() => OnCellTapped(captured));
 
-            return new Cell { item = item, swatch = swatch, border = border, label = label };
+            return new Cell { item = item, swatch = swatch, label = label };
         }
 
         private void OnCellTapped(CosmeticItem item)
@@ -203,7 +206,7 @@ namespace DrawRush.Shop
             {
                 bool owned = PlayerProgress.IsCosmeticOwned(cell.item.id, def);
                 bool isEquipped = cell.item.id == equipped;
-                if (cell.border != null) cell.border.enabled = isEquipped;
+                if (cell.swatch != null) cell.swatch.color = isEquipped ? equippedColor : cardColor;
                 if (cell.label != null)
                 {
                     if (isEquipped) { cell.label.text = "EQUIPPED"; cell.label.color = affordText; }
