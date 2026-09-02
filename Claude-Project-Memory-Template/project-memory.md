@@ -5,6 +5,16 @@
 
 ---
 
+## 🖼️ OVERLAY EKRAN DENETİMİ + SHOP/LOSE DÜZELTMELERİ (2026-09) — **`d5975299`, 72/72**
+- **Overlay UI'ı screenshot'ta görme yöntemi:** panel'ler kontrolcü tarafından her frame gizleniyor (`GameObject.Find` sadece aktifi bulur). Play'de: `WinSequenceDirector`/`WinCondition` gibi kontrolcüyü `mb.enabled=false` yap, canvas'ı `ScreenSpaceCamera + worldCamera=Camera.main + planeDistance=1` yap, panel'i `SetActive(true)`, sonra `capture_source game_view`. Panel'i pasifken bulmak için `FindObjectsByType<RectTransform>(FindObjectsInactive.Include,...)`.
+- **Shop equipped hücresi beyaz doluyordu:** "Border" highlight'ı hücreyi kaplayan **dolu beyaz Image**'dı ve child olduğu için kartın ÜSTÜNE çiziliyordu. Çözüm: root = çerçeve (equipped'te altın), 8px içeride "Card" (koyu) → equipped = altın **halka**, beyaz dolgu değil. (`ShopController.cs`)
+- **Shop hücre etiketleri karakterin bacağına biniyordu:** char'ı üst %70'e küçült (`cellSize*0.70`, pos y=-2), plate'i alt %25'e al. Ayrıca runtime hücre label'larına `label.font = coinText.font` (LilitaOne) ata — yoksa default TMP fontu düşüyordu.
+- **Shop coin bakiyesi** yalnız bir "0" olarak traktörün yanında uçuyordu → coin ikonu + sayı, sağ-üste sabit (sahne düzenlemesi).
+- **Lose panelinde bozuk yarı-saydam "Next Level"** (eski `next_level` sprite, scale 0.26) Restart'ın üstüne biniyordu → `SetActive(false)`. Lose = tek ortalı Restart.
+- 🪤 Win/Shop/Lose panel root'ları full-stretch, `size=(0,0)` = ekranı kaplar (anchors 0-1). WinPanel bg alpha 0.64 dim'li ama forced-test'te görünmedi (kontrolcü davranışı) — gerçek oyunda çalışıyor, dokunma.
+
+---
+
 ## 🔤 FONT (LilitaOne) + BUTON BOYUT + DAMLA OUTLINE (2026-07) — **`ab08691c`, 72/72**
 - **Font:** Comical Cartoon → **LilitaOne** (Mega Hyper Casual GUI Pack'te `LilitaOne-Regular.ttf`, referans stili yuvarlak-tombul). `TMP_FontAsset.CreateFontAsset(ttf,90,9,SDFAA,1024,1024,Dynamic)` + `AddObjectToAsset(material/atlas)` ile `Assets/Fonts/LilitaOne SDF.asset` üretildi. Tüm canvas yazıları buna çevrildi.
 - **Buton boyut tuzağı (yine 0.262):** I_Restart/I_NextLevel scale 0.262'deydi (SHOP scale 1) → aynı fontSize farklı render. Butonları scale 1 + gerçek rect'e normalize et, label'ları ortak autosize (30-64) yap. **Her buton pill'inin ölçeğini kontrol et.**
