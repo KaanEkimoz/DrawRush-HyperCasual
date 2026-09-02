@@ -5,6 +5,20 @@
 
 ---
 
+## 🖼️ UI CİLASI + DÜKKÂN KARAKTER ÖNİZLEMESİ (2026-07) — **69/69 yeşil, `fc68e8a5`**
+Kaan gerçek ekranlara bakınca (overlay UI capture'a düşmediği için ilk pass **kör** kurulmuştu) 3 sorun çıktı, hepsi düzeltildi:
+- **SHOP HUD tuşu** düz sarı kare + "SH OP" iki satır → HUD pill sprite'ı (`I_Level`'in `level_text` sliced sprite'ı) ile turuncu tek-satır "SHOP" pill'i.
+- **Win yıldızları** başlık+butonlarla çakışıyordu → başlık y470, yıldızlar y150 (180px, 210 aralık), temiz bant.
+- **Dükkân kartları** düz renk bloğuydu → **gerçek karakter modelinin o renge boyanmış render'ı** (Kaan'ın isteği: "modelin üzerinde değiştirip ss al").
+
+### 🔑 İKİ YENİDEN-KULLANILIR TEKNİK
+1. **Overlay UI'yı ekran görüntüsüne almak:** `manage_camera screenshot` ScreenSpaceOverlay canvas'ını YAKALAMAZ. Çözüm: **play mode'da** `canvas.renderMode = ScreenSpaceCamera; worldCamera = Camera.main; planeDistance = 1` → screenshot → **play'i durdurunca otomatik geri döner** (edit mode'da yapma, kalıcı olur). Karartma/layering bu modda artefaktlı görünebilir; layout'a bak, dim'e değil.
+2. **Karakter modelini renk renk render edip PNG almak** (dükkân önizlemesi için): play mode'da `Visuals`'ı klonla → (500,500,500)'e taşı (level'den uzak) → temp `Camera` (fov 32, clear SolidColor alpha 0, `UniversalAdditionalCameraData.renderPostProcessing=false`) + `RenderTexture(512,ARGB32)` → her renk için SMR'a MPB `_BaseColor` → `cam.Render()` → `ReadPixels` → `EncodeToPNG` → `Assets/_Project/UI/Textures/Skins/Skin_<id>.png`. Sonra stop → `TextureImporter` Sprite. Şeffaf arka plan URP'de çalıştı. `CosmeticItem.preview` alanına bağlandı; kart varsa render'ı (boyamasız), yoksa tint'li silüeti gösterir.
+
+⚠️ **Kalıcılık tuzağı:** play mode'da yapılan UI/transform değişiklikleri **durunca kaybolur** — layout'u gözle onayladıktan sonra **edit mode'da tekrar uygula + SaveOpenScenes**. (`MarkSceneDirty` play mode'da exception atar.)
+
+---
+
 ## 🎁 4 META ÖZELLİK — "yayına hazır" oturumu (2026-07, tam yetki) — **69/69 yeşil**
 Kaan'ın tasarım-eksik listesi (yıldız / dükkân / juice / düşman çeşitliliği) baştan sona kuruldu. Her biri play mode'da doğrulandı, ayrı commit'lendi, hiçbiri push edilmedi.
 
