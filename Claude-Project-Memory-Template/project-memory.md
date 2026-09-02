@@ -8,9 +8,11 @@
 ## 🔤 FONT (LilitaOne) + BUTON BOYUT + DAMLA OUTLINE (2026-07) — **`ab08691c`, 72/72**
 - **Font:** Comical Cartoon → **LilitaOne** (Mega Hyper Casual GUI Pack'te `LilitaOne-Regular.ttf`, referans stili yuvarlak-tombul). `TMP_FontAsset.CreateFontAsset(ttf,90,9,SDFAA,1024,1024,Dynamic)` + `AddObjectToAsset(material/atlas)` ile `Assets/Fonts/LilitaOne SDF.asset` üretildi. Tüm canvas yazıları buna çevrildi.
 - **Buton boyut tuzağı (yine 0.262):** I_Restart/I_NextLevel scale 0.262'deydi (SHOP scale 1) → aynı fontSize farklı render. Butonları scale 1 + gerçek rect'e normalize et, label'ları ortak autosize (30-64) yap. **Her buton pill'inin ölçeğini kontrol et.**
-- **Damla outline (`DropOutline.cs`):** damlalar rengi duvara/zemine denk gelince kayboluyordu. Billboardlı damlanın çocuğu olarak damlanın kendi mesh'inin %16 büyük kopyası, **-Z'ye** itilmiş (billboard +Z kameraya BAKAR, o yüzden arkaya = -Z), koyu `DropOutline.mat` (URP/Unlit). Runtime component (sahne şişmesin), 396 sahne damlası + Kenar prefab'ına eklendi.
-  - 🪤 Damlalar `GameServices.MainCamera`'ya billboard; **positioned screenshot yanıltır** (billboard oyun kamerasına dönük, senin çektiğin açıdan outline yana kaymış görünür). Gerçeği görmek için `capture_source game_view` (oyun kamerası) kullan.
-  - 🪤 Koyu > beyaz outline: bu oyunun zeminleri açık/parlak (yeşil, kum), beyaz outline kaybolur.
+- **Damla outline — DOĞRU ÇÖZÜM (`a0d0639f`): gerçek inverted-hull shader** `Assets/_Project/Drawing/Shaders/DropOutline.shader` (`DrawRush/DropOutline`). Damla `Mesh_0` = 3D gözyaşı (0.76×0.76×1.20, tip +Z), kameraya billboard + dönel simetrik → silüeti hep düzgün. Shader: mesh'i **world normal boyunca** dışarı büyüt, genişliği **kamera mesafesiyle ölç** (`_OutlineWidth * dist`) → yakın/uzak damlada **sabit ekran kalınlığı**; `Cull Front` + gerçek 3D derinlik → damlanın ön yüzü merkezi kapatır (**bleed yok**). `DropOutline.mat` bu shader'ı kullanır, koyu (0.09,0.09,0.13), width 0.006. `DropOutline.cs` sadece aynı konumda mesh kopyası spawn eder (offset/scale YOK).
+  - 🪤 **Denenip başarısız olan 2 yol:** (1) scaled mesh -Z'ye it → billboard ekseni yanlış, ekran-aşağı kayık gölge; (2) clip-space (screen-space) xy smear + Cull Front → merkeze koyu "göz" bleed. **Object-space sabit width** ise uzak damlalarda incelip kaybolur. Tek doğru: **world-normal, mesafeyle ölçekli, gerçek 3D hull.**
+  - 🪤 Damlalar `GameServices.MainCamera`'ya billboard; **positioned screenshot yanıltır** → `capture_source game_view` kullan.
+  - 🪤 Koyu > beyaz outline: zeminler açık/parlak (yeşil, kum), beyaz kaybolur.
+  - 🪤 `execute_code` kodu bir metoda sarılıyor: **top-level `using` KULLANMA**, tam nitelikli ad yaz (`UnityEngine.Object.FindObjectsByType<...>`). Guard: `if(!UnityEngine.Application.dataPath.Contains("DrawRush")) return "WRONG INSTANCE";`
 
 ---
 
