@@ -5,6 +5,21 @@
 
 ---
 
+## 🎛️ UI POLISH PASS 2 — font/coin/juice/ses (2026-07) — **72/72, `ab61edf9`**
+Kaan referans hyper-casual UI ekran görüntüleri attı, "böyle çözemiyoruz daha iyisini yap" dedi. Motorda güvenle yapılan kısım:
+- **Kalp fontu** tek başına `LiberationSans` (düz) kalmıştı → `Comical Cartoon SDF` (diğer her şey zaten bu).
+- **Coin sayısı** `CoinHud.Abbreviate` ile kısaltılıyor (1.2K / 2.5M), yazı küçültüldü (pill'e sığsın).
+- **`ButtonJuice`** (`_Project/UI/Scripts`): basınca küçülür, bırakınca pop, `static Clicked` olayı; sahnedeki tüm butonlar + runtime dükkân kartları. Unscaled time (panel arkasında pause'da da çalışır).
+- **`uiClick`** cue SfxLibrary'ye eklendi (ffmpeg blip), `SfxPlayer` `ButtonJuice.Clicked`'a abone — event-driven, buton ses bilmiyor.
+- Coin ikonu `Mega Hyper Casual GUI Pack/Coin.png`.
+
+### ⏳ HENÜZ YAPILMADI (Kaan istedi, büyük/iteratif iş)
+- **Referansa uygun özel buton/ikon PNG'leri** (gradient, gölge). Yol: `chatgpt-gorsel-uretme` skill'i (Chrome'dan ChatGPT sürer) — ÖNCE tek element üretip stili onayla, sonra yay. VEYA `generate_image` (kredi ister, bakiye ~1). Kaan'ın onayı + ChatGPT oturumu gerekir.
+- **Işıklandırma pass'i** (sahne lighting).
+- 🪤 Overlay UI capture trick olmadan bu ekranlar gözle görülemez — her UI değişikliğini play+ScreenSpaceCamera ile doğrula.
+
+---
+
 ## 🖼️ UI CİLASI + DÜKKÂN KARAKTER ÖNİZLEMESİ (2026-07) — **69/69 yeşil, `fc68e8a5`**
 Kaan gerçek ekranlara bakınca (overlay UI capture'a düşmediği için ilk pass **kör** kurulmuştu) 3 sorun çıktı, hepsi düzeltildi:
 - **SHOP HUD tuşu** düz sarı kare + "SH OP" iki satır → HUD pill sprite'ı (`I_Level`'in `level_text` sliced sprite'ı) ile turuncu tek-satır "SHOP" pill'i.
