@@ -41,8 +41,12 @@ namespace DrawRush.Drawing
         private Vector3 _hiddenLocal;
         private bool _revealed;
 
+        private Color _color = Color.white;
+
         public float Height => _height;
         public float Thickness => _thickness;
+        /// <summary>The wall's colour — juice systems match a burst to the wall that just rose.</summary>
+        public Color Color => _color;
 
         private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
         private static readonly int ColorId = Shader.PropertyToID("_Color");
@@ -77,6 +81,7 @@ namespace DrawRush.Drawing
             // Material + color (MaterialPropertyBlock so we don't mutate the shared material).
             if (mat != null) _mr.sharedMaterial = mat;
             else if (_mr.sharedMaterial == null) _mr.sharedMaterial = ResolveFallbackMaterial();
+            _color = color;
             _mpb ??= new MaterialPropertyBlock();
             _mr.GetPropertyBlock(_mpb);
             _mpb.SetColor(BaseColorId, color);
@@ -104,15 +109,15 @@ namespace DrawRush.Drawing
         }
 
         /// <summary>Rise into view. Idempotent.</summary>
-        /// <summary>Raised when any wall starts rising. A hook for feedback systems (audio/VFX)
-        /// so this class keeps knowing nothing about them.</summary>
-        public static event System.Action Revealed;
+        /// <summary>Raised when any wall starts rising, with the wall itself so feedback systems
+        /// (audio/VFX) can read its position and colour. This class still knows nothing about them.</summary>
+        public static event System.Action<ProceduralWall> Revealed;
 
         public void Reveal()
         {
             if (_revealed || _wall == null) return;
             _revealed = true;
-            Revealed?.Invoke();
+            Revealed?.Invoke(this);
             _ = RiseAsync();
         }
 

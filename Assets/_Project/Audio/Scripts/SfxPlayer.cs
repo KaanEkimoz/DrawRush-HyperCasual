@@ -64,7 +64,7 @@ namespace DrawRush.Audio
         private void OnGameWonChanged(bool won) { if (won) Play(library != null ? library.win : null); }
         private void OnDied() => Play(library != null ? library.lose : null);
         private void OnCoinsChanged(int total) => Play(library != null ? library.coin : null);
-        private void OnWallRevealed() => Play(library != null ? library.wallRise : null);
+        private void OnWallRevealed(DrawRush.Drawing.ProceduralWall wall) => Play(library != null ? library.wallRise : null);
 
         // Changed also fires on heals and on the reset every level activation performs, so only
         // an actual drop counts as a hit.
