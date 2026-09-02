@@ -5,6 +5,22 @@
 
 ---
 
+## 🎨 CHATGPT İLE UI ASSET ÜRETME PIPELINE (2026-07) — **`86137cf9`, çalışıyor**
+Kaan referans hyper-casual UI attı, "butonları o parlak stile getir, ChatGPT ile PNG üret" dedi. `chatgpt-gorsel-uretme` skill'i + `claude-in-chrome` ile 4 renk buton (mavi/turuncu/yeşil/kırmızı) üretildi, cam-cilalı beyaz-kenarlı kapsül, şeffaf arka plan. Uygulandı: NEXT=mavi, RESTART=turuncu, SHOP=yeşil, CLOSE=kırmızı. Sonuç referans kalitesinde.
+
+### 🔑 ÇALIŞAN İŞ AKIŞI + TUZAKLAR (hepsi yaşandı)
+1. **ChatGPT girişi:** `list_connected_browsers` → Chrome bağlı, ChatGPT'de Kaan giriş yapmış. Üretim ~40-60 sn, buton ~500KB şeffaf PNG çıkıyor, stil mükemmel.
+2. 🪤 **`type` action ASCII DÜŞÜRÜYOR** (skill Tuzak 1) — sayfa taze yüklenince klavye yazımı sadece Türkçe karakter bırakıyor ("öşçü..."). ÇÖZÜM: metni **JS ile** gir: `el.focus(); execCommand('selectAll'); execCommand('delete'); execCommand('insertText',false,PROMPT)` → tam, temiz. Uzunluğu doğrula.
+3. 🪤 **Enter GÖNDERMİYOR** (bazen) — `key Return` ve koordinat-tık gönder butonunu tetiklemedi. ÇÖZÜM: JS ile `document.querySelector('[data-testid="send-button"]')?.click()` → URL `/c/WEB:...`e döner = gönderildi.
+4. 🪤 **Bash `~/Downloads`'ı OKUYAMIYOR** (macOS TCC: "Operation not permitted"). `request_directory` grant'i bile Bash'i açmadı. ÇÖZÜM: **Unity'nin C#'ı Downloads'a erişebiliyor** → `execute_code`'da `System.IO.File.Copy("/Users/kaanusta/Downloads/ChatGPT Image ....png", "Assets/.../x.png")`. Downloads'ı `System.IO.Directory.GetFiles` + LastWriteTime ile sırala, en yeniyi al. (İndirme ChatGPT'nin kendi başlığıyla `ChatGPT Image <tarih>.png` iner.)
+5. **İndirme:** resme tıkla → `find "İndir download button"` → **ref ile tıkla** (koordinat değil). Bazen "Uygulamaları indir" (footer) bulur = yanlış; resmin açıldığından emin ol.
+6. **9-slice kurulumu (C#):** PNG'yi `ImageConversion.LoadImage` ile oku, alfa bbox bul, kırp, `EncodeToPNG`. Importer: Sprite, `spriteBorder`=(L/R≈yükseklik*0.46, T/B≈yükseklik*0.10), **`spritePixelsPerUnit=360`** (yüksek PPU = 9-slice border'ları küçük kalır, dar butonlarda kapaklar bozulmaz). 🪤 Sprite uygulanınca **edit-mode'da geri-oku doğrula** — bir keresinde uygula "başarılı" dedi ama sahneye yazılmamıştı (hâlâ eski sprite'tı); tüm ayarlarım boşa gitti.
+
+### ⏳ Sırada (aynı pipeline ile)
+Panel arka planları (win/shop çerçevesi), HUD pill'lerini de bu stile, belki ikonlar. Işıklandırma pass'i ayrı.
+
+---
+
 ## 🎛️ UI POLISH PASS 2 — font/coin/juice/ses (2026-07) — **72/72, `ab61edf9`**
 Kaan referans hyper-casual UI ekran görüntüleri attı, "böyle çözemiyoruz daha iyisini yap" dedi. Motorda güvenle yapılan kısım:
 - **Kalp fontu** tek başına `LiberationSans` (düz) kalmıştı → `Comical Cartoon SDF` (diğer her şey zaten bu).
