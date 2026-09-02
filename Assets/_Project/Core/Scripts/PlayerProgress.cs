@@ -17,9 +17,34 @@ namespace DrawRush.Core
         private const string LevelsPlayedKey = "LevelsPlayed";
         private const string LevelBagKey = "LevelBag";
         private const string LastLevelEnemiesKey = "LastLevelEnemies";
+        private const string StarsKeyPrefix = "Stars_";
 
         /// <summary>Raised whenever the coin total changes, with the new total.</summary>
         public static event Action<int> CoinsChanged;
+
+        /// <summary>Best star rating (0–3) the player has ever earned on a given level group.
+        /// 0 means never cleared. Keyed by level index so the shuffle-bag order doesn't matter.</summary>
+        public static int BestStars(int levelIndex) => PlayerPrefs.GetInt(StarsKeyPrefix + levelIndex, 0);
+
+        /// <summary>Record a clear at <paramref name="stars"/>, keeping only the player's best for
+        /// that level. Returns true if this beat the previous best (a new record worth celebrating).</summary>
+        public static bool RecordStars(int levelIndex, int stars)
+        {
+            stars = Mathf.Clamp(stars, 0, 3);
+            if (stars <= BestStars(levelIndex)) return false;
+            PlayerPrefs.SetInt(StarsKeyPrefix + levelIndex, stars);
+            PlayerPrefs.Save();
+            return true;
+        }
+
+        /// <summary>Sum of best stars across levels 0..count-1 — the player's mastery total, and a
+        /// natural place to gate later unlocks.</summary>
+        public static int TotalStars(int levelCount)
+        {
+            int sum = 0;
+            for (int i = 0; i < levelCount; i++) sum += BestStars(i);
+            return sum;
+        }
 
         /// <summary>True once the player has finished the tutorial level.</summary>
         public static bool TutorialCompleted
@@ -94,6 +119,21 @@ namespace DrawRush.Core
             PlayerPrefs.SetInt(CoinsKey, total);
             PlayerPrefs.Save();
             CoinsChanged?.Invoke(total);
+        }
+
+        /// <summary>Spend coins if the player can afford it. Returns false and changes nothing when
+        /// they can't, so the shop can gate a purchase on a single call. Raises CoinsChanged on
+        /// success so the HUD counter ticks down.</summary>
+        public static bool TrySpendCoins(int amount)
+        {
+            if (amount <= 0) return true;      // free items always "succeed"
+            int total = Coins;
+            if (total < amount) return false;
+            total -= amount;
+            PlayerPrefs.SetInt(CoinsKey, total);
+            PlayerPrefs.Save();
+            CoinsChanged?.Invoke(total);
+            return true;
         }
     }
 }

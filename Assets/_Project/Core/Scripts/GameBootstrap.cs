@@ -37,7 +37,7 @@ namespace DrawRush.Core
             if (state != null) state.Reset();
             if (playerHealth != null) playerHealth.ResetToStarting();
 
-            GameServices.Register(player, trailPoint, mainCamera, config, state);
+            GameServices.Register(player, trailPoint, mainCamera, config, state, playerHealth);
         }
 
         private void OnDestroy()

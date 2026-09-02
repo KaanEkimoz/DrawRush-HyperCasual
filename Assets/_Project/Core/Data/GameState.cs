@@ -14,6 +14,15 @@ namespace DrawRush.Core
 
         [NonSerialized] private bool _isGameWon;
 
+        /// <summary>Stars earned on the win that just happened (1–3), set by WinCondition before it
+        /// flips <see cref="IsGameWon"/> so the win panel can read it. Lives here because the win
+        /// flow already funnels through this object; it is not persisted (PlayerProgress is).</summary>
+        [NonSerialized] public int LastStars;
+
+        /// <summary>True if that win set a new star record for the level — the panel can celebrate
+        /// a "new best" differently from a repeat clear.</summary>
+        [NonSerialized] public bool LastStarsWereRecord;
+
         public bool IsGameWon
         {
             get => _isGameWon;

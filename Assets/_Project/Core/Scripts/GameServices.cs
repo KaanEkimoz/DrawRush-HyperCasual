@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using DrawRush.Player;
 
 namespace DrawRush.Core
 {
@@ -19,6 +20,7 @@ namespace DrawRush.Core
         public static Transform MainCamera { get; private set; }
         public static GameConfig Config { get; private set; }
         public static GameState State { get; private set; }
+        public static PlayerHealth Health { get; private set; }
 
         public static event Action ServicesReady;
         public static event Action ServicesCleared;
@@ -30,13 +32,15 @@ namespace DrawRush.Core
             Transform trailPoint,
             Transform mainCamera,
             GameConfig config,
-            GameState state)
+            GameState state,
+            PlayerHealth health = null)
         {
             Player = player;
             TrailPoint = trailPoint;
             MainCamera = mainCamera;
             Config = config;
             State = state;
+            Health = health;
             ServicesReady?.Invoke();
         }
 
@@ -47,6 +51,7 @@ namespace DrawRush.Core
             MainCamera = null;
             Config = null;
             State = null;
+            Health = null;
             ServicesCleared?.Invoke();
         }
     }
