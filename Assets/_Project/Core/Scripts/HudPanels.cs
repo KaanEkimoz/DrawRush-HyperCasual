@@ -56,17 +56,22 @@ namespace DrawRush.Core
         public void ShowWinPanel()
         {
             if (winPanel != null) winPanel.SetActive(true);
+            // The win screen carries its own coin display (and the shop), so the gameplay HUD under
+            // it is just redundant clutter — hide it while a panel is up.
+            if (gameUI != null) gameUI.SetActive(false);
         }
 
         public void ShowLosePanel()
         {
             if (losePanel != null) losePanel.SetActive(true);
+            if (gameUI != null) gameUI.SetActive(false);
         }
 
         public void HideAllPanels()
         {
             if (winPanel != null) winPanel.SetActive(false);
             if (losePanel != null) losePanel.SetActive(false);
+            if (gameUI != null) gameUI.SetActive(true);   // back to gameplay
         }
     }
 }
