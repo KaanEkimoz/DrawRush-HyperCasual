@@ -5,6 +5,15 @@
 
 ---
 
+## 🎨 KALEM RENGİ + IŞIK + ÇÖP TEMİZLİĞİ (2026-09) — **`396fb8aa`, 72/72**
+- **"Magenta ışın" = KALEM.** Karakterin tuttuğu kalem (`kalem_sapı`, mat `Assets/Materials/pencil.mat`) `_BaseColor`'ı magenta, ucu (`pencil ucu.mat`) parlak yeşildi. Klasik **sarı kalem + kırmızı uç** yaptım (kırmızı = çizdiği boyayı yansıtır).
+- **"Bozuk siyah blob" GÖLGE DEĞİLDİ:** dünya orijininde (0,0,0.12) parent'ı NULL, `Outline` adında, `Mesh_0`+`DropOutline` materyalli, **scale 1.28** (eski outline denemesinden kalma) 2 ADET ÖKSÜZ mesh sahneye kaydedilmişti. `DestroyImmediate` + save. Karakter oradan geçince siyah blob gibi görünüyordu.
+- **Işık:** directional shadow strength 0.5→0.38; grass `_SColor` neredeyse-siyah gri (0.2)→koyu yeşil (0.16,0.48,0.12) → gölgeli çim "çukur" değil çim gibi; ramp biraz yumuşatıldı (0.22).
+- **Tech-debt:** kalp HP sayısı scale 2.52 tuzağı → scale 1 + 110x110 rect + autosize; WinCoins negatif fontSize düzeltildi.
+- 🪤🪤 **KRİTİK: Editör Game View, PLAY sırasında yapılan material düzenlemelerini ÖNBELLEKTE tutar (SRP Batcher).** `execute_code` ile material `_BaseColor` değiştirip screenshot alınca ESKİ renk görünür — material inspection ise YENİ değeri gösterir (kafa karıştırır). Doğrulamak için **play'i durdur, TEKRAR play başlat** (fresh instance'lar asset'ten kurulur). Ayrıca `InternalEditorUtility.RepaintAllViews()` çağır; edit mode'da alınan game_view screenshot'ı bayat olabilir.
+
+---
+
 ## 🖼️ OVERLAY EKRAN DENETİMİ + SHOP/LOSE DÜZELTMELERİ (2026-09) — **`d5975299`, 72/72**
 - **Overlay UI'ı screenshot'ta görme yöntemi:** panel'ler kontrolcü tarafından her frame gizleniyor (`GameObject.Find` sadece aktifi bulur). Play'de: `WinSequenceDirector`/`WinCondition` gibi kontrolcüyü `mb.enabled=false` yap, canvas'ı `ScreenSpaceCamera + worldCamera=Camera.main + planeDistance=1` yap, panel'i `SetActive(true)`, sonra `capture_source game_view`. Panel'i pasifken bulmak için `FindObjectsByType<RectTransform>(FindObjectsInactive.Include,...)`.
 - **Shop equipped hücresi beyaz doluyordu:** "Border" highlight'ı hücreyi kaplayan **dolu beyaz Image**'dı ve child olduğu için kartın ÜSTÜNE çiziliyordu. Çözüm: root = çerçeve (equipped'te altın), 8px içeride "Card" (koyu) → equipped = altın **halka**, beyaz dolgu değil. (`ShopController.cs`)
