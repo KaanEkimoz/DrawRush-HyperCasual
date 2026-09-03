@@ -54,7 +54,7 @@ Material:
     m_Colors:
     - _BaseColor: {r: 0.13, g: 0.13, b: 0.16, a: 1}
     - _Color: {r: 0.12999997, g: 0.12999997, b: 0.15999997, a: 1}
-    - _OutlineColor: {r: 0.09, g: 0.09, b: 0.13, a: 1}
+    - _OutlineColor: {r: 0.86, g: 0.86, b: 0.89, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
 --- !u!114 &1724859864854283964
