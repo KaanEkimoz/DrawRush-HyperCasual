@@ -5,6 +5,17 @@
 
 ---
 
+## 👾 DÜŞMAN: IDLE + ÖLÜM (poof+ses+shrink) + LEVEL 1 SADE (2026-09) — **`19cb6fc0`, 72/72**
+- **"Mal mal koşar pozisyonda":** `Enemy.controller`'da SADECE `Run` state'i vardı (hep oynuyordu), idle yok. Ekledim: `Idle` state (motion = `Assets/Animations/PlayerIdle.anim` — enemy zaten player'ın PlayerDie'ını retarget ediyor, humanoid), `f_speed` float param, Idle↔Run blend (>0.1 / <0.1), death `Any State → PlayerDie` (t_die). `EnemyFollow` her frame `_anim.SetFloat(AnimatorIds.Speed, agent.velocity.magnitude)` — dormant/halted → vel 0 → Idle.
+- **Ölüm (`EnemyDeath.cs`, YENİ):** eskiden win'de sadece donuyorlardı, ölüm sesi/efekti yok, geç kayboluyorlardı. Artık **hem win HEM player ölümünde** (GameState.GameWonChanged + PlayerHealth.Died): renk poof'u (runtime ParticleSystem, DrawJuice paterni), pop sesi (`EnemyDeath.EnemyDied` static event → SfxPlayer, burst başına 1 pop), t_die anim, hızlı shrink-out + renderer/collider kapat. **OnEnable'da resetlenir** (restart'ta geri gelir).
+  - 🪤 `EnemyDeath.Die()` `EnemyFollow.enabled=false` yapıyor; **SetActive döngüsü disabled component'i geri AÇMAZ** → OnEnable'da `_follow.enabled=true` şart, yoksa restart'ta düşman kovalamaz.
+  - Ölüm sesi şimdilik `hit.wav` placeholder (SfxLibrary.enemyDie, vol 0.6). Kredi olunca özel "pop" üret.
+- **Level 1 neden 2 düşmanlı:** enemy budget SADECE `LevelFlow.NextLevel` + resume-restore'da uygulanıyordu; **doğrudan boot edilen** (veya dev-forced) level hiç dial'lanmadan tüm authored düşmanlarla açılıyordu. `LevelManager.Start` artık restore yoksa `LevelFlow.BudgetLevelForCurve(index)` çağırıyor → tutorial sonrası ilk level played=0 → target=min(3) → Level_01 (shapeScore 4) = **0 düşman**. Doğrulandı: boot'ta active=0/2.
+- Enemy = `EnemyFollow`+`EnemyCombat`(+artık `EnemyDeath`), model `Standard_Run_with_skin`, mat `EnemyMaterial` (kırmızı; pembe = EnemyFollow tint). Sahnede 112 authored enemy; `EnemyDeath` hepsine eklendi.
+- 🪤 **SRP-batcher stale-render (tekrar ısırdı):** play sırasında material `_BaseColor` değiştirince game_view screenshot ESKİ rengi gösterir; gerçek için play'i kapat-aç. (Bu turda da kalem sarısı ancak fresh play'de göründü.)
+
+---
+
 ## 🎨 KALEM RENGİ + IŞIK + ÇÖP TEMİZLİĞİ (2026-09) — **`396fb8aa`, 72/72**
 - **"Magenta ışın" = KALEM.** Karakterin tuttuğu kalem (`kalem_sapı`, mat `Assets/Materials/pencil.mat`) `_BaseColor`'ı magenta, ucu (`pencil ucu.mat`) parlak yeşildi. Klasik **sarı kalem + kırmızı uç** yaptım (kırmızı = çizdiği boyayı yansıtır).
 - **"Bozuk siyah blob" GÖLGE DEĞİLDİ:** dünya orijininde (0,0,0.12) parent'ı NULL, `Outline` adında, `Mesh_0`+`DropOutline` materyalli, **scale 1.28** (eski outline denemesinden kalma) 2 ADET ÖKSÜZ mesh sahneye kaydedilmişti. `DestroyImmediate` + save. Karakter oradan geçince siyah blob gibi görünüyordu.
