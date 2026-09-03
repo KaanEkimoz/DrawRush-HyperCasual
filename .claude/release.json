@@ -1,0 +1,13 @@
+{
+  "productName":       "DrawRush",
+  "gameSlug":          "DrawRush",
+  "package":           "com.ekimozgames.drawrush",
+  "playDeveloperId":   "4832328434117186606",
+  "playAppId":         "4973441516329334011",
+  "buildOutputPath":   "Builds/DrawRush_release.aab",
+  "gitBranch":         "master",
+  "gitMirrorBranches": [],
+  "memoryFolder":      "~/.claude/projects/-Users-kaanusta-Unity-Projects-DrawRush/memory",
+  "releaseNotesLocales": ["en-US", "tr-TR"],
+  "managedPublishing": false
+}
