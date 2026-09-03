@@ -26,6 +26,8 @@ namespace DrawRush.Audio
         public Cue lose = new();
         [Tooltip("Player took a hit from an enemy.")]
         public Cue hit = new();
+        [Tooltip("An enemy is destroyed at the end of a level (win or lose).")]
+        public Cue enemyDie = new();
         [Tooltip("Coins awarded.")]
         public Cue coin = new();
         [Tooltip("A UI button was pressed.")]

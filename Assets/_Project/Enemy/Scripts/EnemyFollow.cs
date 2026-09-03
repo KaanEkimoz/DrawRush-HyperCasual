@@ -41,6 +41,7 @@ namespace DrawRush.Enemy
         private const float RetargetInterval = 0.1f;
 
         private NavMeshAgent _agent;
+        private Animator _anim;
         private GameState _state;
         private bool _halted;
         private bool _awake;          // for wakeRadius: has this guardian been roused yet
@@ -59,6 +60,7 @@ namespace DrawRush.Enemy
         private void Awake()
         {
             _agent = GetComponent<NavMeshAgent>();
+            _anim = GetComponentInChildren<Animator>(true);
             _baseSpeed = _agent.speed;
             // Authored position is the spawn point — capture before NavMeshAgent
             // can drift the transform.
@@ -138,15 +140,17 @@ namespace DrawRush.Enemy
 
         private void Update()
         {
-            if (_halted) return;
+            if (_halted) { SetAnimSpeed(0f); return; }
             var player = GameServices.Player;
             if (player == null) return;
             if (_agent == null || !_agent.isActiveAndEnabled || !_agent.isOnNavMesh) return;
 
             // A dormant guardian holds position until the player strays too close, then wakes —
-            // switching from its sleeping colour to its active one so the change is visible.
+            // switching from its sleeping colour to its active one so the change is visible. While
+            // asleep it stands in the Idle pose (speed 0) instead of jogging in place.
             if (!_awake)
             {
+                SetAnimSpeed(0f);
                 float sqr = (player.position - transform.position).sqrMagnitude;
                 if (sqr > wakeRadius * wakeRadius) return;
                 _awake = true;
@@ -156,9 +160,21 @@ namespace DrawRush.Enemy
             // Throttled re-target — SetDestination throws off-mesh (handled above) and is wasteful
             // every frame, so re-plan a few times a second toward the player's current position.
             _retargetTimer -= Time.deltaTime;
-            if (_retargetTimer > 0f) return;
-            _retargetTimer = RetargetInterval;
-            _agent.SetDestination(player.position);
+            if (_retargetTimer <= 0f)
+            {
+                _retargetTimer = RetargetInterval;
+                _agent.SetDestination(player.position);
+            }
+
+            // Drive the run/idle blend by how fast the agent is actually moving, so a blocked or
+            // barely-moving enemy doesn't sprint on the spot.
+            SetAnimSpeed(_agent.velocity.magnitude);
+        }
+
+        // f_speed feeds the Idle<->Run blend in Enemy.controller.
+        private void SetAnimSpeed(float v)
+        {
+            if (_anim != null) _anim.SetFloat(AnimatorIds.Speed, v);
         }
 
         private void OnGameWonChanged(bool won)

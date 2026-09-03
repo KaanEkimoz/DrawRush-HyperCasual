@@ -85,23 +85,37 @@ namespace DrawRush.Core
             if (!autoActivateOnStart)
             {
                 int active = FindActiveLevelIndex();
-                ActivateLevel(active >= 0 ? active : firstLevelIndex);
+                int idx = active >= 0 ? active : firstLevelIndex;
+                if (!RestoreEnemyBudget(idx)) BudgetBootLevel(idx);
+                ActivateLevel(idx);
                 return;
             }
 #endif
             int resume = startLevelIndex >= 0 ? startLevelIndex : ResolveResumeIndex();
-            RestoreEnemyBudget(resume);
+            if (!RestoreEnemyBudget(resume)) BudgetBootLevel(resume);
             ActivateLevel(resume);
+        }
+
+        // A level reached NOT through LevelFlow.NextLevel (the boot level, or a dev-forced one) never
+        // had its enemy count dialled, so it would come up with every authored enemy on. Ask the
+        // curve for the right count — which, for the first level after the tutorial, is zero.
+        private void BudgetBootLevel(int index)
+        {
+            if (index == tutorialLevelIndex) return;   // tutorial has no enemies to budget
+            var flow = FindFirstObjectByType<LevelFlow>();
+            if (flow != null) flow.BudgetLevelForCurve(index);
+            else LevelDifficulty.ApplyEnemyBudget(GetLevel(index), 0);   // no curve available: start gentle
         }
 
         // A level's enemy count is picked per playthrough by LevelFlow rather than baked into the
         // level, so on a relaunch the group would come back with every authored enemy switched on.
         // Re-apply the count the player actually left, and only to the level it was saved for.
-        private void RestoreEnemyBudget(int index)
+        private bool RestoreEnemyBudget(int index)
         {
             int saved = PlayerProgress.LastLevelEnemies;
-            if (saved < 0 || index != PlayerProgress.LastLevelIndex) return;
+            if (saved < 0 || index != PlayerProgress.LastLevelIndex) return false;
             LevelDifficulty.ApplyEnemyBudget(GetLevel(index), saved);
+            return true;
         }
 
         // Where a launching player belongs: the level they last reached, else the tutorial for

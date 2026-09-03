@@ -38,13 +38,9 @@ namespace DrawRush.Enemy
 
         private void OnEnable()
         {
+            // Only needed for the win-guard in OnTriggerEnter; the death animation + VFX + sound are
+            // owned by EnemyDeath, which handles both the win and the lose case.
             _state = GameServices.State;
-            if (_state != null) _state.GameWonChanged += OnGameWonChanged;
-        }
-
-        private void OnDisable()
-        {
-            if (_state != null) _state.GameWonChanged -= OnGameWonChanged;
         }
 
         private void OnTriggerEnter(Collider other)
@@ -78,12 +74,6 @@ namespace DrawRush.Enemy
                 ? damageOverride
                 : (GameServices.Config != null ? GameServices.Config.enemyTouchDamage : 1);
             _playerCombat.TakeDamage(Mathf.Abs(dmg));
-        }
-
-        private void OnGameWonChanged(bool won)
-        {
-            if (!won || enemyAnim == null) return;
-            enemyAnim.SetTrigger(AnimatorIds.EnemyDie);
         }
     }
 }

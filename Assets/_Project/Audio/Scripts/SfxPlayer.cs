@@ -48,6 +48,7 @@ namespace DrawRush.Audio
             PlayerProgress.CoinsChanged += OnCoinsChanged;
             ProceduralWall.Revealed += OnWallRevealed;
             DrawRush.UI.ButtonJuice.Clicked += OnUiClick;
+            DrawRush.Enemy.EnemyDeath.EnemyDied += OnEnemyDied;
         }
 
         private void OnDisable()
@@ -61,6 +62,17 @@ namespace DrawRush.Audio
             PlayerProgress.CoinsChanged -= OnCoinsChanged;
             ProceduralWall.Revealed -= OnWallRevealed;
             DrawRush.UI.ButtonJuice.Clicked -= OnUiClick;
+            DrawRush.Enemy.EnemyDeath.EnemyDied -= OnEnemyDied;
+        }
+
+        // Enemies at the end of a level often die on the same frame; collapse the burst into one
+        // pop so it reads as a single satisfying sound instead of a machine-gun of clips.
+        private float _lastEnemyDie = -1f;
+        private void OnEnemyDied()
+        {
+            if (Time.unscaledTime - _lastEnemyDie < 0.06f) return;
+            _lastEnemyDie = Time.unscaledTime;
+            Play(library != null ? library.enemyDie : null);
         }
 
         private void OnGameWonChanged(bool won) { if (won) Play(library != null ? library.win : null); }

@@ -101,6 +101,24 @@ namespace DrawRush.Core
             levelManager.ActivateLevel(next);
         }
 
+        /// <summary>Apply the enemy budget the difficulty curve wants for the level at
+        /// <paramref name="index"/> at the CURRENT played count, WITHOUT advancing the curve. Used to
+        /// budget the level the game boots directly into (not reached through <see cref="NextLevel"/>),
+        /// which otherwise came up with every authored enemy switched on — so the first level after
+        /// the tutorial works out to zero enemies, the gentle start it was always meant to be.</summary>
+        public void BudgetLevelForCurve(int index)
+        {
+            if (levelManager == null) return;
+            Transform level = levelManager.GetLevel(index);
+            if (level == null) return;
+            int played = PlayerProgress.LevelsPlayed;
+            float target = LevelDifficulty.SawtoothTarget(played, sawPeriod, minTarget, maxTarget, rampLevels);
+            int enemies = LevelDifficulty.EnemyBudget(
+                target, LevelDifficulty.ShapeScore(level), LevelDifficulty.AvailableEnemies(level));
+            LevelDifficulty.ApplyEnemyBudget(level, enemies);
+            PlayerProgress.LastLevelEnemies = enemies;   // persist so a relaunch restores this count
+        }
+
         /// <summary>Kept because scene/prefab UI still references it by name. It used to pick a
         /// uniformly random level, which is what served a 3-enemy star straight after the tutorial;
         /// it now goes through the same curve as everything else.</summary>
