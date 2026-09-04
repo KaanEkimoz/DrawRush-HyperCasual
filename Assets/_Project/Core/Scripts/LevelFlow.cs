@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using DrawRush.Ads;
 
 namespace DrawRush.Core
 {
@@ -22,6 +23,10 @@ namespace DrawRush.Core
 
         [Tooltip("Switcher that enables level groups in the mega-scene.")]
         [SerializeField] private LevelManager levelManager;
+
+        [Tooltip("Optional. Shows an interstitial between levels on its own cadence. Left unset (or " +
+                 "with no ad unit) the game runs ad-free — the hook no-ops.")]
+        [SerializeField] private AdManager ads;
 
         [Header("Difficulty Curve")]
         [Tooltip("Difficulty target for the very first level after the tutorial. Low enough that " +
@@ -52,6 +57,7 @@ namespace DrawRush.Core
             // LevelFlow may be added at runtime by GameManager, so the Inspector
             // wiring can be absent — resolve the scene's LevelManager as a fallback.
             if (levelManager == null) levelManager = FindFirstObjectByType<LevelManager>();
+            if (ads == null) ads = FindFirstObjectByType<AdManager>();
             _bag.CandidatePool = Mathf.Max(1, candidatePool);
             _bag.Deserialize(PlayerProgress.LevelBag);
         }
@@ -78,6 +84,10 @@ namespace DrawRush.Core
             Time.timeScale = 1f;
 
             int played = PlayerProgress.LevelsPlayed;
+            // Ad boundary sits between plays: shown here (as the player advances) it overlays the win
+            // panel while the next level loads underneath, so closing it reveals a ready level. No-ops
+            // unless the cadence lands and an ad is loaded.
+            if (ads != null) ads.MaybeShowInterstitial(played);
             float target = LevelDifficulty.SawtoothTarget(played, sawPeriod, minTarget, maxTarget, rampLevels);
 
             int next = _bag.Draw(target, i => AttainableScore(i, target), DrawableLevels());

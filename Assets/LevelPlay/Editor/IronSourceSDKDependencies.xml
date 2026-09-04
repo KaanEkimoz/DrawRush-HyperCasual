@@ -1,0 +1,21 @@
+<dependencies>
+  <unityversion>9.6.0</unityversion>
+  <androidPackages>
+    <androidPackage spec="com.unity3d.ads-mediation:mediation-sdk:9.6.0">
+    </androidPackage>
+  </androidPackages>
+  <androidPackages>
+    <androidPackage spec="com.google.android.gms:play-services-ads-identifier:18.1.0">
+      <repositories>
+        <repository>https://maven.google.com/</repository>
+      </repositories>
+    </androidPackage>
+  </androidPackages>
+  <iosPods>
+    <iosPod name="IronSourceSDK" version="9.6.0.0">
+      <sources>
+        <source>https://github.com/CocoaPods/Specs</source>
+      </sources>
+    </iosPod>
+  </iosPods>
+</dependencies>

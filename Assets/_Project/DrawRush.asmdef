@@ -5,7 +5,8 @@
         "Unity.TextMeshPro",
         "Unity.InputSystem",
         "Unity.AI.Navigation",
-        "Unity.Cinemachine"
+        "Unity.Cinemachine",
+        "Unity.LevelPlay"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
