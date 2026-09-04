@@ -12,7 +12,8 @@ Play Console'da "reklam var + reklam kimliği toplanıyor" beyan edildi. Şu an
   "Live"e döner). COPPA = **Not directed** (13+, çocuklara yönelik değil).
 - SDK **`com.unity.services.levelplay` 9.5.1** kuruldu + EDM4A (Mobile Dependency
   Resolver) import edildi. Kod: `Assets/_Project/Ads/` (`AdConfig` + `AdManager`),
-  interstitial `LevelFlow.NextLevel`'de her 3 level'de bir gösteriliyor.
+  interstitial `LevelFlow.NextLevel`'de **her 2 yanma VE son reklamdan ≥70 sn**
+  (ikisi de sağlanınca) gösteriliyor — frequency cap. Runtime doğrulandı.
 
 ## ⚠️ İki kritik uyarı (console'da çıktı)
 1. **ironSource Ads direct-demand ağı 30 Nisan 2026'da kapatıldı.** Artık gelir

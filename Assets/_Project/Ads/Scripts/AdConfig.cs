@@ -18,18 +18,24 @@ namespace DrawRush.Ads
         [Tooltip("Ad Unit ID of the Interstitial to show between levels. From the LevelPlay console.")]
         [SerializeField] private string interstitialAdUnitId = "gn5krubs30l4gsgf";
 
-        [Header("Cadence")]
-        [Tooltip("Show an interstitial once every N completed levels (1 = every level). 3 keeps it " +
-                 "unobtrusive for a hyper-casual loop.")]
+        [Header("Cadence (both gates must pass)")]
+        [Tooltip("Show an interstitial at most once every N wins/completed levels (1 = every win). " +
+                 "The ad only shows when this AND the time gate below are both satisfied.")]
         [Min(1)]
-        [SerializeField] private int interstitialEveryNLevels = 3;
+        [SerializeField] private int interstitialEveryNWins = 2;
+
+        [Tooltip("Minimum real seconds between interstitials. Even if the win count is due, an ad is " +
+                 "held back until this long has passed since the last one — a hard frequency cap.")]
+        [Min(0f)]
+        [SerializeField] private float minSecondsBetweenAds = 70f;
 
         [Tooltip("Log init/load/show steps to the console. Handy on device; leave off for release.")]
         [SerializeField] private bool verboseLogging = false;
 
         public string AndroidAppKey => androidAppKey;
         public string InterstitialAdUnitId => interstitialAdUnitId;
-        public int InterstitialEveryNLevels => interstitialEveryNLevels;
+        public int InterstitialEveryNWins => interstitialEveryNWins;
+        public float MinSecondsBetweenAds => minSecondsBetweenAds;
         public bool VerboseLogging => verboseLogging;
     }
 }

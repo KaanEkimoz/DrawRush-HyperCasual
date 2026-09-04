@@ -84,10 +84,11 @@ namespace DrawRush.Core
             Time.timeScale = 1f;
 
             int played = PlayerProgress.LevelsPlayed;
-            // Ad boundary sits between plays: shown here (as the player advances) it overlays the win
-            // panel while the next level loads underneath, so closing it reveals a ready level. No-ops
-            // unless the cadence lands and an ad is loaded.
-            if (ads != null) ads.MaybeShowInterstitial(played);
+            // One win/advance: let the ad layer decide whether to show (it caps by win-count AND a
+            // minimum time gap). Shown here it overlays the win panel while the next level loads
+            // underneath, so closing it reveals a ready level. No-ops unless both gates pass and an
+            // ad is loaded.
+            if (ads != null) ads.MaybeShowInterstitial();
             float target = LevelDifficulty.SawtoothTarget(played, sawPeriod, minTarget, maxTarget, rampLevels);
 
             int next = _bag.Draw(target, i => AttainableScore(i, target), DrawableLevels());

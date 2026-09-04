@@ -17,7 +17,7 @@ Tarih: 2026-09-03 · Sürüm: 1.0.0 (code 1)
 ## 🔴 Gerçek eksikler
 1. ~~Reklam SDK (LevelPlay) entegre DEĞİL~~ → ✅ **ENTEGRE (2026-09-04, commit `0c09d533`)**.
    LevelPlay 9.5.1 + EDM4A, App Key `27f1c2215`, Interstitial `gn5krubs30l4gsgf`,
-   `LevelFlow.NextLevel`'de her 3 level'de bir. Editörde init+load doğrulandı.
+   `LevelFlow.NextLevel`'de **her 2 yanma + ≥70 sn** (frequency cap; runtime doğrulandı).
    **Kalan (senin, cihaz/interaktif):** LevelPlay → Integration Manager'dan adapter'lar
    (Unity Ads vb.) + EDM Android Resolve + cihazda LevelPlay Test Suite ile test +
    ironSource hesabı "pending approval" onayı (gerçek dolgu/gelir onaydan sonra).

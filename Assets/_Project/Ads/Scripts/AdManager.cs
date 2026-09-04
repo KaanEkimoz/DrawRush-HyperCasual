@@ -24,6 +24,9 @@ namespace DrawRush.Ads
         private LevelPlayInterstitialAd _interstitial;
         private bool _initialised;
 
+        private int _winsSinceLastAd;
+        private float _lastShownRealtime = float.NegativeInfinity;  // so the first eligible ad isn't time-gated
+
         private void Start()
         {
             if (config == null)
@@ -75,23 +78,36 @@ namespace DrawRush.Ads
             => Debug.LogWarning($"[Ads] LevelPlay init failed: {error}");
 
         /// <summary>
-        /// Show an interstitial when the cadence lands on an ad boundary and one is ready. Pass the
-        /// number of levels completed so far (i.e. before it is incremented for the level about to
-        /// start), so ads land between plays rather than mid-level.
+        /// Call once per win/level-advance (from <c>LevelFlow.NextLevel</c>). Shows an interstitial only
+        /// when BOTH frequency gates pass: at least <see cref="AdConfig.InterstitialEveryNWins"/> wins
+        /// since the last ad, AND at least <see cref="AdConfig.MinSecondsBetweenAds"/> real seconds since
+        /// the last ad. When only the count is due but the time gate blocks (or no ad is loaded), the
+        /// win tally is kept so the ad shows on a later win once the cooldown clears.
         /// </summary>
-        public void MaybeShowInterstitial(int levelsCompleted)
+        public void MaybeShowInterstitial()
         {
             if (!_initialised || _interstitial == null) return;
 
-            int every = Mathf.Max(1, config.InterstitialEveryNLevels);
-            if (levelsCompleted <= 0 || levelsCompleted % every != 0) return;
+            _winsSinceLastAd++;
+            if (_winsSinceLastAd < Mathf.Max(1, config.InterstitialEveryNWins)) return;
+
+            float sinceLast = Time.realtimeSinceStartup - _lastShownRealtime;
+            if (sinceLast < config.MinSecondsBetweenAds)
+            {
+                if (config.VerboseLogging)
+                    Debug.Log($"[Ads] Win count due but only {sinceLast:F0}s since last ad (need {config.MinSecondsBetweenAds:F0}s) — holding.");
+                return;   // keep the win tally; retry on a later win once the cooldown clears
+            }
 
             if (!_interstitial.IsAdReady())
             {
-                if (config.VerboseLogging) Debug.Log("[Ads] Interstitial not ready — skipping this boundary.");
-                return;
+                if (config.VerboseLogging) Debug.Log("[Ads] Interstitial not loaded yet — skipping, will retry next win.");
+                return;   // keep the tally so we try again as soon as one is loaded
             }
+
             _interstitial.ShowAd();
+            _winsSinceLastAd = 0;
+            _lastShownRealtime = Time.realtimeSinceStartup;
         }
     }
 }

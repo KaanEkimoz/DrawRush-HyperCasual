@@ -14,5 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: DrawRush::DrawRush.Ads.AdConfig
   androidAppKey: 27f1c2215
   interstitialAdUnitId: gn5krubs30l4gsgf
-  interstitialEveryNLevels: 3
+  interstitialEveryNWins: 2
+  minSecondsBetweenAds: 70
   verboseLogging: 0
