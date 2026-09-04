@@ -406,6 +406,8 @@ Kaan ile interaktif polish oturumu. Hepsi master'a `--no-ff` merge + push (her c
 | 21 | **Neighbor-restricted chain** — `DrawPartNeighborGraph` pure helper + `DrawPart.IsNeighborOf` API; `PlayerInteract` mid-chain ve closure check'leri eklendi; auto-wire en yakın 2 komşu (Awake). Köşegen jump'lar reject. 5 EditMode test eklendi. | `f19450f0` |
 | 22 | **Mega-scene** — tüm level'lar tek `Game.unity`'de grup grup; `LevelManager.ActivateLevel` switcher + state reset; `PlayerInteract.ResetChain`; `LevelFlow` LoadScene yerine LevelManager delegate; DrawPart neighbor + WallManager watcher level-group scope'una çekildi; build = Splash + Game. | `8348d330..750b23ca` |
 | 23 | **Sahne reorganizasyonu** (Kaan) — `Game.unity`→`01_DrawRushGame.unity`, `SplashScreen`→`00_SplashScreen`, eski Level'lar→`Scenes/Old/`. Build = 00_+01_. Git rename ile GUID korundu. | `942e3ffb` |
+| 24 | **HUD mute toggle** — `MuteButton.cs` (AudioListener.volume 1↔0 + PlayerPrefs "Muted"), HUD sağ-üstte beyaz daire + hoparlör ikonu. | `20bcf1e5` |
+| 25 | **LevelPlay reklam (ilk monetizasyon)** — `com.unity.services.levelplay` 9.5.1 + EDM4A. App Key `27f1c2215`, Interstitial ad unit `gn5krubs30l4gsgf` (LevelPlay console'da açıldı). `AdConfig` SO + `AdManager` (`__Bootstrap`'te), interstitial `LevelFlow.NextLevel`'de her 3 level'de bir. Editörde init+load doğrulandı. **Kalan (Kaan, cihaz):** Integration Manager adapter'lar + EDM Android Resolve + cihazda Test Suite + ironSource hesap onayı ("pending approval"). Detay: `PlayStore/LEVELPLAY_SETUP.md`. | `0c09d533` |
 
 ---
 
