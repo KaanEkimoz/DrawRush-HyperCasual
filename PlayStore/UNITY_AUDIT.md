@@ -18,10 +18,18 @@ Tarih: 2026-09-03 · Sürüm: 1.0.0 (code 1)
 1. ~~Reklam SDK (LevelPlay) entegre DEĞİL~~ → ✅ **ENTEGRE (2026-09-04, commit `0c09d533`)**.
    LevelPlay 9.5.1 + EDM4A, App Key `27f1c2215`, Interstitial `gn5krubs30l4gsgf`,
    `LevelFlow.NextLevel`'de **her 2 yanma + ≥70 sn** (frequency cap; runtime doğrulandı).
-   **Kalan (senin, cihaz/interaktif):** LevelPlay → Integration Manager'dan adapter'lar
+   ✅ **ironSource hesabı ONAYLANDI** (2026-09-25; "pending approval" banner'ı kalktı,
+   ad unit aktif). **Kalan (senin, cihaz/interaktif):** Integration Manager'dan adapter'lar
    (Unity Ads vb.) + EDM Android Resolve + cihazda LevelPlay Test Suite ile test +
-   ironSource hesabı "pending approval" onayı (gerçek dolgu/gelir onaydan sonra).
+   **payment preferences** gir (geliri almak için).
 2. **AAB henüz build edilmedi** — keystore şifresi (sende) + build gerekiyor.
+
+## ✅ Play Console kurulumu (2026-09-25)
+- **App content 11/11 TAMAM:** Privacy, Sign-in, Ads, Content rating, Target audience,
+  Data safety, Government apps=Hayır, Financial features=yok, Health=yok, App category=
+  **Game/Casual**, Contact=`kaanekimoz@gmail.com` + `https://kaanusta.dev`, Store listing.
+- Dashboard artık **Release** aşamasında; closed-test track **3/5** ("Create a new release" ✓,
+  kalan "Preview & confirm" + "Send for review" → senin yayın kararın).
 
 ## 🟠 Polish eksikleri (blocker değil, ama iyi olur)
 1. ~~Ses/mute butonu YOK~~ → ✅ **EKLENDİ** (HUD'da mute toggle, commit `20bcf1e5`).
