@@ -18,6 +18,14 @@ namespace DrawRush.Ads
         [Tooltip("Ad Unit ID of the Interstitial to show between levels. From the LevelPlay console.")]
         [SerializeField] private string interstitialAdUnitId = "gn5krubs30l4gsgf";
 
+        [Tooltip("Ad Unit ID of the Rewarded video (revive, x2 coins, start with shield). Empty = the " +
+                 "rewarded offers stay hidden. Create it in the LevelPlay console → Ad Units.")]
+        [SerializeField] private string rewardedAdUnitId = "";
+
+        [Tooltip("Editor only: pretend a rewarded ad was watched, so the offer flows can be tested " +
+                 "without a device (ads never fill in the Editor).")]
+        [SerializeField] private bool simulateRewardedInEditor = true;
+
         [Header("Cadence (both gates must pass)")]
         [Tooltip("Show an interstitial at most once every N wins/completed levels (1 = every win). " +
                  "The ad only shows when this AND the time gate below are both satisfied.")]
@@ -34,6 +42,8 @@ namespace DrawRush.Ads
 
         public string AndroidAppKey => androidAppKey;
         public string InterstitialAdUnitId => interstitialAdUnitId;
+        public string RewardedAdUnitId => rewardedAdUnitId;
+        public bool SimulateRewardedInEditor => simulateRewardedInEditor;
         public int InterstitialEveryNWins => interstitialEveryNWins;
         public float MinSecondsBetweenAds => minSecondsBetweenAds;
         public bool VerboseLogging => verboseLogging;
