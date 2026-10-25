@@ -42,6 +42,13 @@ namespace DrawRush.Player
             _initialDuration = _remaining;
         }
 
+        /// <summary>Cancel any push in progress (level switch).</summary>
+        public void Stop()
+        {
+            _remaining = 0f;
+            _velocity = Vector3.zero;
+        }
+
         private void FixedUpdate()
         {
             if (_remaining <= 0f) return;
