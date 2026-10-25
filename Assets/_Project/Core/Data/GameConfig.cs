@@ -16,9 +16,16 @@ namespace DrawRush.Core
         [FormerlySerializedAs("playerSpeed")]
         [SerializeField] private float _playerSpeed = 1.5f;
 
-        [Tooltip("Stick deflection (0 = deadzone edge, 1 = full) → fraction of playerSpeed. " +
-                 "A gentle push walks for precise tracing, a full push runs.")]
-        [SerializeField] private AnimationCurve _speedByDeflection = DefaultSpeedCurve();
+        [Tooltip("Fraction of playerSpeed the player starts at when they begin moving. Speed then " +
+                 "builds up while they keep moving, so the stick never has to be pushed all the way.")]
+        [SerializeField, Range(0.1f, 1f)] private float _startSpeedFactor = 0.55f;
+
+        [Tooltip("Seconds of continuous movement to build up to full speed.")]
+        [SerializeField, Min(0.01f)] private float _speedRampTime = 0.6f;
+
+        [Tooltip("A turn sharper than this (degrees) drops back toward the start speed, so corners " +
+                 "and course corrections stay precise.")]
+        [SerializeField, Range(30f, 180f)] private float _sharpTurnAngle = 100f;
 
         [Tooltip("Seconds from standstill to full speed.")]
         [SerializeField] private float _accelerationTime = 0.08f;
@@ -65,16 +72,15 @@ namespace DrawRush.Core
         public float accelerationTime => _accelerationTime;
         public float decelerationTime => _decelerationTime;
 
-        /// <summary>Fraction of <see cref="playerSpeed"/> for a stick deflection in 0..1.</summary>
-        public float SpeedFactor(float deflection)
-            => Mathf.Clamp01(_speedByDeflection != null && _speedByDeflection.length > 0
-                ? _speedByDeflection.Evaluate(Mathf.Clamp01(deflection))
-                : 1f);
+        public float sharpTurnAngle => _sharpTurnAngle;
 
-        // Walk band up to about half deflection, a short ramp, then a flat run.
-        private static AnimationCurve DefaultSpeedCurve() => new AnimationCurve(
-            new Keyframe(0f, 0.35f, 0f, 0f), new Keyframe(0.5f, 0.45f, 0f, 0f),
-            new Keyframe(0.7f, 1f, 0f, 0f), new Keyframe(1f, 1f, 0f, 0f));
+        /// <summary>Fraction of <see cref="playerSpeed"/> after <paramref name="movingSeconds"/> of
+        /// continuous movement: starts at the start factor and eases up to full speed.</summary>
+        public float SpeedFactor(float movingSeconds)
+        {
+            float k = Mathf.Clamp01(movingSeconds / Mathf.Max(0.01f, _speedRampTime));
+            return Mathf.Lerp(_startSpeedFactor, 1f, k * k * (3f - 2f * k));
+        }
         public int playerStartingHealth => _playerStartingHealth;
         public int enemyTouchDamage => _enemyTouchDamage;
         public float lineWidth => _lineWidth;

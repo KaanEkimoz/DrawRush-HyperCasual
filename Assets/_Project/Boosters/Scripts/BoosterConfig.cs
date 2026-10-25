@@ -23,6 +23,10 @@ namespace DrawRush.Boosters
             public Color color;
             [Tooltip("Relative chance to be picked when a pickup spawns.")]
             public float weight;
+            [Tooltip("Name shown over the pickup and on the HUD (empty = the type name).")]
+            public string title;
+            [Tooltip("One line telling what it does, shown when it is collected.")]
+            public string hint;
         }
 
         [SerializeField] private Entry[] _entries =
@@ -85,6 +89,25 @@ namespace DrawRush.Boosters
         }
 
         public Color ColorOf(BoosterType type) => Get(type).color;
+
+        public string TitleOf(BoosterType type)
+        {
+            string t = Get(type).title;
+            return string.IsNullOrEmpty(t) ? type.ToString().ToUpperInvariant() : t;
+        }
+
+        public string HintOf(BoosterType type)
+        {
+            string h = Get(type).hint;
+            if (!string.IsNullOrEmpty(h)) return h;
+            return type switch
+            {
+                BoosterType.Shield => "Blocks the next hit",
+                BoosterType.Freeze => "Enemies freeze in place",
+                BoosterType.Speed => "You run faster",
+                _ => "Drawing gets easier",
+            };
+        }
 
         /// <summary>Weighted pick; defensive types weigh more when <paramref name="pity"/> is on.</summary>
         public BoosterType Pick(bool pity, Func<float> random01)

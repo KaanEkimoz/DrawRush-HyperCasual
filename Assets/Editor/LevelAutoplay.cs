@@ -31,7 +31,7 @@ public static class LevelAutoplay
     private static EdgeNetwork _network;
     private static Transform _level;
     private static DrawEdge _target;
-    private static float _goalT, _entryT;
+    private static float _goalT, _entryT, _botT;
     private static double _levelStart;
     private static readonly StringBuilder Report = new();
 
@@ -101,8 +101,11 @@ public static class LevelAutoplay
         if (_target == null || _target.IsComplete || !GapStillOpen()) PickTarget(edges, pos);
         if (_target == null) { MoveField.SetValue(_movement, Vector2.zero); return; }
 
-        float tNow = _target.ClosestT(pos, out float dist);
         float len = Mathf.Max(0.01f, _target.Length);
+        // Track progress locally around the last known t: on loop-like edges (flower petals) both
+        // ends sit side by side, and a global nearest-point query flips to the wrong end.
+        float tNow = LocalT(_target, pos, _botT, 1.5f / len, out float dist);
+        _botT = tNow;
         Vector3 aim;
         if (dist > OnLine) aim = _target.PointAt(_entryT);               // walk onto the gap
         else
@@ -143,8 +146,23 @@ public static class LevelAutoplay
                 _target = e;
                 _entryT = d0 <= d1 ? g0 : g1;
                 _goalT = d0 <= d1 ? g1 : g0;
+                _botT = _entryT;
             }
         }
+    }
+
+    // Nearest point on the edge within ±window (t units) of around, by sampling.
+    private static float LocalT(DrawEdge e, Vector3 pos, float around, float window, out float dist)
+    {
+        float best = around, bestSqr = float.PositiveInfinity;
+        for (int i = 0; i <= 30; i++)
+        {
+            float t = Mathf.Clamp01(around + Mathf.Lerp(-window, window, i / 30f));
+            Vector3 d = e.PointAt(t) - pos; d.y = 0f;
+            if (d.sqrMagnitude < bestSqr) { bestSqr = d.sqrMagnitude; best = t; }
+        }
+        dist = Mathf.Sqrt(bestSqr);
+        return best;
     }
 
     // The stretch being walked is still (partly) unpainted around the goal.

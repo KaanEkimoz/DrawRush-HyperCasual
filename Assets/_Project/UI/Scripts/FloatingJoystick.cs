@@ -32,7 +32,10 @@ namespace DrawRush.UI
                  "scaled by (dp-based reach / this) so it matches the real reach.")]
         [SerializeField] private float movementRange = 80f;
         [Tooltip("Max knob travel from center in dp (density-independent pixels). Full deflection = input 1.")]
-        [SerializeField] private float reachDp = 64f;
+        [SerializeField] private float reachDp = 46f;
+        [Tooltip("Ring/knob art size relative to the reach. Below 1 keeps the art smaller than the " +
+                 "thumb travel so the stick does not dominate the screen.")]
+        [SerializeField, Range(0.4f, 1.5f)] private float artScale = 0.75f;
         [Tooltip("Fraction of this rect, from the bottom, where a touch may spawn the stick.")]
         [SerializeField, Range(0.1f, 1f)] private float spawnZoneHeight = 0.45f;
         [Tooltip("Once the thumb is this many reaches from the center, the ring follows it.")]
@@ -85,7 +88,7 @@ namespace DrawRush.UI
                 if ((local.y - r.yMin) / r.height > spawnZoneHeight) return;   // outside the thumb zone
                 _pointerId = eventData.pointerId;
                 _reach = ResolveReach();
-                float art = movementRange > 0f ? _reach / movementRange : 1f;
+                float art = (movementRange > 0f ? _reach / movementRange : 1f) * artScale;
                 background.localScale = _backgroundScale * art;
                 if (handle != null) handle.localScale = _handleScale * art;
                 background.anchoredPosition = local;

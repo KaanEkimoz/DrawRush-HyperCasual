@@ -10,6 +10,7 @@ namespace DrawRush.Boosters
     {
         private BoosterSpawner _owner;
         private Renderer _renderer;
+        private Transform _label;
         private float _born, _lifetime, _blink;
         private Vector3 _basePos;
 
@@ -23,7 +24,8 @@ namespace DrawRush.Boosters
             _blink = blinkSeconds;
             _born = Time.time;
             _basePos = transform.position;
-            _renderer = GetComponentInChildren<Renderer>();
+            _renderer = transform.GetChild(0).GetComponent<Renderer>();
+            _label = transform.Find("Label");
         }
 
         private void Update()
@@ -31,12 +33,15 @@ namespace DrawRush.Boosters
             float age = Time.time - _born;
             if (age >= _lifetime) { _owner.Expired(this); return; }
             transform.position = _basePos + Vector3.up * (0.15f * Mathf.Sin(age * 3f));
-            transform.Rotate(0f, 120f * Time.deltaTime, 0f, Space.World);
             if (_renderer != null)
             {
+                _renderer.transform.Rotate(0f, 120f * Time.deltaTime, 0f, Space.World);   // spin the body, not the label
                 float left = _lifetime - age;
                 _renderer.enabled = left > _blink || Mathf.Repeat(age * 8f, 1f) < 0.6f;
             }
+            // The label faces the camera (the gameplay camera never rotates, so this is cheap).
+            var cam = UnityEngine.Camera.main;
+            if (_label != null && cam != null) _label.rotation = cam.transform.rotation;
         }
 
         private void OnTriggerEnter(Collider other)

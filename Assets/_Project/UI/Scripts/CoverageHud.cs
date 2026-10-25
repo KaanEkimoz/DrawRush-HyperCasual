@@ -19,9 +19,9 @@ namespace DrawRush.UI
         [SerializeField] private Color backColor = new(0f, 0f, 0f, 0.35f);
         [SerializeField] private Color lossColor = new(1f, 0.3f, 0.3f, 1f);
         [Tooltip("Bar size in canvas units.")]
-        [SerializeField] private Vector2 size = new(560f, 34f);
+        [SerializeField] private Vector2 size = new(560f, 40f);
         [Tooltip("Gap below the safe-area top, in canvas units.")]
-        [SerializeField] private float topOffset = 150f;
+        [SerializeField] private float topOffset = 185f;
         [Tooltip("How fast the shown value catches up with the real one (per second).")]
         [SerializeField] private float catchUp = 4f;
 

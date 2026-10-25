@@ -99,12 +99,13 @@ namespace DrawRush.Drawing
             return lost;
         }
 
-        /// <summary>Close gaps shorter than <paramref name="meters"/> along this edge.</summary>
-        public void CloseGaps(float meters)
+        /// <summary>Close gaps shorter than <paramref name="meters"/> along this edge, and slivers
+        /// at either end shorter than <paramref name="endMeters"/> (defaults to the same).</summary>
+        public void CloseGaps(float meters, float endMeters = -1f)
         {
             float len = Length;
             if (len < 0.001f) return;
-            AfterChange(Fill.CloseGaps(meters / len));
+            AfterChange(Fill.CloseGaps(meters / len, (endMeters < 0f ? meters : endMeters) / len));
         }
 
         /// <summary>Paint the whole edge at once (auto-complete, win sweep).</summary>

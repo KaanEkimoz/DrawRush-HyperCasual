@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using DrawRush.Core;
 using DrawRush.Drawing;
 using DrawRush.Enemy;
+using TMPro;
 using UnityEngine;
 
 namespace DrawRush.Boosters
@@ -19,6 +20,10 @@ namespace DrawRush.Boosters
         [Tooltip("Material for pickups (tinted per type through a property block).")]
         [SerializeField] private Material pickupMaterial;
         [SerializeField] private float pickupSize = 0.7f;
+        [Tooltip("Font for the name floating over each pickup.")]
+        [SerializeField] private TMP_FontAsset labelFont;
+        [Tooltip("Material for the soft glowing disc under each pickup (tinted per type).")]
+        [SerializeField] private Material glowMaterial;
         [SerializeField] private float pickupHeight = 0.6f;
 
         private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
@@ -152,6 +157,35 @@ namespace DrawRush.Boosters
             mpb.SetColor(BaseColorId, c);
             mpb.SetColor(ColorId, c);
             r.SetPropertyBlock(mpb);
+
+            // A glowing disc on the ground and the booster's name floating above it, so it reads
+            // as "SHIELD" from across the field rather than as an anonymous shape.
+            var disc = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            Destroy(disc.GetComponent<Collider>());
+            disc.name = "Glow";
+            disc.transform.SetParent(root.transform, false);
+            disc.transform.localPosition = new Vector3(0f, -pickupHeight + 0.03f, 0f);
+            disc.transform.localScale = new Vector3(pickupSize * 2.2f, 0.01f, pickupSize * 2.2f);
+            var dr = disc.GetComponent<Renderer>();
+            if (glowMaterial != null) dr.sharedMaterial = glowMaterial;
+            var dmpb = new MaterialPropertyBlock();
+            var glow = new Color(c.r, c.g, c.b, 0.45f);
+            dmpb.SetColor(BaseColorId, glow);
+            dmpb.SetColor(ColorId, glow);
+            dr.SetPropertyBlock(dmpb);
+            dr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+
+            var labelGo = new GameObject("Label", typeof(TextMeshPro));
+            labelGo.transform.SetParent(root.transform, false);
+            labelGo.transform.localPosition = new Vector3(0f, pickupSize * 1.3f, 0f);
+            var label = labelGo.GetComponent<TextMeshPro>();
+            if (labelFont != null) label.font = labelFont;
+            label.text = Config.TitleOf(type);
+            label.fontSize = 4.5f;
+            label.alignment = TextAlignmentOptions.Center;
+            label.color = Color.white;
+            label.fontStyle = FontStyles.Bold;   // no outlineWidth: it instances the material at runtime
+            label.rectTransform.sizeDelta = new Vector2(6f, 1.5f);
 
             _current = root.AddComponent<BoosterPickup>();
             _current.Init(this, type, Config.PickupLifetime, Config.BlinkSeconds);

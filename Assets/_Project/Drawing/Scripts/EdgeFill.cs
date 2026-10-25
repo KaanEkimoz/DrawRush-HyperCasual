@@ -105,15 +105,17 @@ namespace DrawRush.Drawing
         }
 
         /// <summary>Close unpainted gaps no longer than <paramref name="maxGap"/> (in t units) that
-        /// sit between two painted spans, or between a span and an edge end.</summary>
-        public bool CloseGaps(float maxGap)
+        /// sit between two painted spans, and slivers at either edge end no longer than
+        /// <paramref name="maxEndGap"/> (defaults to <paramref name="maxGap"/>).</summary>
+        public bool CloseGaps(float maxGap, float maxEndGap = -1f)
         {
             ConfirmAll();
-            if (_confirmed.Count == 0 || maxGap <= 0f) return false;
+            if (maxEndGap < 0f) maxEndGap = maxGap;
+            if (_confirmed.Count == 0 || (maxGap <= 0f && maxEndGap <= 0f)) return false;
             bool changed = false;
-            if (_confirmed[0].x > Epsilon && _confirmed[0].x <= maxGap) { _confirmed[0] = new Vector2(0f, _confirmed[0].y); changed = true; }
+            if (_confirmed[0].x > Epsilon && _confirmed[0].x <= maxEndGap) { _confirmed[0] = new Vector2(0f, _confirmed[0].y); changed = true; }
             int last = _confirmed.Count - 1;
-            if (_confirmed[last].y < 1f - Epsilon && 1f - _confirmed[last].y <= maxGap) { _confirmed[last] = new Vector2(_confirmed[last].x, 1f); changed = true; }
+            if (_confirmed[last].y < 1f - Epsilon && 1f - _confirmed[last].y <= maxEndGap) { _confirmed[last] = new Vector2(_confirmed[last].x, 1f); changed = true; }
             for (int i = _confirmed.Count - 2; i >= 0; i--)
             {
                 if (_confirmed[i + 1].x - _confirmed[i].y > maxGap) continue;

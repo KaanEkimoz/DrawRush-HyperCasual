@@ -28,14 +28,15 @@ namespace DrawRush.Tests.EditMode
         }
 
         [Test]
-        public void SpeedFactor_WalksOnAGentlePush_AndRunsOnAFullOne()
+        public void SpeedFactor_StartsSlower_AndBuildsUpToFullWhileMoving()
         {
             var config = ScriptableObject.CreateInstance<GameConfig>();
             try
             {
-                Assert.Less(config.SpeedFactor(0.2f), 0.5f);
-                Assert.AreEqual(1f, config.SpeedFactor(1f), 1e-4f);
-                Assert.LessOrEqual(config.SpeedFactor(0.3f), config.SpeedFactor(0.8f));
+                Assert.AreEqual(0.55f, config.SpeedFactor(0f), 1e-4f);
+                Assert.Less(config.SpeedFactor(0.2f), config.SpeedFactor(0.4f));
+                Assert.AreEqual(1f, config.SpeedFactor(0.6f), 1e-4f);
+                Assert.AreEqual(1f, config.SpeedFactor(5f), 1e-4f);
             }
             finally { Object.DestroyImmediate(config); }
         }

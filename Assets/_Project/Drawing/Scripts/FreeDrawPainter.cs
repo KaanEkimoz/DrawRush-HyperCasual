@@ -13,9 +13,10 @@ namespace DrawRush.Drawing
     /// always looks clean). No rails: the player can leave, dodge and rejoin anywhere.
     ///
     /// Forgiveness, from the redesign research: fresh paint stays PENDING for a moment and only
-    /// an enemy hit in that window can wipe it; an edge that is mostly painted finishes itself;
-    /// tiny gaps close; once the whole shape is about 90% painted the rest is swept in
-    /// automatically and the level is won. Late in a level the band widens a little if the
+    /// an enemy hit in that window can wipe it; an edge painted all but a sliver finishes itself;
+    /// tiny gaps close; once the whole shape is 99% painted the last 1% (a margin of error, Kaan's
+    /// call after playtesting — 90% let levels end with whole edges unpainted) is swept in and the
+    /// level is won. Late in a level the band widens a little if the
     /// player stalls, and the remaining gaps are highlighted.
     /// </summary>
     [DefaultExecutionOrder(-40)]
@@ -34,11 +35,14 @@ namespace DrawRush.Drawing
         [Tooltip("Seconds fresh paint stays wipeable by an enemy hit before it is kept for good.")]
         [SerializeField] private float pendingSeconds = 1.2f;
         [Tooltip("An edge this painted (0-1) completes itself.")]
-        [SerializeField, Range(0.5f, 1f)] private float edgeAutoComplete = 0.85f;
+        [SerializeField, Range(0.5f, 1f)] private float edgeAutoComplete = 0.99f;
         [Tooltip("Unpainted gaps shorter than this (m) close on their own.")]
         [SerializeField] private float microGapMeters = 0.3f;
+        [Tooltip("A sliver this short (m) left at an edge's end closes on its own: it sits under the " +
+                 "corner drop, where the shapes' edges crowd together.")]
+        [SerializeField] private float endGapMeters = 0.6f;
         [Tooltip("Whole-shape coverage (0-1) at which the rest is swept in and the level is won.")]
-        [SerializeField, Range(0.5f, 1f)] private float winCoverage = 0.9f;
+        [SerializeField, Range(0.5f, 1f)] private float winCoverage = 0.99f;
         [Tooltip("Seconds the finishing sweep takes to paint what is left.")]
         [SerializeField] private float sweepSeconds = 0.6f;
 
@@ -156,7 +160,7 @@ namespace DrawRush.Drawing
                 e.ConfirmPendingOlderThan(now - pendingSeconds);
                 if (!e.Fill.HasPending)
                 {
-                    e.CloseGaps(microGapMeters);
+                    e.CloseGaps(microGapMeters, endGapMeters);
                     if (e.Fill.Coverage >= edgeAutoComplete) e.CompleteAll();
                 }
             }

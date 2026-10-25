@@ -36,6 +36,9 @@ namespace DrawRush.Boosters
         /// <summary>Raised whenever the running set changes.</summary>
         public event Action Changed;
 
+        /// <summary>Raised when a booster is collected or granted, for the pickup announcement.</summary>
+        public event Action<BoosterType> Granted;
+
         /// <summary>True if the player took a real hit within the config's pity window.</summary>
         public bool RecentlyHit => config != null && Time.time - _lastHitTime < config.PityWindow;
 
@@ -80,6 +83,7 @@ namespace DrawRush.Boosters
             _active.Add(new Active { Type = type, Ends = Time.time + length, Length = length });
             Begin(type);
             Changed?.Invoke();
+            Granted?.Invoke(type);
         }
 
         private void Update()

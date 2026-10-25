@@ -1,14 +1,12 @@
 using UnityEngine;
-using DrawRush.Core;
-using DrawRush.Player;
 
 namespace DrawRush.Drawing
 {
     /// <summary>
-    /// The tutorial's "you can only slide along this line" sign: a left-right arrow that appears
-    /// over the edge the moment the rail takes hold of the player, and goes away once they have
-    /// drawn it. Touching an anchor takes control of movement away from the stick, which is the
-    /// one moment in the game that needs explaining and never explained itself.
+    /// The tutorial's "walk along this line" sign: a left-right arrow over the one edge left to
+    /// draw, shown from the start and gone once it is drawn. With free drawing there is no rail to
+    /// take hold of the player any more, so the sign no longer waits for one; it simply points at
+    /// the stretch to walk until it is done.
     ///
     /// This lives in the tutorial group, so it exists only while the tutorial is the active level
     /// — no "am I the tutorial?" check anywhere, and nothing to strip later.
@@ -18,7 +16,6 @@ namespace DrawRush.Drawing
     /// floor. That it happens to read left-right across a rail that is horizontal on screen is what
     /// makes the message land.
     /// </summary>
-    [DefaultExecutionOrder(60)]   // after RailPaintController has refreshed its guidance
     public sealed class TutorialRailHint : MonoBehaviour
     {
         [Tooltip("The sign itself. Kept as a child so this component can survive it being off.")]
@@ -34,7 +31,6 @@ namespace DrawRush.Drawing
         [SerializeField] private float fadeSeconds = 0.25f;
 
         private SpriteRenderer _renderer;
-        private RailPaintController _rail;
         private float _shown;
 
         private void OnEnable()
@@ -45,26 +41,13 @@ namespace DrawRush.Drawing
                 _renderer = sign.GetComponentInChildren<SpriteRenderer>(true);
                 sign.SetActive(false);
             }
-            // The player is a shared object that outlives every level, so it cannot be wired in the
-            // inspector from inside a level group — resolve it when the group wakes.
-            _rail = null;
         }
 
         private void LateUpdate()
         {
             if (sign == null) return;
 
-            if (_rail == null)
-            {
-                Transform player = GameServices.Player;
-                if (player == null) return;
-                _rail = player.GetComponent<RailPaintController>();
-                if (_rail == null) return;
-            }
-
-            bool onRail = _rail.TryGetGuidance(out _, out _);
-            bool stillNeeded = !IsEdgeDrawn();
-            bool show = onRail && stillNeeded;
+            bool show = !IsEdgeDrawn();
 
             if (show && !sign.activeSelf) sign.SetActive(true);
             if (!show && sign.activeSelf && _shown <= 0f) sign.SetActive(false);
@@ -80,8 +63,8 @@ namespace DrawRush.Drawing
             if (_shown <= 0f && sign.activeSelf && !show) sign.SetActive(false);
         }
 
-        // Unscaled time above and this check together mean the sign behaves during the 3-2-1
-        // countdown too, when timeScale is 0 and the player is already standing on the rail.
+        // Unscaled time above means the sign is already up during the 3-2-1 countdown, when
+        // timeScale is 0, so the player knows where to go the moment they can move.
         private bool IsEdgeDrawn()
         {
             if (edge == null || network == null || !edge.IsValid) return false;

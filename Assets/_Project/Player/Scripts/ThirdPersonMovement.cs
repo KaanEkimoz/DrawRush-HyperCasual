@@ -28,8 +28,8 @@ namespace DrawRush.Player
         [SerializeField] private float idleArmsBlend = 10f;
 
         // The on-screen stick applies its own radial deadzone and rescales past it, so this only
-        // filters gamepad drift. Deflection beyond it sets the speed through
-        // GameConfig.SpeedFactor: a gentle push walks, a full push runs.
+        // filters gamepad drift. Past it the stick only steers: speed builds up with time spent
+        // moving (GameConfig.SpeedFactor), so it never has to be pushed all the way.
         private const float InputDeadzone = 0.02f;
 
         private PlayerControls _controls;
@@ -37,6 +37,8 @@ namespace DrawRush.Player
         private float _turnSmoothVelocity;
         private Vector3 _velocity = Vector3.zero;
         private Vector3 _planarVelocity = Vector3.zero;
+        private float _movingTime;
+        private Vector3 _lastDirection;
         private CharacterController _characterController;
         private GameState _state;
         private bool _hasWon;
@@ -117,14 +119,23 @@ namespace DrawRush.Player
         {
             float speed = ResolveSpeed();
             Vector3 target = Vector3.zero;
-            float deflection = _move.magnitude;
-            if (deflection >= InputDeadzone)
+            if (_move.magnitude < InputDeadzone) { _movingTime = 0f; _lastDirection = Vector3.zero; }
+            else
             {
                 var camera = GameServices.MainCamera;
                 float cameraY = camera != null ? camera.eulerAngles.y : 0f;
                 var direction = new Vector3(_move.x, 0f, _move.y).normalized;
                 float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cameraY;
-                target = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward * (speed * SpeedFactor(deflection) * SpeedMultiplier);
+                Vector3 heading = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
+
+                // Build speed while moving; a sharp turn falls back toward the start speed. The
+                // reference heading trails the stick by ~0.1 s so a quick thumb sweep still counts.
+                float sharp = GameServices.Config != null ? GameServices.Config.sharpTurnAngle : 100f;
+                if (_lastDirection == Vector3.zero) _lastDirection = heading;
+                if (Vector3.Angle(_lastDirection, heading) > sharp) { _movingTime = 0f; _lastDirection = heading; }
+                _movingTime += Time.deltaTime;
+                _lastDirection = Vector3.Slerp(_lastDirection, heading, 1f - Mathf.Exp(-10f * Time.deltaTime));
+                target = heading * (speed * SpeedFactor(_movingTime) * SpeedMultiplier);
 
                 // Only the model's facing is smoothed; the velocity below follows the stick.
                 float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref _turnSmoothVelocity, ResolveTurnSmoothTime());
@@ -139,8 +150,8 @@ namespace DrawRush.Player
             if (_planarVelocity.sqrMagnitude > 0f) _characterController.Move(_planarVelocity * Time.deltaTime);
         }
 
-        private float SpeedFactor(float deflection)
-            => GameServices.Config != null ? GameServices.Config.SpeedFactor(deflection) : 1f;
+        private float SpeedFactor(float movingSeconds)
+            => GameServices.Config != null ? GameServices.Config.SpeedFactor(movingSeconds) : 1f;
 
         private float ResolveAccelerationTime() => GameServices.Config != null ? GameServices.Config.accelerationTime : 0.08f;
         private float ResolveDecelerationTime() => GameServices.Config != null ? GameServices.Config.decelerationTime : 0.05f;
