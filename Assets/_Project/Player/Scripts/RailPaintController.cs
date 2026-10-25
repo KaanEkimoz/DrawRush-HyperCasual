@@ -39,6 +39,11 @@ namespace DrawRush.Player
                  "release the stick right at the end).")]
         [SerializeField] private float arrivalDistance = 0.6f;
 
+        [Tooltip("How far (world units) the player must have painted away from the start drop " +
+                 "before sliding back onto it lets them off the rail. The guard keeps the drop from " +
+                 "becoming a free in-and-out escape hatch: wiggling inside the drop never releases.")]
+        [SerializeField] private float escapeArmDistance = 1f;
+
         [Tooltip("Degrees per second the player turns to face the edge that still needs painting " +
                  "while anchored and undecided. Snapping instantly reads as a glitch.")]
         [SerializeField] private float aimTurnSpeed = 540f;
@@ -60,6 +65,7 @@ namespace DrawRush.Player
         private DrawPart _targetPart;
         private DrawEdge _edge;
         private float _localT;          // 0 = at current anchor, 1 = at target anchor
+        private float _farthestAlong;   // world units painted away from the start drop on this edge
         private bool _detached;
         private readonly List<DrawEdge> _edgeBuffer = new();
 
@@ -116,6 +122,7 @@ namespace DrawRush.Player
             _targetPart = null;
             _currentPart = null;
             _localT = 0f;
+            _farthestAlong = 0f;
             _guidance = Vector3.zero;
             if (movement != null) movement.MovementLocked = false;
         }
@@ -148,6 +155,7 @@ namespace DrawRush.Player
             _targetPart = null;
             _edge = null;
             _localT = 0f;
+            _farthestAlong = 0f;
             _detached = false;
             if (_network == null || !_network.isActiveAndEnabled) _network = ResolveNetwork(part);
         }
@@ -239,6 +247,17 @@ namespace DrawRush.Player
                 ? railSpeed
                 : (GameServices.Config != null ? GameServices.Config.playerSpeed : 2.7f);
             _localT = Mathf.Clamp01(_localT + along * speed * Time.deltaTime / len);   // arc-length normalized
+            _farthestAlong = Mathf.Max(_farthestAlong, _localT * len);
+
+            // Backed all the way onto the start drop after really leaving it → step off the rail
+            // (Kaan: mid-edge, an enemy closes in, you retreat to the drop and run). The paint is
+            // kept. Only armed once the player got escapeArmDistance away, so hovering inside the
+            // drop can't toggle on/off — there it still just re-picks an edge as before.
+            if (along < 0f && _localT <= 0f && _farthestAlong >= escapeArmDistance)
+            {
+                Detach();
+                return;
+            }
 
             float edgeT = _currentPart == _edge.A ? _localT : 1f - _localT;
             _edge.PaintFrom(_currentPart, edgeT);
@@ -341,6 +360,7 @@ namespace DrawRush.Player
             _edge = best;
             _targetPart = bestTarget;
             _localT = 0f;
+            _farthestAlong = 0f;
             return true;
         }
 
