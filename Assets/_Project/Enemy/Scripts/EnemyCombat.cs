@@ -25,7 +25,6 @@ namespace DrawRush.Enemy
         [SerializeField] private float knockbackForce = 9f;
 
         private PlayerCombat _playerCombat;
-        private RailPaintController _railPaint;
         private GameState _state;
 
         private void Awake()
@@ -49,13 +48,9 @@ namespace DrawRush.Enemy
             if (_state != null && _state.IsGameWon) return;
 
             // During the post-hit invulnerability window the player is intangible to enemies:
-            // no damage, no knockback, no rail detach — contact does nothing at all.
+            // no damage, no knockback — contact does nothing at all.
             if (_playerCombat == null) _playerCombat = other.GetComponent<PlayerCombat>();
             if (_playerCombat != null && _playerCombat.IsInvulnerable) return;
-
-            // Contact frees the player from the paint rail so they can flee.
-            if (_railPaint == null) _railPaint = other.GetComponent<RailPaintController>();
-            if (_railPaint != null) _railPaint.Detach();
 
             // Knock the player away from the enemy along the horizontal contact direction.
             if (knockbackForce > 0f)

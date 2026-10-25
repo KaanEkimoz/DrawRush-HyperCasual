@@ -239,7 +239,7 @@ public class ShowcaseDirector : MonoBehaviour
     {
         // Deactivate ONLY the Player GameObject (child of ===SHARED===) — NOT transform.root,
         // which is ===SHARED=== itself and would also kill LevelManager/Camera.
-        var rpc = FindByTypeName("RailPaintController") as Component;
+        var rpc = FindByTypeName("ThirdPersonMovement") as Component;
         if (rpc != null) rpc.gameObject.SetActive(false);
     }
 

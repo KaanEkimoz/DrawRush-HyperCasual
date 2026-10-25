@@ -7,7 +7,7 @@ namespace DrawRush.Player
     /// world-space direction and a force; this controller then slides the
     /// CharacterController along that vector for <see cref="knockbackDuration"/> seconds
     /// with linear decay (force at start, 0 at end). While <see cref="IsActive"/> is true,
-    /// ThirdPersonMovement and RailPaintController yield so this script owns the movement.
+    /// ThirdPersonMovement yields so this script owns the movement.
     ///
     /// Runs before the other movement controllers so its Move() lands before they'd try
     /// to apply theirs in the same physics step.

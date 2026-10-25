@@ -44,16 +44,13 @@ namespace DrawRush.Player
         private bool _hasWon;
         private int _idleStateHash;
 
-        /// <summary>Latest movement input vector. Exposed so RailPaintController can reuse
+        /// <summary>Latest movement input vector. Exposed so other systems can reuse
         /// the same input source while it drives edge-constrained movement.</summary>
         public Vector2 MoveInput => _move;
 
         /// <summary>Speed multiple from boosters (1 = none).</summary>
         public float SpeedMultiplier { get; set; } = 1f;
 
-        /// <summary>When true, free movement is suspended (rail-drawing owns the player).
-        /// Gravity still applies so the character stays grounded.</summary>
-        public bool MovementLocked { get; set; }
 
         private void Awake()
         {
@@ -102,17 +99,11 @@ namespace DrawRush.Player
             // Yield to PlayerKnockback while it's pushing the player away from an enemy;
             // gravity still applies so the character stays grounded.
             if (knockback != null && knockback.IsActive) { _planarVelocity = Vector3.zero; ApplyGravity(); return; }
-            if (MovementLocked) _planarVelocity = Vector3.zero;
-            else Move();
+            Move();
             ApplyGravity();
-            // Drive the Run ↔ Idle blend. RailPaintController locks movement while sliding, but
-            // the player is still actively moving on the rail, so report the stick there; in
-            // free movement report the real speed so a walk animates slower than a run.
+            // Drive the Run ↔ Idle blend from the real speed, so the build-up animates too.
             if (playerAnim != null)
-            {
-                float speed01 = MovementLocked ? _move.magnitude : _planarVelocity.magnitude / Mathf.Max(0.01f, ResolveSpeed());
-                playerAnim.SetFloat(AnimatorIds.Speed, speed01);
-            }
+                playerAnim.SetFloat(AnimatorIds.Speed, _planarVelocity.magnitude / Mathf.Max(0.01f, ResolveSpeed()));
         }
 
         private void Move()
