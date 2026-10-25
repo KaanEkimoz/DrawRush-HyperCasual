@@ -13,12 +13,54 @@ MonoBehaviour:
   m_Name: GameConfig
   m_EditorClassIdentifier: Studios208.DrawRush::Studios208.DrawRush.Core.GameConfig
   _playerSpeed: 2.7
-  _turnSmoothTime: 0.1
+  _speedByDeflection:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0.35
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.5
+      value: 0.45
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.7
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  _accelerationTime: 0.08
+  _decelerationTime: 0.05
+  _turnSmoothTime: 0.05
   _gravity: -9.81
+  _targetFrameRate: 60
   _playerStartingHealth: 3
   _enemyTouchDamage: 1
-  _lineDestroyDelay: 2
   _lineWidth: 0.4
-  _trailCatchUpLerp: 100
   _gameWonDelay: 3
-  _splashWaitSeconds: 2.1

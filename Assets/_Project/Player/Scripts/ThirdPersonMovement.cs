@@ -27,14 +27,16 @@ namespace DrawRush.Player
         [SerializeField] private int idleArmsLayer = 1;
         [SerializeField] private float idleArmsBlend = 10f;
 
-        // Minimum raw stick deflection that counts as input. Direction is normalised afterwards,
-        // so anything past this moves at the SAME speed — the stick steers, it never throttles.
-        private const float InputDeadzone = 0.1f;
+        // The on-screen stick applies its own radial deadzone and rescales past it, so this only
+        // filters gamepad drift. Deflection beyond it sets the speed through
+        // GameConfig.SpeedFactor: a gentle push walks, a full push runs.
+        private const float InputDeadzone = 0.02f;
 
         private PlayerControls _controls;
         private Vector2 _move;
         private float _turnSmoothVelocity;
         private Vector3 _velocity = Vector3.zero;
+        private Vector3 _planarVelocity = Vector3.zero;
         private CharacterController _characterController;
         private GameState _state;
         private bool _hasWon;
@@ -94,35 +96,51 @@ namespace DrawRush.Player
             if (_hasWon) return;
             // Yield to PlayerKnockback while it's pushing the player away from an enemy;
             // gravity still applies so the character stays grounded.
-            if (knockback != null && knockback.IsActive) { ApplyGravity(); return; }
-            if (!MovementLocked) Move();
+            if (knockback != null && knockback.IsActive) { _planarVelocity = Vector3.zero; ApplyGravity(); return; }
+            if (MovementLocked) _planarVelocity = Vector3.zero;
+            else Move();
             ApplyGravity();
-            // Drive the Run ↔ Idle blend from input magnitude. RailPaintController locks
-            // movement while sliding, but the player is still actively moving on the rail —
-            // report the rail's input so the run anim stays active.
-            if (playerAnim != null) playerAnim.SetFloat(AnimatorIds.Speed, _move.magnitude);
+            // Drive the Run ↔ Idle blend. RailPaintController locks movement while sliding, but
+            // the player is still actively moving on the rail, so report the stick there; in
+            // free movement report the real speed so a walk animates slower than a run.
+            if (playerAnim != null)
+            {
+                float speed01 = MovementLocked ? _move.magnitude : _planarVelocity.magnitude / Mathf.Max(0.01f, ResolveSpeed());
+                playerAnim.SetFloat(AnimatorIds.Speed, speed01);
+            }
         }
 
         private void Move()
         {
-            // Dead-zone the RAW stick, then normalise. The check used to run on the already
-            // normalised vector, whose magnitude is only ever 1 or 0 — so it gated nothing and
-            // the faintest touch or stick drift launched the player at full speed.
-            if (_move.sqrMagnitude < InputDeadzone * InputDeadzone) return;
-            var direction = new Vector3(_move.x, 0f, _move.y).normalized;
-
-            var camera = GameServices.MainCamera;
-            float cameraY = camera != null ? camera.eulerAngles.y : 0f;
             float speed = ResolveSpeed();
-            float turn = ResolveTurnSmoothTime();
+            Vector3 target = Vector3.zero;
+            float deflection = _move.magnitude;
+            if (deflection >= InputDeadzone)
+            {
+                var camera = GameServices.MainCamera;
+                float cameraY = camera != null ? camera.eulerAngles.y : 0f;
+                var direction = new Vector3(_move.x, 0f, _move.y).normalized;
+                float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cameraY;
+                target = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward * (speed * SpeedFactor(deflection));
 
-            float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cameraY;
-            float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref _turnSmoothVelocity, turn);
-            transform.rotation = Quaternion.Euler(0f, angle, 0f);
+                // Only the model's facing is smoothed; the velocity below follows the stick.
+                float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref _turnSmoothVelocity, ResolveTurnSmoothTime());
+                transform.rotation = Quaternion.Euler(0f, angle, 0f);
+            }
 
-            var moveDirection = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
-            _characterController.Move(moveDirection.normalized * (speed * Time.deltaTime));
+            // Short ramps instead of instant on/off: full speed in accelerationTime, a stop in
+            // decelerationTime. Short enough to read as instant, long enough to kill the jolt.
+            bool stopping = target.sqrMagnitude < 0.0001f;
+            float rampTime = Mathf.Max(0.001f, stopping ? ResolveDecelerationTime() : ResolveAccelerationTime());
+            _planarVelocity = Vector3.MoveTowards(_planarVelocity, target, speed / rampTime * Time.deltaTime);
+            if (_planarVelocity.sqrMagnitude > 0f) _characterController.Move(_planarVelocity * Time.deltaTime);
         }
+
+        private float SpeedFactor(float deflection)
+            => GameServices.Config != null ? GameServices.Config.SpeedFactor(deflection) : 1f;
+
+        private float ResolveAccelerationTime() => GameServices.Config != null ? GameServices.Config.accelerationTime : 0.08f;
+        private float ResolveDecelerationTime() => GameServices.Config != null ? GameServices.Config.decelerationTime : 0.05f;
 
         private void ApplyGravity()
         {

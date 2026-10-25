@@ -317,6 +317,8 @@ namespace DrawRush.Player
             float speed = railSpeed > 0f
                 ? railSpeed
                 : (GameServices.Config != null ? GameServices.Config.playerSpeed : 2.7f);
+            // Same analog feel as free movement: a gentle push paints slowly and precisely.
+            if (GameServices.Config != null) speed *= GameServices.Config.SpeedFactor(movement.MoveInput.magnitude);
             _localT = Mathf.Clamp01(_localT + along * speed * Time.deltaTime / len);   // arc-length normalized
             _farthestAlong = Mathf.Max(_farthestAlong, _localT * len);
 
