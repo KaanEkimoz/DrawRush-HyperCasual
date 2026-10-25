@@ -5,6 +5,19 @@
 
 ---
 
+## 🎮 KONTROL + KAMERA PROTOTİPİ (2026-10-26) — PLAN, Kaan "yap" demeden BAŞLAMA
+Kaynak: `reports/Draw Rush yeniden tasarım araştırması.md` (worktree game-issues-list-8d2b00). Dal: `claude-dev-feat-controls` (master'dan, main checkout). Raylar bu prototipte KALIYOR; serbest çizim sonraki aşama.
+- **Mevcut durum (kod):** `FloatingJoystick` zaten var (dokunulan yerde açılır) ama follow yok, deadzone yok, `movementRange` 80 canvas birimi. `ThirdPersonMovement` her sapmada sabit `playerSpeed` 2.7 (normalize ediyor), dönüş 0.1 s, hareket FixedUpdate'te. Kamera ayarı okunmadı (Unity kapalıydı).
+- **0 Ölçüm (0.5 g):** vcam body/binding mode (karakterle dönüyor mu?), FOV, offset, damping, CanvasScaler; seviye 1-5 elle süre + vuruş sayısı; video.
+- **1 Kamera (1 g):** yaw sabit, pitch ~55°, FOV ~35, Framing Transposer + TargetGroup, lookahead 0; ayarlar yeni `CameraConfig` SO (`_Project/Camera/`).
+- **2 Joystick (1 g):** follow (parmak yarıçapı aşınca taban kayar), spawn alanı alt %45 safe area, yarıçap dp ile (60-75 dp), radyal deadzone 0.1 + yeniden ölçek, tek pointerId, alfa %40.
+- **3 Hareket (1 g):** analog hız eğrisi (GameConfig AnimationCurve: hafif itiş yürüme, tam itiş koşu), ivme 0.08 s / fren 0.05 s, yön anında, model dönüşü 0.05 s; Update vs FixedUpdate titremesini kontrol et; anim hızı gerçek hıza bağlı.
+- **4 Tehdit kamerası (1 g):** `ThreatFramer`: en yakın 3 düşman (6 m gir / 8 m çık histerezis, min 1 s tutma) TargetGroup'a ağırlık rampasıyla; Dolly Only, max mesafe tabanın 1.5 katı, damping ~0.6 s. Düşman listesi runtime-set SO (singleton yok).
+- **5 Ekran dışı ok (0.5 g):** havuzlu 4 ok, safe area kenarına clamp, mesafeye göre alfa, görünürken gizle.
+- **6 Test (1 g):** dev ayar paneli (yalnız Development build), EditMode testleri (eğri, deadzone, kenar clamp), autoplay 34/34, dev APK ile Kaan + iki testçi; kriter: "istediğin yöne kaçabildin mi", görünmeyen düşmandan vuruş, 1-5 süre kıyası, düşük cihazda 60 fps.
+
+---
+
 ## 🚀 1.1.0 (versionCode 5) CANLIDA — "Available on Google Play", 25 Eki 2026 16:40 (178 ülke)
 - Feedback dalı master'a `--no-ff` merge (`0a11cae7`, commit-tree ile — Unity açıkken dosyalar oynamadı), bump `44d8ceb2`, ikisi de push'lu.
 - İmzalı AAB `Builds/DrawRush_release.aab` 55.4MB (yayın anahtarı, O=Ekimoz Games doğrulandı). Console önizleme: **cihaz kaybı 0** (11.021 telefon), yeni kurulum **38.4MB (−13.2MB)**, güncelleme 29.8MB. 2 standart uyarı (deobfuscation / native symbols).
