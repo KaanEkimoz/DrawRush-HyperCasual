@@ -27,15 +27,16 @@ namespace DrawRush.Core
             return 1;                            // cleared it, barely
         }
 
-        /// <summary>Coins for a clear at <paramref name="stars"/>. A 3-star clear pays well over
-        /// three times a 1-star, so replaying for the top rating is the fast way to earn.</summary>
+        /// <summary>Coins for a clear at <paramref name="stars"/>. A 3-star clear pays over three
+        /// times a 1-star, so replaying for the top rating is the fast way to earn. Cut ~40% from
+        /// 10/20/35 after launch (Kaan: the shop filled up too fast).</summary>
         public static int CoinsForStars(int stars)
         {
             switch (Mathf.Clamp(stars, 1, 3))
             {
-                case 3: return 35;
-                case 2: return 20;
-                default: return 10;
+                case 3: return 20;
+                case 2: return 12;
+                default: return 6;
             }
         }
     }
