@@ -44,6 +44,7 @@ namespace DrawRush.Player
         private int[] _colorProp;          // BaseColorId, ColorId, or 0 (none)
         private Vector3 _baseScale;
         private bool _playing;
+        private int _runId;   // bumped by Stop() so an in-flight pulse knows it was cancelled
 
         private void Awake()
         {
@@ -77,11 +78,12 @@ namespace DrawRush.Player
         private async Awaitable RunAsync()
         {
             _playing = true;
+            int run = ++_runId;
             float t = 0f;
             float total = Mathf.Max(flashDuration, punchDuration);
             try
             {
-                while (t < total)
+                while (t < total && run == _runId)
                 {
                     t += Time.deltaTime;
 
@@ -109,9 +111,12 @@ namespace DrawRush.Player
             catch (System.OperationCanceledException) { }
             finally
             {
-                ApplyColor(0f);
-                if (punchTarget != null) punchTarget.localScale = _baseScale;
-                _playing = false;
+                if (run == _runId)   // a cancelled run must not clobber a newer one
+                {
+                    ApplyColor(0f);
+                    if (punchTarget != null) punchTarget.localScale = _baseScale;
+                    _playing = false;
+                }
             }
         }
 
@@ -125,6 +130,13 @@ namespace DrawRush.Player
                 _mpb.SetColor(_colorProp[i], Color.Lerp(_baseColors[i], flashColor, amount));
                 _renderers[i].SetPropertyBlock(_mpb);
             }
+        }
+
+        /// <summary>Cut a running flash/squash short and restore the normal look.</summary>
+        public void Stop()
+        {
+            _runId++;
+            OnDisable();
         }
 
         // If the player is disabled mid-pulse (level switch), don't leave it red/shrunk.

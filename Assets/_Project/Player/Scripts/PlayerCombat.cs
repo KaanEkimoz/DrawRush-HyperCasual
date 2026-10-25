@@ -62,6 +62,17 @@ namespace DrawRush.Player
             _invulnerableUntil = Time.time + invulnerabilityDuration;
         }
 
+        /// <summary>Fresh-level reset: drop the post-hit invulnerability window and any running
+        /// hit juice/knockback. The window is measured in scaled time, and the level-start countdown
+        /// freezes time — so a hit taken just before dying/advancing used to carry its full 3 s of
+        /// blinking, untouchable player into the next level.</summary>
+        public void ResetForLevel()
+        {
+            _invulnerableUntil = 0f;
+            if (hitFeedback != null) hitFeedback.Stop();
+            GetComponent<PlayerKnockback>()?.Stop();
+        }
+
         /// <summary>Applies positive healing to the bound PlayerHealth asset.</summary>
         public void Heal(int amount)
         {

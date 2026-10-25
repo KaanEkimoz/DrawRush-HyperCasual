@@ -1,0 +1,117 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d2398bd7eeeb94e95a861481d0554591, type: 3}
+  m_Name: ShapeCollection
+  m_EditorClassIdentifier: DrawRush::DrawRush.Collection.ShapeCollection
+  entries:
+  - levelIndex: 1
+    displayName: Square
+    illustration: {fileID: 21300000, guid: 54cd31868ba38473ea7acfb3146d494c, type: 3}
+  - levelIndex: 2
+    displayName: Triangle
+    illustration: {fileID: 21300000, guid: 0a65a22e6ba7145ffb59bdf4184d5934, type: 3}
+  - levelIndex: 3
+    displayName: Hexagon
+    illustration: {fileID: 21300000, guid: dcff920b224f746c48262a3926c39f41, type: 3}
+  - levelIndex: 4
+    displayName: Circle
+    illustration: {fileID: 21300000, guid: 03d8a83ad152b4d47a2039a7951357f4, type: 3}
+  - levelIndex: 5
+    displayName: Pentagon
+    illustration: {fileID: 21300000, guid: 7fbf1bef1e5604728806345898b9e39a, type: 3}
+  - levelIndex: 6
+    displayName: Tile
+    illustration: {fileID: 21300000, guid: 016d591e2d1f44f68ba7470502c9e14f, type: 3}
+  - levelIndex: 7
+    displayName: Heptagon
+    illustration: {fileID: 21300000, guid: c89ac5fada7ae4883a987bc9f65adffd, type: 3}
+  - levelIndex: 8
+    displayName: Octagon
+    illustration: {fileID: 21300000, guid: 46e39b8c371074e12b8ccf7ace5b7556, type: 3}
+  - levelIndex: 9
+    displayName: Kite
+    illustration: {fileID: 21300000, guid: c3b4b42911f2649dabb90d0ea24ac8eb, type: 3}
+  - levelIndex: 10
+    displayName: Oval
+    illustration: {fileID: 21300000, guid: e3a6d605532b844d39ac70a84352a608, type: 3}
+  - levelIndex: 11
+    displayName: Bubble
+    illustration: {fileID: 21300000, guid: 2b2748e2dc46446e79f766c86bc560cd, type: 3}
+  - levelIndex: 12
+    displayName: Star
+    illustration: {fileID: 21300000, guid: b0262e0bc5fca4dedb0745185c79fcdf, type: 3}
+  - levelIndex: 13
+    displayName: Plus
+    illustration: {fileID: 21300000, guid: aa8a4a30afe6845c6bed18196c0787ac, type: 3}
+  - levelIndex: 14
+    displayName: Gem
+    illustration: {fileID: 21300000, guid: f1288b94ad91242bea013e8a1d6337ea, type: 3}
+  - levelIndex: 15
+    displayName: Hexagram
+    illustration: {fileID: 21300000, guid: 8aec770ab6f994f00a556e92abd82384, type: 3}
+  - levelIndex: 16
+    displayName: Heart
+    illustration: {fileID: 21300000, guid: fd6e2a88f2c1546b68ff3ae4f916996c, type: 3}
+  - levelIndex: 17
+    displayName: Moon
+    illustration: {fileID: 21300000, guid: 13e76443fba224ff4b587e075aaaaa2c, type: 3}
+  - levelIndex: 18
+    displayName: Diamond
+    illustration: {fileID: 21300000, guid: f4071085f7e484884b1971092a10cdfd, type: 3}
+  - levelIndex: 19
+    displayName: Arrow
+    illustration: {fileID: 21300000, guid: 732258d10c20542aea2421d30bfb6cc9, type: 3}
+  - levelIndex: 20
+    displayName: Drop
+    illustration: {fileID: 21300000, guid: 4c90808929e6a4c59a18bccffed9c54e, type: 3}
+  - levelIndex: 21
+    displayName: Lightning
+    illustration: {fileID: 21300000, guid: 92d0652a14d49456b899127164446aad, type: 3}
+  - levelIndex: 22
+    displayName: Shield
+    illustration: {fileID: 21300000, guid: 1ad6e792d5d52499a8266a91ca3a59e0, type: 3}
+  - levelIndex: 23
+    displayName: Flower
+    illustration: {fileID: 21300000, guid: a839ee4dbf17b45df936caea41b089c7, type: 3}
+  - levelIndex: 24
+    displayName: Clover
+    illustration: {fileID: 21300000, guid: fc3c689b2adbb4522a6d5960a7cc67a8, type: 3}
+  - levelIndex: 25
+    displayName: Smiley
+    illustration: {fileID: 21300000, guid: 93c9d1bd45a9b4967b1361676b27b54f, type: 3}
+  - levelIndex: 26
+    displayName: Grin
+    illustration: {fileID: 21300000, guid: 11d36f5c8bf7b4563b588db65ae269da, type: 3}
+  - levelIndex: 27
+    displayName: Sad Face
+    illustration: {fileID: 21300000, guid: b4c0fa229ad27425d8881f86b3e70172, type: 3}
+  - levelIndex: 28
+    displayName: Wow Face
+    illustration: {fileID: 21300000, guid: 79d5ed7a8de8846f2beed599ca205f8e, type: 3}
+  - levelIndex: 29
+    displayName: Lemon
+    illustration: {fileID: 21300000, guid: 8fc5ec4eb674b40d895f6d97cef738d9, type: 3}
+  - levelIndex: 30
+    displayName: Banana
+    illustration: {fileID: 21300000, guid: 5fad394cd4f6646b59e12d48ebcde542, type: 3}
+  - levelIndex: 31
+    displayName: Pear
+    illustration: {fileID: 21300000, guid: d06aa2f88f50d462f8fd4bbfc5d9d690, type: 3}
+  - levelIndex: 32
+    displayName: Apple
+    illustration: {fileID: 21300000, guid: 2251ca5c6f8b044efa995c7919c8ad8f, type: 3}
+  - levelIndex: 33
+    displayName: Watermelon
+    illustration: {fileID: 21300000, guid: a80b640a86f6e440db2bf3f3ea1a01bc, type: 3}
+  - levelIndex: 34
+    displayName: Cherries
+    illustration: {fileID: 21300000, guid: ab2c847cf7b274ab08aebe3c205f63fc, type: 3}

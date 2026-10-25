@@ -116,7 +116,8 @@ namespace DrawRush.Drawing
         /// call-site compatibility.</summary>
         public Color WallColor(Color fallback) => wallColor;
 
-        /// <summary>Material for a corner cap to match the wall. May be null (generated).</summary>
-        public Material WallMaterial() => wallMaterial;
+        /// <summary>Material for a corner cap to match the wall: the author's material, else the
+        /// wall's build-safe fallback. Null only when neither is wired.</summary>
+        public Material WallMaterial() => wallMaterial != null ? wallMaterial : Wall?.ResolveFallbackMaterial();
     }
 }

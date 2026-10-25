@@ -14,6 +14,7 @@ namespace DrawRush.Drawing
         private Vector3 _shown;
         private Vector3 _hidden;
         private bool _revealed;
+        private Renderer _renderer;
 
         /// <summary>Capture the shown position and drop the post below ground (hidden state).</summary>
         public void Init(float riseSeconds, float sinkDepth)
@@ -23,6 +24,11 @@ namespace DrawRush.Drawing
             _hidden = _shown + Vector3.down * Mathf.Max(0.1f, sinkDepth);
             transform.localPosition = _hidden;
             _revealed = false;
+            // Sinking alone isn't enough: the visible ground sits ~0.45 below the posts' base, so a
+            // "hidden" post still poked its top out of the grass as a square at every corner before
+            // anything was painted. Stay invisible until the post actually rises.
+            _renderer ??= GetComponent<Renderer>();
+            if (_renderer != null) _renderer.enabled = false;
         }
 
         /// <summary>Rise into view. Idempotent.</summary>
@@ -30,6 +36,7 @@ namespace DrawRush.Drawing
         {
             if (_revealed) return;
             _revealed = true;
+            if (_renderer != null) _renderer.enabled = true;
             _ = RiseAsync();
         }
 

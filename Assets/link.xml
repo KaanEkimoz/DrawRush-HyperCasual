@@ -1,0 +1,12 @@
+<!--
+  Managed stripping is Medium (smaller IL2CPP binary). Code that is only reached by name at
+  runtime must be preserved here, or it is silently stripped:
+  - Unity.LevelPlay: ad callbacks arrive from Java through AndroidJavaProxy, which looks the
+    C# methods up by name (onInitSuccess, onAdLoaded, ...). Stripped = ads never report back.
+  - DrawRush: our own gameplay assembly is small; keeping it whole rules out scene/UnityEvent
+    references the linker can't see.
+-->
+<linker>
+  <assembly fullname="Unity.LevelPlay" preserve="all"/>
+  <assembly fullname="DrawRush" preserve="all"/>
+</linker>

@@ -37,6 +37,7 @@ namespace DrawRush.Drawing
             int stars = health != null ? LevelScore.Evaluate(health.Current, health.StartingValue) : 1;
 
             int levelIndex = ResolveLevelIndex();
+            bool firstClear = levelIndex >= 0 && PlayerProgress.BestStars(levelIndex) == 0;
             bool record = levelIndex >= 0 && PlayerProgress.RecordStars(levelIndex, stars);
 
             var state = GameServices.State;
@@ -46,6 +47,7 @@ namespace DrawRush.Drawing
                 // starts the win sequence, and the panel reads these when it shows.
                 state.LastStars = stars;
                 state.LastStarsWereRecord = record;
+                state.LastShapeWasNew = firstClear;
             }
 
             PlayerProgress.AddCoins(LevelScore.CoinsForStars(stars));

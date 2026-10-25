@@ -192,12 +192,16 @@ namespace DrawRush.Core
             else Time.timeScale = 1f;
         }
 
-        // Keep the HUD level label in sync with the actually-active level (the old label read
-        // a stale PlayerPrefs value and never updated on level change).
+        // The player-facing number is how far along the campaign they are (1, 2, 3 …), not the
+        // scene index of the shape — the sequencer serves shapes out of index order, so showing
+        // the index read as "Tutorial → Level 13 → Level 31".
         private void UpdateLevelLabel(int index)
         {
             if (_hud == null) _hud = FindFirstObjectByType<HudPanels>();
-            if (_hud != null) _hud.SetLevelText(index == tutorialLevelIndex ? "Tutorial" : "Level " + index);
+            if (_hud == null) return;
+            _hud.SetLevelText(index == tutorialLevelIndex
+                ? "Tutorial"
+                : "Level " + Mathf.Max(1, PlayerProgress.LevelsPlayed));
         }
 
         private void MovePlayerToSpawn(Transform activeLevel)
@@ -222,6 +226,10 @@ namespace DrawRush.Core
             // never fires on a level switch. Detach explicitly so stale _currentPart /
             // _edge refs from the previous level don't re-engage the rail at the new spawn.
             playerTf.GetComponent<DrawRush.Player.RailPaintController>()?.Detach();
+
+            // Same persistence problem for the post-hit window: start every level hittable and
+            // not blinking, however the last one ended.
+            playerTf.GetComponent<PlayerCombat>()?.ResetForLevel();
         }
 
         private Transform ResolveSpawn(Transform activeLevel)

@@ -47,11 +47,14 @@ namespace DrawRush.Core
             if (_remaining.Count == 0) Refill(refillWith);
             if (_remaining.Count == 0) return -1;
 
-            // Rank what's left by how close it sits to the target, then pick among the closest few
-            // so the curve is honoured without the order being identical every playthrough.
+            // Rank what's left by how close it sits to the target, then pick among the closest few.
+            // Ties break on index so a pool of 1 gives the same fixed campaign order every time.
             var ranked = new List<int>(_remaining);
             ranked.Sort((a, b) =>
-                Math.Abs(difficultyOf(a) - target).CompareTo(Math.Abs(difficultyOf(b) - target)));
+            {
+                int byGap = Math.Abs(difficultyOf(a) - target).CompareTo(Math.Abs(difficultyOf(b) - target));
+                return byGap != 0 ? byGap : a.CompareTo(b);
+            });
 
             int pool = Math.Max(1, Math.Min(CandidatePool, ranked.Count));
             int chosen = ranked[_rng.Next(pool)];

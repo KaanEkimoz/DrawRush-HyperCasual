@@ -44,9 +44,10 @@ namespace DrawRush.Core
         [Tooltip("Levels it takes for the teeth to grow from a beginner's peak to the full maxTarget.")]
         [SerializeField] private int rampLevels = 30;
 
-        [Tooltip("How many of the closest-to-target levels the bag chooses between. 1 = strictly " +
-                 "the closest every time; higher = the curve is still honoured but the order varies.")]
-        [SerializeField] private int candidatePool = 3;
+        [Tooltip("How many of the closest-to-target levels the bag chooses between. 1 = a fixed " +
+                 "campaign: every player gets the same order (Kaan: levels must feel like 1→2→3, " +
+                 "not a shuffle). Higher = the curve is still honoured but the order varies.")]
+        [SerializeField] private int candidatePool = 1;
 
         private readonly LevelBag _bag = new();
 

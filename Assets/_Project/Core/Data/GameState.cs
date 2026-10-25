@@ -23,6 +23,10 @@ namespace DrawRush.Core
         /// a "new best" differently from a repeat clear.</summary>
         [NonSerialized] public bool LastStarsWereRecord;
 
+        /// <summary>True when the level just won had never been cleared before — its shape is a new
+        /// collection entry. Set by WinCondition before the win flag flips, like LastStars.</summary>
+        public bool LastShapeWasNew { get; set; }
+
         public bool IsGameWon
         {
             get => _isGameWon;

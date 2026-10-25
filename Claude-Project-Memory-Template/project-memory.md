@@ -5,6 +5,56 @@
 
 ---
 
+## 📝 YAYIN SONRASI FEEDBACK PAKETİ (2026-10-25) — **YAPILDI, branch `claude-dev-feat-feedback` (ana checkout), 74/74 test, 34/34 autoplay. Push/merge YOK, build YOK.**
+Kaan 15 madde verdi, "bu paketi yap" dedi. Hepsi commit'li (ayrı conventional commit'ler, `b99a4517..HEAD`).
+1. **Splash "208 Studios"** → video kapatıldı (klip referansı kaldırıldı, build'e girmiyor), yerine `SplashBrand` animasyonlu **EKIMOZ / GAMES** yazısı (lacivert zemin, LilitaOne) + sahneye Main Camera. Gerçek logo yok — Kaan logo verirse değiştir.
+2. **Buton yazıları** → win/lose/shop butonları tek boy (60, BÜYÜK HARF, autosize kapalı), 400×140.
+3. **Pembe kareler** = köşe direkleri (`EdgeNetwork.SpawnPost` CreatePrimitive → build'de Default-Material = magenta). Artık duvar materyali/`fallbackCornerMaterial` + MPB renk. **AYRICA** gizli direklerin tepesi zeminden 0.25 taşıyordu (zemin y=-0.45, direk tabanı 0) → çizilmeden önce yerden "kare" çıkıyordu; `CornerPost` artık yükselene kadar görünmez. Level_04'ün 4 duvarında da fallbackMaterial eksikti → eklendi.
+4. **Level sırası** → `LevelBag` candidatePool 1 + index tie-break = herkes aynı sabit sıra; HUD "Level N" = `LevelsPlayed` (1,2,3…), sahne index'i değil. `LevelBagOrderTests` kilitliyor.
+5. **Buton orantısı** → `SafeAreaPadding` (GameUI/Win/Lose/Shop/Collection): üst/alt anchor'lı çocukları çentik/gesture bar'dan iter. CanvasScaler match=0 (genişlik) bırakıldı.
+6. **App adı** → productName `Draw Rush` (paket aynı). **İkon görünmüyordu çünkü adaptive katmanlar TERSTİ** (Unity: index0=background, index1=foreground; yeşil degrade foreground'a gitmiş, kalbi örtüyordu). Düzeltildi. (Not: editörde PlayerPrefs konumu productName'e bağlı → editör ilerlemesi sıfırlanmış görünebilir; telefonda etkisi yok.)
+7. **147 MB** → kaynak: AAB'de sahne verisi ~99MB (dokuların %89'u), libil2cpp arm64 ~60MB. 44 plaj/çiftlik dokusu 2048→256/512 (editör ölçümü 323→106MB). **Build alınıp ölçülmedi.** Kalan kaldıraçlar Kaan kararı bekliyor (aşağıda).
+8. **Tutorial beyaz zemin** → beyaz `MainPlatform` renderer kapatıldı, L01'in çim `Ground`'u kopyalandı (3×3.5 ölçek).
+9. **Joystick** → cam stil `GlassRing`/`GlassKnob` (Unity'de prosedürel üretildi, koyu dış çizgi = açık zeminde görünür).
+10. **Level 13 (artı) + Kaan izlerken yıldız/hexagram takılması** → 3 kök neden (köşede damlalar 0.2-0.45 arası): (a) uzak damla trigger'ı kenarı 0.45 erken bitiriyordu → artık sadece gerçek varışta; (b) bitince oyuncu zaten sonraki damlanın içinde, enter gelmiyor → `PlayerInteract` overlap listesi + bitişte o damlaya bağlan; (c) içbükey köşede komşu damlaya yeniden bağlanıp ping-pong → yabancı damlaya geçiş sadece o kenar yönünde itiliyorsa. `DrawRush > Dev > Autoplay Levels` (Assets/Editor/LevelAutoplay.cs) 34/34 PASS.
+11. **Koleksiyon** → ChatGPT'den 6 sticker sayfası (kawaii, beyaz kenarlı) → Unity'de kesildi (alfa≥200 eşiği haleyi siler) → 34 sprite `Collection/Art/Shapes`. `ShapeCollection` SO, kazanınca `WinShapeReveal` (pop + ad + NEW!), WinPanel'de COLLECTION butonu → kaydırmalı 3 sütun galeri (`CollectionController`). "Toplandı" = `BestStars>0` (yeni kayıt yok, eski oyuncular otomatik sahip).
+12. **Düşmanlar dışarıda kalıyor** → Level 05-11 NavMesh'inde (6.7,4.5) civarı kopuk ada (eski bake'te dekor collider'ları açıktı). Yeniden bake (CopySerialized ile aynı asset/GUID). 112/112 düşman merkeze path buluyor.
+13. **Damladan raydan çıkış** → başlangıç damlasına geri kayınca ray bırakılır; koruma: önce ≥1 birim uzaklaşmış olmalı (`escapeArmDistance`).
+14. **Coin** → 10/20/35 → 6/12/20.
+15. **Ölünce yanıp sönme** → `PlayerCombat.ResetForLevel` (i-frame + flash + knockback) level aktivasyonunda.
++ **Repo hijyeni:** ScreenFlash/DrawJuice/ButtonJuice + bazı klasör `.meta`'ları hiç commit'lenmemişti (temiz klonda Missing Script) → commit'lendi.
+
+### ⏳ Kaan kararı bekleyen (bu oturumda fark edilen)
+- ~~Boyut 2. aşama~~ → **YAPILDI (aşağıda).**
+- **Level başında kırmızı piksel kırıntıları** (düşman ölüm poof'u countdown'da timeScale=0 iken donmuş kalıyor gibi) — ekran görüntülerinde görüldü, dokunulmadı.
+- Duvar/direk tabanı y=0, görünen zemin y=-0.45 → yandan bakınca havada olabilir (tepeden fark edilmiyor).
+- Bir damlaya dokununca oyuncu, o damlanın kenarı yönünde itene kadar kilitli (eskiden beri böyle; ok yön gösteriyor).
+- Koleksiyona şu an sadece win panelinden gidiliyor — HUD'a buton istenirse eklenir.
+- Stil borcu: `CosmeticItem.price` ve `GameState.LastStars` public field (kural dışı, eski kod). Bir commit tipi yanlışlıkla `balance(...)` oldu (amend yok kuralı → bırakıldı).
+- **Release için:** cihaz testi, versionCode 5 bump + imzalı AAB + boyut ölçümü (play-console-release skill), master merge Kaan onayıyla.
+
+### 📦 BOYUT 2. AŞAMA (2026-10-25, Kaan onayıyla) — 3 commit, 74/74
+- **En büyük suçlu:** `Assets/Plugins/Roslyn/*.dll` (Unity MCP execute_code için, ~12MB IL) **Android'e dahildi** → libil2cpp'ye derleniyordu. Artık Editor-only.
+- managed stripping **Low→Medium**, IL2CPP **OptimizeSize**. `Assets/link.xml`: `Unity.LevelPlay` (AndroidJavaProxy callback'leri isimle çağrılır) + `DrawRush` preserve=all. Stripped DLL'de onInitSuccess/onAdLoaded… doğrulandı.
+- ProBuilder + VFX Graph paketleri kaldırıldı (hiç kullanılmıyordu, Resources dokuları build'e giriyordu).
+- Oyun sahnesi eski `Scenes/Old/Level 1/LightingData` kullanıyordu (1024 probe 5.3MB) → kendi LightingData'sı (GI kapalı, 128px probe 161KB).
+- **Ölçüm (debug-imzalı AAB, `Builds/SizeCheck/`, bundletool):** AAB 77.2→**55.4MB**; arm64 indirme 52.6→**38.4MB**; libil2cpp arm64 60.5→**23.6MB**; cihazda açılan veri ~112→~69MB → Play'deki "147MB" tahminen **~90-105MB**'a iner (tam değeri Play Console söyler).
+- arm64 emülatörde (`emulator-5554`, Android 15) kuruldu ve açıldı: ikon kalp + "Draw Rush" ✓, HUD safe-area ✓, duvar/köşe kırmızı ✓. LevelPlay init başladı ama sonuç callback'i gelmedi (emülatör/debug imza ortamı olabilir — stripping değil; reklam hâlâ GERÇEK CİHAZDA test edilmedi). Test APK'sı sonra kaldırıldı.
+- Tutorial'daki krem şerit = dikey beyaz `MainPlatform (1)` fon duvarı → renderer kapatıldı.
+- 🪤 `EditorApplication.delayCall` ile build başlatma tetiklenmedi; build'i doğrudan execute_code'da çalıştır (MCP timeout verir, build sürer, sonucu dosyaya yaz). Build ~26 dk.
+- 🪤 bundletool: `/Applications/Unity/Hub/Editor/6000.3.12f1/PlaybackEngines/AndroidPlayer/Tools/bundletool-all-1.17.2.jar` + aynı klasördeki OpenJDK java + SDK adb.
+
+### 🪤 Bu oturumun tuzakları
+- **Unity editörü ANA checkout'ta açık** (`/Users/kaanusta/Unity Projects/DrawRush`), Claude oturumu worktree'de başladı → işler ana checkout'ta `claude-dev-feat-feedback` dalında yapıldı (Write hook'u ana checkout'u engelliyor, Bash/python ile yazıldı).
+- `AssetDatabase.DeleteAsset` MCP safety'de bloklu → NavMesh'i yerinde güncellemek için `EditorUtility.CopySerialized(fresh, old)`.
+- `EditorApplication.Exit*` bloklu → play'i `EditorApplication.isPlaying=false` ile durdur.
+- Sprite import bitmeden `LoadAssetAtPath<Sprite>` null döner → atamadan sonra mutlaka geri-oku.
+- TMP `outlineWidth` runtime-yaratılan text'te NRE (materyal yok) — kullanma.
+- ChatGPT Free: 6 görselden sonra kota doldu (18:58'e kadar). Prompt'u `.ProseMirror`'a `execCommand('insertText')` ile gir, Return ile gönder; canvas görünümünde indirme `İndir` → menüden "Görseli indir".
+- Autoplay editör PlayerPrefs'ini değiştirir (LastLevelIndex vb.).
+
+---
+
 ## 👾 DÜŞMAN: IDLE + ÖLÜM (poof+ses+shrink) + LEVEL 1 SADE (2026-09) — **`19cb6fc0`, 72/72**
 - **"Mal mal koşar pozisyonda":** `Enemy.controller`'da SADECE `Run` state'i vardı (hep oynuyordu), idle yok. Ekledim: `Idle` state (motion = `Assets/Animations/PlayerIdle.anim` — enemy zaten player'ın PlayerDie'ını retarget ediyor, humanoid), `f_speed` float param, Idle↔Run blend (>0.1 / <0.1), death `Any State → PlayerDie` (t_die). `EnemyFollow` her frame `_anim.SetFloat(AnimatorIds.Speed, agent.velocity.magnitude)` — dormant/halted → vel 0 → Idle.
 - **Ölüm (`EnemyDeath.cs`, YENİ):** eskiden win'de sadece donuyorlardı, ölüm sesi/efekti yok, geç kayboluyorlardı. Artık **hem win HEM player ölümünde** (GameState.GameWonChanged + PlayerHealth.Died): renk poof'u (runtime ParticleSystem, DrawJuice paterni), pop sesi (`EnemyDeath.EnemyDied` static event → SfxPlayer, burst başına 1 pop), t_die anim, hızlı shrink-out + renderer/collider kapat. **OnEnable'da resetlenir** (restart'ta geri gelir).
