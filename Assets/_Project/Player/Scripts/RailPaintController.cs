@@ -127,18 +127,75 @@ namespace DrawRush.Player
             if (movement != null) movement.MovementLocked = false;
         }
 
+        // Fill the rest of the edge being painted, then leave the rail.
+        private void FinishEdge()
+        {
+            _edge.PaintFrom(_currentPart, _currentPart == _edge.A ? 1f : 0f);
+            DetachAndChain();
+        }
+
+        // An edge now finishes ON its far drop, and the next edge's drop sits 0.2–0.45 away from
+        // it — so the player is already standing inside it and will never get a fresh touch.
+        // Before, walking into that drop was what started the next edge; keep that feel by
+        // treating "finished while standing in an open drop" as touching it (anchored, arrow
+        // shows the way). Escapes (enemy hit, backing off the start drop) use plain Detach.
+        private void DetachAndChain()
+        {
+            Detach();
+            if (interact != null && interact.TryGetOverlappingPart(HasOpenEdge, out DrawPart next))
+                OnPartTouched(next);
+        }
+
+        private bool HasOpenEdge(DrawPart part)
+        {
+            EdgeNetwork net = ResolveNetwork(part);
+            if (net == null) return false;
+            net.GetEdgesTouching(part, _edgeBuffer);
+            for (int i = 0; i < _edgeBuffer.Count; i++)
+                if (!_edgeBuffer[i].IsComplete && _edgeBuffer[i].Other(part) != null) return true;
+            return false;
+        }
+
+        // Touches are enter-only, but at a corner the next edge's drop sits ~0.4 from the one just
+        // reached, so the player is usually already standing inside it when an edge completes — no
+        // fresh touch ever fires and they push and push without the rail catching (Kaan: Level 13,
+        // the plus). While free, pushing along an open edge of a drop they're standing in counts as
+        // touching it. Movement stays free otherwise, so nothing locks them at the corner.
+        private Vector3 _intentInput;
+        private bool TryAttachFromOverlap()
+        {
+            _intentInput = ResolveWorldInput();
+            if (_intentInput.sqrMagnitude < 0.0001f || interact == null) return false;
+            if (!interact.TryGetOverlappingPart(HasOpenEdgeAlongIntent, out DrawPart part)) return false;
+            OnPartTouched(part);
+            return true;
+        }
+
+        private bool HasOpenEdgeAlongIntent(DrawPart part)
+        {
+            EdgeNetwork net = ResolveNetwork(part);
+            if (net == null) return false;
+            net.GetEdgesTouching(part, _edgeBuffer);
+            for (int i = 0; i < _edgeBuffer.Count; i++)
+            {
+                DrawEdge e = _edgeBuffer[i];
+                if (e.IsComplete || e.Other(part) == null) continue;
+                Vector3 dir = part == e.A ? e.TangentAt(0f) : -e.TangentAt(1f);
+                dir.y = 0f;
+                if (dir.sqrMagnitude < 0.0001f) continue;
+                if (Vector3.Dot(_intentInput, dir.normalized) > selectThreshold) return true;
+            }
+            return false;
+        }
+
         private void OnPartTouched(DrawPart part)
         {
-            // Reached the far end of the edge being painted → finish that edge and free the
-            // player (get off the rail). The whole span fills; if it was the last unpainted
-            // edge, EdgeNetwork raises AllCompleted and the level ends. We do NOT re-anchor
-            // here — that was the bug that re-locked the player onto a new rail.
-            if (_edge != null && part == _targetPart)
-            {
-                _edge.PaintFrom(_currentPart, _currentPart == _edge.A ? 1f : 0f);
-                Detach();
-                return;
-            }
+            // Touching the far drop's trigger does NOT finish the edge any more: trigger contact
+            // happens ~0.45 short of the drop, which left the player parked beside the corner and
+            // off-line with the next edge, so walking on missed that edge's drop entirely (Kaan:
+            // Level 13, the plus). The arrival check in FixedUpdate finishes it on the drop itself.
+            // We also never re-anchor onto the target here — that re-locked the player on a new rail.
+            if (_edge != null && part == _targetPart) return;
 
             // Every edge owns its own drops, so a corner holds two of them a drop-gap apart:
             // painting toward one, the player clips the NEIGHBOUR edge's trigger first. Falling
@@ -148,6 +205,17 @@ namespace DrawRush.Player
             // and let the arrival check in FixedUpdate finish it properly. Near the start,
             // re-picking a different edge from the same corner is still legitimate.
             if (_edge != null && _localT >= 0.5f) return;
+
+            // Already on the rail (anchored or sliding), a neighbouring drop is only a reason to
+            // switch if the player is actually pushing along ITS open edge. At a concave corner the
+            // two drops sit ~0.4 apart, so just leaving one clips the other: unconditionally
+            // re-anchoring there locked the player onto an edge pointing across their input, and
+            // they ping-ponged between the two drops unable to draw (Kaan: Level 13, the plus).
+            if (_currentPart != null && !_detached && part != _currentPart)
+            {
+                _intentInput = ResolveWorldInput();
+                if (!HasOpenEdgeAlongIntent(part)) return;
+            }
 
             // Fresh attach, or re-pick from the same corner: lock to this anchor and wait for
             // a stick direction to choose an edge.
@@ -174,7 +242,7 @@ namespace DrawRush.Player
             {
                 _guidance = Vector3.zero;
                 if (movement != null) movement.MovementLocked = false;
-                return;
+                if (!TryAttachFromOverlap()) return;
             }
 
             if (movement != null) movement.MovementLocked = true;
@@ -200,8 +268,7 @@ namespace DrawRush.Player
                 if (sqr <= ArrivalSnap * ArrivalSnap ||
                     (released && sqr <= arrivalDistance * arrivalDistance))
                 {
-                    _edge.PaintFrom(_currentPart, _currentPart == _edge.A ? 1f : 0f);
-                    Detach();
+                    FinishEdge();
                     return;
                 }
             }
@@ -222,7 +289,11 @@ namespace DrawRush.Player
 
             if (released) return;   // no input → hold position
 
-            if (_edge == null && !TrySelectEdge(worldInput)) return;
+            // Anchored but pushing away from this drop's edge: if they're also standing in a
+            // neighbouring drop whose open edge matches the push, hand over to it (the enter for
+            // that drop already fired and was ignored above).
+            if (_edge == null && !TrySelectEdge(worldInput)
+                && !(TryAttachFromOverlap() && TrySelectEdge(worldInput))) return;
 
             // Geometry-agnostic traversal: works for straight edges AND arcs. _localT is the
             // local progress current→target; convert to the edge's A→B parameter (edgeT). All
@@ -264,7 +335,7 @@ namespace DrawRush.Player
 
             // Edge done — the two painted spans met in the middle (arrival at the far anchor
             // is handled above, before the input gate).
-            if (_edge.IsComplete) { Detach(); return; }
+            if (_edge.IsComplete) { DetachAndChain(); return; }
 
             Vector3 targetPos = _edge.PointAt(edgeT);
             Vector3 delta = targetPos - transform.position;
