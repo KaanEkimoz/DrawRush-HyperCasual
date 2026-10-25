@@ -35,6 +35,8 @@ namespace DrawRush.Enemy
         [SerializeField] private Color fastColor = new Color(1f, 0.5f, 0.05f, 1f);
         [Tooltip("Tint for a sleeping guardian; it switches to its normal colour when it wakes.")]
         [SerializeField] private Color sleepColor = new Color(0.45f, 0.35f, 0.85f, 1f);
+        [Tooltip("Tint while frozen by the Freeze booster.")]
+        [SerializeField] private Color frozenColor = new Color(0.55f, 0.85f, 1f, 1f);
 
         // SetDestination every frame is wasted work — the agent re-plans far faster than it needs to.
         // Re-target a few times a second; the chase looks identical and the pathfinding cost drops.
@@ -49,6 +51,89 @@ namespace DrawRush.Enemy
         private float _retargetTimer;
         private Vector3 _spawnPos;
         private Quaternion _spawnRot;
+        private float _pressure = 1f;
+        private float _frozenUntil;
+        private bool _frozen;
+        private Vector3 _authoredScale;
+        private float _authoredSpeedMultiplier;
+        private Color? _tierColor;
+
+        /// <summary>Extra speed multiple from rising level pressure (1 = none). Reset per level.</summary>
+        public float Pressure
+        {
+            get => _pressure;
+            set { _pressure = Mathf.Max(0.1f, value); ApplySpeed(); }
+        }
+
+        /// <summary>True for heavy enemies that pushes (pet, blast) cannot move.</summary>
+        public bool Unpushable { get; private set; }
+
+        /// <summary>True while a Freeze booster holds this enemy.</summary>
+        public bool IsFrozen => _frozen;
+
+        /// <summary>Turn this enemy into a variant for the level: speed, size, pushability and an
+        /// optional tint. Reverted to the authored enemy by <see cref="ClearVariant"/>.</summary>
+        public void ApplyVariant(float speed, float scale, bool unpushable, Color? tint)
+        {
+            CaptureAuthored();
+            speedMultiplier = speed;
+            transform.localScale = _authoredScale * scale;
+            Unpushable = unpushable;
+            _tierColor = tint;
+            ApplySpeed();
+            ApplyTint();
+        }
+
+        /// <summary>Back to the enemy as authored in the scene.</summary>
+        public void ClearVariant()
+        {
+            CaptureAuthored();
+            speedMultiplier = _authoredSpeedMultiplier;
+            transform.localScale = _authoredScale;
+            Unpushable = false;
+            _tierColor = null;
+            ApplySpeed();
+            ApplyTint();
+        }
+
+        /// <summary>Stop in place for <paramref name="seconds"/>, tinted icy, then resume.</summary>
+        public void Freeze(float seconds)
+        {
+            if (seconds <= 0f || _halted) return;
+            _frozenUntil = Mathf.Max(_frozenUntil, Time.time + seconds);
+            if (_frozen) return;
+            _frozen = true;
+            if (_agent != null && _agent.isOnNavMesh) { _agent.isStopped = true; _agent.velocity = Vector3.zero; }
+            SetColor(frozenColor);
+        }
+
+        /// <summary>Shove this enemy <paramref name="distance"/> m along <paramref name="direction"/>
+        /// (ground plane), staying on the NavMesh. Heavy enemies ignore it.</summary>
+        public void Push(Vector3 direction, float distance)
+        {
+            if (Unpushable || _agent == null || !_agent.isOnNavMesh) return;
+            direction.y = 0f;
+            if (direction.sqrMagnitude < 1e-6f) return;
+            Vector3 target = transform.position + direction.normalized * distance;
+            if (NavMesh.Raycast(transform.position, target, out NavMeshHit hit, NavMesh.AllAreas)) target = hit.position;
+            _agent.Warp(target);
+            _agent.velocity = Vector3.zero;
+            _retargetTimer = 0.25f;   // a beat of stagger before it re-plans
+        }
+
+        // Variants can be applied to an enemy that has never been active (no Awake yet).
+        private void CaptureAuthored()
+        {
+            if (_authoredScale != Vector3.zero) return;
+            _authoredScale = transform.localScale;
+            _authoredSpeedMultiplier = speedMultiplier;
+            if (_agent == null) { _agent = GetComponent<NavMeshAgent>(); _baseSpeed = _agent.speed; }
+        }
+
+        private void ApplySpeed()
+        {
+            if (_agent != null) _agent.speed = _baseSpeed * Mathf.Max(0.05f, speedMultiplier) * _pressure;
+        }
 
         private Renderer[] _renderers;
         private MaterialPropertyBlock _mpb;
@@ -66,6 +151,8 @@ namespace DrawRush.Enemy
             // can drift the transform.
             _spawnPos = transform.position;
             _spawnRot = transform.rotation;
+            _authoredScale = transform.localScale;
+            _authoredSpeedMultiplier = speedMultiplier;
 
             _renderers = GetComponentsInChildren<Renderer>(true);
             foreach (var r in _renderers)
@@ -80,13 +167,16 @@ namespace DrawRush.Enemy
             _halted = false;
             _awake = wakeRadius <= 0f;   // no wake radius => already awake (plain chaser)
             _retargetTimer = 0f;
+            _pressure = 1f;
+            _frozen = false;
+            _frozenUntil = 0f;
 
             // Restart: send the enemy back to its authored spawn. Warp keeps the agent on
             // the NavMesh; transform.SetPositionAndRotation handles the off-NavMesh edge
             // case (Warp would no-op there).
             if (_agent != null && _agent.isActiveAndEnabled)
             {
-                _agent.speed = _baseSpeed * Mathf.Max(0.05f, speedMultiplier);
+                ApplySpeed();
                 _agent.Warp(_spawnPos);
                 if (_agent.isOnNavMesh)
                 {
@@ -113,7 +203,9 @@ namespace DrawRush.Enemy
         {
             if (_renderers == null) return;
             Color c;
-            if (!_awake) c = sleepColor;                       // dormant guardian
+            if (_frozen) c = frozenColor;
+            else if (!_awake) c = sleepColor;                  // dormant guardian
+            else if (_tierColor.HasValue) c = _tierColor.Value;
             else if (speedMultiplier > 1.01f) c = fastColor;   // fast chaser
             else if (_hasAuthoredColor) c = _authoredColor;    // plain chaser — leave it be
             else return;
@@ -144,6 +236,15 @@ namespace DrawRush.Enemy
             var player = GameServices.Player;
             if (player == null) return;
             if (_agent == null || !_agent.isActiveAndEnabled || !_agent.isOnNavMesh) return;
+
+            if (_frozen)
+            {
+                SetAnimSpeed(0f);
+                if (Time.time < _frozenUntil) return;
+                _frozen = false;
+                _agent.isStopped = false;
+                ApplyTint();
+            }
 
             // A dormant guardian holds position until the player strays too close, then wakes —
             // switching from its sleeping colour to its active one so the change is visible. While
