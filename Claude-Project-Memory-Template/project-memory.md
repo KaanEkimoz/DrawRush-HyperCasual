@@ -5,6 +5,16 @@
 
 ---
 
+## 🚀 1.1.0 (versionCode 5) PRODUCTION REVIEW'DA (2026-10-25)
+- Feedback dalı master'a `--no-ff` merge (`0a11cae7`, commit-tree ile — Unity açıkken dosyalar oynamadı), bump `44d8ceb2`, ikisi de push'lu.
+- İmzalı AAB `Builds/DrawRush_release.aab` 55.4MB (yayın anahtarı, O=Ekimoz Games doğrulandı). Console önizleme: **cihaz kaybı 0** (11.021 telefon), yeni kurulum **38.4MB (−13.2MB)**, güncelleme 29.8MB. 2 standart uyarı (deobfuscation / native symbols).
+- Notlar en-US + tr-TR ("Draw Rush 1.1 — Collection & smoother drawing"). Managed publishing kapalı → onaylanınca otomatik yayın. **code 4 artık canlıydı** (24 Eki) — 5 onun yerini alıyor.
+- 🪤 Chrome MCP `file_upload` artık **10MB sınırlı** → AAB'yi Kaan sürükledi (`open -R` ile Finder'da gösterildi). play-console-release skill'indeki "boyut sınırı yok" notu ESKİ.
+- Keystore şifreleri Keychain'den otomatik (`KeystoreFromKeychain.cs`).
+- ⏳ Kalan: review sonucu (Releases sekmesinde "Available on Google Play" 5 (1.1.0)), gerçek cihazda reklam testi.
+
+---
+
 ## 📝 YAYIN SONRASI FEEDBACK PAKETİ (2026-10-25) — **YAPILDI, branch `claude-dev-feat-feedback` (ana checkout), 74/74 test, 34/34 autoplay. Push/merge YOK, build YOK.**
 Kaan 15 madde verdi, "bu paketi yap" dedi. Hepsi commit'li (ayrı conventional commit'ler, `b99a4517..HEAD`).
 1. **Splash "208 Studios"** → video kapatıldı (klip referansı kaldırıldı, build'e girmiyor), yerine `SplashBrand` animasyonlu **EKIMOZ / GAMES** yazısı (lacivert zemin, LilitaOne) + sahneye Main Camera. Gerçek logo yok — Kaan logo verirse değiştir.
