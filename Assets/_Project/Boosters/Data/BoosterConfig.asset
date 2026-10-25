@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c24183f63621d43868e5fb9d59373690, type: 3}
+  m_Name: BoosterConfig
+  m_EditorClassIdentifier: DrawRush::DrawRush.Boosters.BoosterConfig
+  _entries:
+  - type: 0
+    duration: 12
+    upgradeStep: 3
+    color: {r: 0.25, g: 0.6, b: 1, a: 1}
+    weight: 1
+  - type: 1
+    duration: 3
+    upgradeStep: 0.5
+    color: {r: 0.55, g: 0.95, b: 1, a: 1}
+    weight: 1
+  - type: 2
+    duration: 5
+    upgradeStep: 1
+    color: {r: 1, g: 0.85, b: 0.15, a: 1}
+    weight: 1
+  - type: 3
+    duration: 6
+    upgradeStep: 1
+    color: {r: 0.8, g: 0.35, b: 1, a: 1}
+    weight: 1
+  _speedMultiplier: 1.35
+  _magnetBandMultiplier: 1.5
+  _shieldBreakGrace: 1
+  _firstSpawnDelay: 6
+  _spawnInterval: {x: 8, y: 12}
+  _pickupLifetime: 7
+  _blinkSeconds: 2
+  _minEnemyDistance: 2.5
+  _minPlayerDistance: 2
+  _maxActiveTypes: 2
+  _pityWindow: 10
+  _pityWeight: 3
