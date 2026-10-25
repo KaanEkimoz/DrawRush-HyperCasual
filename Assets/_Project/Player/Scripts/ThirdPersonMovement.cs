@@ -46,6 +46,9 @@ namespace DrawRush.Player
         /// the same input source while it drives edge-constrained movement.</summary>
         public Vector2 MoveInput => _move;
 
+        /// <summary>Speed multiple from boosters (1 = none).</summary>
+        public float SpeedMultiplier { get; set; } = 1f;
+
         /// <summary>When true, free movement is suspended (rail-drawing owns the player).
         /// Gravity still applies so the character stays grounded.</summary>
         public bool MovementLocked { get; set; }
@@ -121,7 +124,7 @@ namespace DrawRush.Player
                 float cameraY = camera != null ? camera.eulerAngles.y : 0f;
                 var direction = new Vector3(_move.x, 0f, _move.y).normalized;
                 float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cameraY;
-                target = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward * (speed * SpeedFactor(deflection));
+                target = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward * (speed * SpeedFactor(deflection) * SpeedMultiplier);
 
                 // Only the model's facing is smoothed; the velocity below follows the stick.
                 float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref _turnSmoothVelocity, ResolveTurnSmoothTime());

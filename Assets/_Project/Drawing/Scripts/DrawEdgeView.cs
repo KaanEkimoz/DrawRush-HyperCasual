@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using DrawRush.Core;
 
@@ -5,10 +6,10 @@ namespace DrawRush.Drawing
 {
     /// <summary>
     /// Renders the painted spans of one <see cref="DrawEdge"/> as ground-aligned
-    /// LineRenderers. Because an edge can be painted inward from both ends — leaving a gap in
-    /// the middle until they meet — two renderers are used: the low span [A, paintedLow] and
-    /// the high span [paintedHigh, B]. Refreshes only when the edge's fill advances (it
-    /// subscribes to <see cref="DrawEdge.Changed"/>), never per frame.
+    /// LineRenderers. With free drawing an edge can be painted in any number of separate
+    /// stretches, so painted spans and the dashed ghost (whatever is still unpainted) each use
+    /// a small pool of renderers. Refreshes only when the edge's fill changes (it subscribes to
+    /// <see cref="DrawEdge.Changed"/>); the only per-frame work is the gap-highlight pulse.
     /// </summary>
     public sealed class DrawEdgeView : MonoBehaviour
     {
@@ -36,11 +37,20 @@ namespace DrawRush.Drawing
                  "already repeats by world length.")]
         [SerializeField] private float ghostY = 0.012f;
 
+        [Header("Gap highlight (late in a level)")]
+        [Tooltip("Ghost opacity while the remaining gaps are highlighted.")]
+        [SerializeField, Range(0.1f, 1f)] private float highlightAlpha = 0.95f;
+        [Tooltip("Ghost width multiple while highlighted.")]
+        [SerializeField] private float highlightWidthScale = 1.6f;
+        [Tooltip("Pulses per second of the highlighted ghost.")]
+        [SerializeField] private float highlightPulse = 2.5f;
+
         private DrawEdge _edge;
-        private LineRenderer _lowSpan;
-        private LineRenderer _highSpan;
-        private LineRenderer _ghostSpan;
+        private readonly List<LineRenderer> _spans = new();
+        private readonly List<LineRenderer> _ghosts = new();
+        private readonly List<Vector2> _gaps = new();
         private bool _hidden;
+        private bool _highlight;
         private MaterialPropertyBlock _ghostBlock;
         private static readonly int GhostBaseColorId = Shader.PropertyToID("_BaseColor");
         private static readonly int GhostColorId = Shader.PropertyToID("_Color");
@@ -65,16 +75,30 @@ namespace DrawRush.Drawing
         public void Hide()
         {
             _hidden = true;
-            if (_lowSpan != null) _lowSpan.enabled = false;
-            if (_highSpan != null) _highSpan.enabled = false;
-            if (_ghostSpan != null) _ghostSpan.enabled = false;
+            SetHighlight(false);
+            foreach (LineRenderer lr in _spans) lr.enabled = false;
+            foreach (LineRenderer lr in _ghosts) lr.enabled = false;
+        }
+
+        /// <summary>Make the still-unpainted stretches stand out (pulse, wider, brighter).</summary>
+        public void SetHighlight(bool on)
+        {
+            if (_highlight == on) return;
+            _highlight = on;
+            if (!on) ApplyGhostColor(ghostAlpha, 1f);
+        }
+
+        private void Update()
+        {
+            if (!_highlight || _hidden) return;
+            float k = 0.5f + 0.5f * Mathf.Sin(Time.time * highlightPulse * 2f * Mathf.PI);
+            ApplyGhostColor(Mathf.Lerp(ghostAlpha, highlightAlpha, k), Mathf.Lerp(1f, highlightWidthScale, k));
         }
 
         private void ApplyColor()
         {
-            if (_lowSpan != null) { _lowSpan.startColor = color; _lowSpan.endColor = color; }
-            if (_highSpan != null) { _highSpan.startColor = color; _highSpan.endColor = color; }
-            ApplyGhostColor();
+            foreach (LineRenderer lr in _spans) { lr.startColor = color; lr.endColor = color; }
+            ApplyGhostColor(ghostAlpha, 1f);
         }
 
         // The ghost wears the edge's own colour, faded — so it says what this edge will BE, and so
@@ -84,15 +108,20 @@ namespace DrawRush.Drawing
         // Via a property block rather than the LineRenderer's vertex colours: the ghost material is
         // URP/Unlit, which ignores vertex colour, and per-edge tinting must not instance the one
         // shared material.
-        private void ApplyGhostColor()
+        private void ApplyGhostColor(float alpha, float widthScale)
         {
-            if (_ghostSpan == null) return;
             _ghostBlock ??= new MaterialPropertyBlock();
-            _ghostSpan.GetPropertyBlock(_ghostBlock);
-            var c = new Color(color.r, color.g, color.b, ghostAlpha);
-            _ghostBlock.SetColor(GhostBaseColorId, c);
-            _ghostBlock.SetColor(GhostColorId, c);
-            _ghostSpan.SetPropertyBlock(_ghostBlock);
+            var c = new Color(color.r, color.g, color.b, alpha);
+            float w = ResolveWidth() * Mathf.Max(0.05f, ghostWidthScale) * widthScale;
+            foreach (LineRenderer lr in _ghosts)
+            {
+                lr.GetPropertyBlock(_ghostBlock);
+                _ghostBlock.SetColor(GhostBaseColorId, c);
+                _ghostBlock.SetColor(GhostColorId, c);
+                lr.SetPropertyBlock(_ghostBlock);
+                lr.startWidth = w;
+                lr.endWidth = w;
+            }
         }
 
         private void OnDestroy()
@@ -102,9 +131,20 @@ namespace DrawRush.Drawing
 
         private void EnsureRenderers()
         {
-            if (_lowSpan == null) _lowSpan = CreateSpan("LowSpan");
-            if (_highSpan == null) _highSpan = CreateSpan("HighSpan");
-            if (_ghostSpan == null) _ghostSpan = CreateGhost();
+            if (_spans.Count == 0) _spans.Add(CreateSpan("Span0"));
+            if (_ghosts.Count == 0) _ghosts.Add(CreateGhost());
+        }
+
+        private LineRenderer SpanAt(int i)
+        {
+            while (_spans.Count <= i) { var lr = CreateSpan("Span" + _spans.Count); lr.startColor = color; lr.endColor = color; _spans.Add(lr); }
+            return _spans[i];
+        }
+
+        private LineRenderer GhostAt(int i)
+        {
+            while (_ghosts.Count <= i) _ghosts.Add(CreateGhost());
+            return _ghosts[i];
         }
 
         // The dashed hint showing where this edge still has to be drawn. Deliberately NOT the whole
@@ -113,7 +153,7 @@ namespace DrawRush.Drawing
         // "what's left" instead of "what exists".
         private LineRenderer CreateGhost()
         {
-            var go = new GameObject("GhostSpan");
+            var go = new GameObject("GhostSpan" + _ghosts.Count);
             go.transform.SetParent(transform, false);
 
             var lr = go.AddComponent<LineRenderer>();
@@ -130,6 +170,14 @@ namespace DrawRush.Drawing
             lr.receiveShadows = false;
             lr.material = ResolveGhostMaterial();
             lr.enabled = false;
+            if (_ghostBlock != null || color != default)
+            {
+                _ghostBlock ??= new MaterialPropertyBlock();
+                var c = new Color(color.r, color.g, color.b, ghostAlpha);
+                _ghostBlock.SetColor(GhostBaseColorId, c);
+                _ghostBlock.SetColor(GhostColorId, c);
+                lr.SetPropertyBlock(_ghostBlock);
+            }
             return lr;
         }
 
@@ -178,38 +226,35 @@ namespace DrawRush.Drawing
         {
             if (_edge == null || _hidden) return;
             EdgeFill fill = _edge.Fill;
+            IReadOnlyList<Vector2> spans = fill.IsComplete ? Full : fill.Spans;
 
-            if (fill.IsComplete)
-            {
-                SetSpan(_lowSpan, 0f, 1f);
-                _highSpan.enabled = false;
-                _ghostSpan.enabled = false;   // nothing left to hint at
-                return;
-            }
+            // Painted stretches.
+            int n = 0;
+            for (; n < spans.Count; n++) SetSpan(SpanAt(n), spans[n].x, spans[n].y);
+            for (int i = n; i < _spans.Count; i++) _spans[i].enabled = false;
 
-            if (fill.PaintedLow > 0.0001f) SetSpan(_lowSpan, 0f, fill.PaintedLow);
-            else _lowSpan.enabled = false;
-
-            if (fill.PaintedHigh < 0.9999f) SetSpan(_highSpan, fill.PaintedHigh, 1f);
-            else _highSpan.enabled = false;
-
-            // Whatever the two painted ends have not claimed yet.
-            SetGhost(fill.PaintedLow, fill.PaintedHigh);
+            // Ghost = the complement: whatever is still unpainted.
+            _gaps.Clear();
+            float cursor = 0f;
+            foreach (Vector2 s in spans) { if (s.x - cursor > 0.001f) _gaps.Add(new Vector2(cursor, s.x)); cursor = Mathf.Max(cursor, s.y); }
+            if (1f - cursor > 0.001f) _gaps.Add(new Vector2(cursor, 1f));
+            for (int i = 0; i < _gaps.Count; i++) SetGhost(GhostAt(i), _gaps[i].x, _gaps[i].y);
+            for (int i = _gaps.Count; i < _ghosts.Count; i++) _ghosts[i].enabled = false;
         }
 
-        private void SetGhost(float t0, float t1)
-        {
-            if (t1 - t0 < 0.001f) { _ghostSpan.enabled = false; return; }
+        private static readonly Vector2[] Full = { new(0f, 1f) };
 
-            int segs = _edge.IsArc ? Mathf.Max(2, arcSegments) : 1;
-            _ghostSpan.positionCount = segs + 1;
+        private void SetGhost(LineRenderer ghost, float t0, float t1)
+        {
+            int segs = _edge.IsArc ? Mathf.Max(2, Mathf.CeilToInt(arcSegments * (t1 - t0))) : 1;
+            ghost.positionCount = segs + 1;
             for (int i = 0; i <= segs; i++)
             {
                 Vector3 p = _edge.PointAt(Mathf.Lerp(t0, t1, (float)i / segs));
                 p.y = ghostY;
-                _ghostSpan.SetPosition(i, p);
+                ghost.SetPosition(i, p);
             }
-            _ghostSpan.enabled = true;
+            ghost.enabled = true;
             // Dash density is NOT set here: LineTextureMode.Tile already repeats the pattern by
             // world length, and the rate lives in GhostPath.mat's tiling. Driving it from here
             // would both double-apply the length and force a material instance per edge.
@@ -219,7 +264,7 @@ namespace DrawRush.Drawing
         {
             // Straight edge → a single 2-point segment. Arc → sample the curve so the painted
             // line actually follows the bow.
-            int segs = _edge.IsArc ? Mathf.Max(2, arcSegments) : 1;
+            int segs = _edge.IsArc ? Mathf.Max(2, Mathf.CeilToInt(arcSegments * (t1 - t0))) : 1;
             lr.positionCount = segs + 1;
             for (int i = 0; i <= segs; i++)
             {
