@@ -51,10 +51,10 @@ namespace DrawRush.Drawing
         private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
         private static readonly int ColorId = Shader.PropertyToID("_Color");
 
-        // Last-resort material when no author material is wired. Prefers the serialized
+        // Last-resort material when no author material is wired (corner posts share it too). Prefers the serialized
         // reference (survives shader stripping); the Shader.Find path only ever succeeds in the
         // editor, so shout loudly instead of silently shipping magenta walls.
-        private Material ResolveFallbackMaterial()
+        public Material ResolveFallbackMaterial()
         {
             if (fallbackMaterial != null) return fallbackMaterial;
             Shader lit = Shader.Find("Universal Render Pipeline/Lit");

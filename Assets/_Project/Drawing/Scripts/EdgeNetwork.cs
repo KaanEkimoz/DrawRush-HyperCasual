@@ -30,6 +30,12 @@ namespace DrawRush.Drawing
         [Header("Corner posts")]
         [Tooltip("Generate rising filler posts where edges meet. Off = no corner pieces.")]
         [SerializeField] private bool generateCornerPosts = true;
+        [Tooltip("Corner material when no edge author supplies one. Serialized so the shader " +
+                 "survives build stripping (a primitive's default material renders magenta on device).")]
+        [SerializeField] private Material fallbackCornerMaterial;
+
+        private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
+        private static readonly int ColorId = Shader.PropertyToID("_Color");
         [Tooltip("Max distance between two anchors to count them as the same corner. Each edge " +
                  "has its own drops, so the two drops at a corner sit a little apart — this must " +
                  "be larger than that gap but smaller than an edge length.")]
@@ -322,9 +328,17 @@ namespace DrawRush.Drawing
             go.transform.position = new Vector3(corner.x, baseY + height * 0.5f, corner.z);
             go.transform.localScale = new Vector3(thickness, height, thickness);
 
+            // CreatePrimitive hands out the built-in Default-Material, which has no URP shader in a
+            // player build → magenta posts on device. Always swap in the wall's material and tint
+            // through a property block (never instantiate a material per post).
             var rend = go.GetComponent<Renderer>();
+            if (wallMat == null) wallMat = fallbackCornerMaterial;
             if (wallMat != null) rend.sharedMaterial = wallMat;
-            else rend.material.color = wallCol;
+            else Debug.LogError("[EdgeNetwork] Corner post has no material; it will render magenta on device.", this);
+            var mpb = new MaterialPropertyBlock();
+            mpb.SetColor(BaseColorId, wallCol);
+            mpb.SetColor(ColorId, wallCol);
+            rend.SetPropertyBlock(mpb);
 
             var post = go.AddComponent<CornerPost>();
             post.Init(cornerRiseSeconds, height + 0.2f);
