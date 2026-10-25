@@ -11,7 +11,8 @@
 - Notlar en-US + tr-TR ("Draw Rush 1.1 — Collection & smoother drawing"). Managed publishing kapalı → onaylanınca otomatik yayın. **code 4 artık canlıydı** (24 Eki) — 5 onun yerini alıyor.
 - 🪤 Chrome MCP `file_upload` artık **10MB sınırlı** → AAB'yi Kaan sürükledi (`open -R` ile Finder'da gösterildi). play-console-release skill'indeki "boyut sınırı yok" notu ESKİ.
 - Keystore şifreleri Keychain'den otomatik (`KeystoreFromKeychain.cs`).
-- ✅ Review geçti, 25 Eki 16:40'ta yayında. ⏳ Kalan: gerçek cihazda reklam testi.
+- ✅ Review geçti, 25 Eki 16:40'ta yayında.
+- **Mağaza adı:** Store listing'de ad hâlâ "DrawRush"ydı (oyun içi ad ≠ mağaza adı). App name → **"Draw Rush"** + açıklamadaki "DrawRush" düzeltildi, AI asset declaration = "Don't label assets" (Kaan: mağaza görsellerinin hiçbiri AI değil), review'a gönderildi (25 Eki). Tek listing dili en-US. ⏳ Kalan: gerçek cihazda reklam testi.
 
 ---
 
