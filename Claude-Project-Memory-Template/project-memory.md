@@ -5,13 +5,13 @@
 
 ---
 
-## 🚀 1.1.0 (versionCode 5) PRODUCTION REVIEW'DA (2026-10-25)
+## 🚀 1.1.0 (versionCode 5) CANLIDA — "Available on Google Play", 25 Eki 2026 16:40 (178 ülke)
 - Feedback dalı master'a `--no-ff` merge (`0a11cae7`, commit-tree ile — Unity açıkken dosyalar oynamadı), bump `44d8ceb2`, ikisi de push'lu.
 - İmzalı AAB `Builds/DrawRush_release.aab` 55.4MB (yayın anahtarı, O=Ekimoz Games doğrulandı). Console önizleme: **cihaz kaybı 0** (11.021 telefon), yeni kurulum **38.4MB (−13.2MB)**, güncelleme 29.8MB. 2 standart uyarı (deobfuscation / native symbols).
 - Notlar en-US + tr-TR ("Draw Rush 1.1 — Collection & smoother drawing"). Managed publishing kapalı → onaylanınca otomatik yayın. **code 4 artık canlıydı** (24 Eki) — 5 onun yerini alıyor.
 - 🪤 Chrome MCP `file_upload` artık **10MB sınırlı** → AAB'yi Kaan sürükledi (`open -R` ile Finder'da gösterildi). play-console-release skill'indeki "boyut sınırı yok" notu ESKİ.
 - Keystore şifreleri Keychain'den otomatik (`KeystoreFromKeychain.cs`).
-- ⏳ Kalan: review sonucu (Releases sekmesinde "Available on Google Play" 5 (1.1.0)), gerçek cihazda reklam testi.
+- ✅ Review geçti, 25 Eki 16:40'ta yayında. ⏳ Kalan: gerçek cihazda reklam testi.
 
 ---
 
