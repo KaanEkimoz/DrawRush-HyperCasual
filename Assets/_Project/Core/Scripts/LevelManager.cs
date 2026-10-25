@@ -192,12 +192,16 @@ namespace DrawRush.Core
             else Time.timeScale = 1f;
         }
 
-        // Keep the HUD level label in sync with the actually-active level (the old label read
-        // a stale PlayerPrefs value and never updated on level change).
+        // The player-facing number is how far along the campaign they are (1, 2, 3 …), not the
+        // scene index of the shape — the sequencer serves shapes out of index order, so showing
+        // the index read as "Tutorial → Level 13 → Level 31".
         private void UpdateLevelLabel(int index)
         {
             if (_hud == null) _hud = FindFirstObjectByType<HudPanels>();
-            if (_hud != null) _hud.SetLevelText(index == tutorialLevelIndex ? "Tutorial" : "Level " + index);
+            if (_hud == null) return;
+            _hud.SetLevelText(index == tutorialLevelIndex
+                ? "Tutorial"
+                : "Level " + Mathf.Max(1, PlayerProgress.LevelsPlayed));
         }
 
         private void MovePlayerToSpawn(Transform activeLevel)
