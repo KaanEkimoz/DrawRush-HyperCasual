@@ -8,6 +8,13 @@
 ## 🎮 KONTROL + KAMERA PROTOTİPİ (2026-10-26) — PLAN, Kaan "yap" demeden BAŞLAMA
 Kaynak: `reports/Draw Rush yeniden tasarım araştırması.md` (worktree game-issues-list-8d2b00). Dal: `claude-dev-feat-controls` (master'dan, main checkout). Raylar bu prototipte KALIYOR; serbest çizim sonraki aşama.
 - **Mevcut durum (kod):** `FloatingJoystick` zaten var (dokunulan yerde açılır) ama follow yok, deadzone yok, `movementRange` 80 canvas birimi. `ThirdPersonMovement` her sapmada sabit `playerSpeed` 2.7 (normalize ediyor), dönüş 0.1 s, hareket FixedUpdate'te. Kamera ayarı okunmadı (Unity kapalıydı).
+- **0 ÖLÇÜM SONUCU (2026-10-26, editörden okundu):**
+  - Kamera DÖNMÜYOR (tahmin yanlıştı): `CM vcam2` Transposer **WorldSpace**, offset (-0.21, 10.94, -8.67), mesafe ~14 m, pitch 49°, **FOV 60**, X/Y/Z damping **1** (kamera ~1 s geriden geliyor), x offset yüzünden ~0.3° yaw + 0.5° roll. Brain SmartUpdate.
+  - **Görüş:** 20:9 telefonda oyuncu hizasında görünen genişlik **7.5 m**, arena **18.8 x 17.8 m**. Oyuncunun **arkası 6.5 m**, önü 23 m görünüyor (ekranın üstü boşa). 16:9'da 9.4 m, tablette 12.6 m. "Düşmanı göremiyorum" şikâyetinin ölçülü karşılığı.
+  - **Joystick:** dokunma alanı tüm ekran, `movementRange` 110 (ref 1080 genişlik, match 0) ≈ telefonda **~7 mm** başparmak yolu; hareket normalize olduğundan **~0.7 mm** titreme bile tam hızda koşturuyor. Hassas kontrol imkânsız.
+  - **Kare hızı:** `Application.targetFrameRate` hiç set edilmiyor → Android varsayılanı **30 fps** (Unity dokümanı; cihazda FPS ile doğrulanacak). Hareket FixedUpdate 50 Hz → 30 fps'te kare başına 1-2 adım = takılma/judder şüphesi.
+  - **Revize öncelik:** (a) 60 fps + hareketi Update'e al ya da interpolasyon, (b) joystick fiziksel boyut + analog hız, (c) kamera: damping 1 → ~0.2-0.3, x offset 0, pitch ~60°, karakteri ekranda biraz yukarı al ki arkası görünsün, sonra tehdit zoom'u.
+  - **Baseline:** elle oynama gerekiyor → Kaan canlı 1.1.0'da level 1-5 süre + vuruş sayısı + ekran kaydı.
 - **0 Ölçüm (0.5 g):** vcam body/binding mode (karakterle dönüyor mu?), FOV, offset, damping, CanvasScaler; seviye 1-5 elle süre + vuruş sayısı; video.
 - **1 Kamera (1 g):** yaw sabit, pitch ~55°, FOV ~35, Framing Transposer + TargetGroup, lookahead 0; ayarlar yeni `CameraConfig` SO (`_Project/Camera/`).
 - **2 Joystick (1 g):** follow (parmak yarıçapı aşınca taban kayar), spawn alanı alt %45 safe area, yarıçap dp ile (60-75 dp), radyal deadzone 0.1 + yeniden ölçek, tek pointerId, alfa %40.
