@@ -5,6 +5,17 @@
 
 ---
 
+## 🧪 YENİDEN TASARIM PROTOTİPİ — FAZ 0-6 YAPILDI (2026-10-26 gece), dal `claude-dev-feat-controls`, master'a MERGE EDİLMEDİ
+Kaynak: araştırma raporu (`reports/Draw Rush yeniden tasarım araştırması.md`, worktree game-issues-list-8d2b00). Kaan "tüm fazları bu gece bitir" dedi. Hepsi editörde doğrulandı; **cihazda his testi YAPILMADI** (bkz. feedback-verification-claims).
+- **Faz 0 kontrol/kamera `825a521e`:** 60 fps + 60 Hz fizik; joystick dp tabanlı (64 dp), takip eden, alt %45, deadzone 0.1 yeniden ölçekli; analog hız eğrisi (`GameConfig._speedByDeflection`), ivme 0.08 / fren 0.05 s, dönüş 0.05; yeni CM3 `CM GameplayCamera` + `GameplayCameraRig` + `CameraConfig` (pitch 58, FOV 40, 10.5 m genişlik, oyuncu y 0.58, damping 0.25, tehdit zoom ≤1.5x 6/8 m histerezis); eski `CM vcam2` kapalı duruyor (geri dönüş için); ekran dışı oklar; dev build FPS göstergesi. ⚠️ Cinemachine aslında **3.1.6** (2.10 değil).
+- **Faz 1 serbest çizim `427c7c81`:** raylar kapalı (`RailPaintController`, `RailDirectionArrow` disabled, kod duruyor). `EdgeFill` artık span kümesi; `FreeDrawPainter` 0.5 m bant (yay x1.25), pending 1.2 s, kenar %85'te kendini tamamlar, <0.3 m boşluk kapanır, %90'da sweep + kazanma, %70'te boşluk nabzı, %80+4 s duraksamada bant x1.6. `CoverageHud` üst bar. Autoplay serbest çizime yeniden yazıldı (33/33).
+- **Faz 2 `cab86a4c`:** `ChasePressure` %50/%80'de düşman +%10; `EnemyFollow` Pressure/Freeze/Push/ApplyVariant.
+- **Faz 3 boosterlar `29025eea`:** Shield/Freeze/Speed/Magnet; `BoosterConfig` asset; tek pickup, ilk 6 s, sonra 8-12 s, 7 s ömür; max 2 aktif tür; pity; `BoosterHud` halkalar. `_Project/Boosters/`.
+- **Faz 4 ödüllü reklam `360666cc`:** `RewardedOffers` (İkinci şans / Kalkanla yeniden dene / x2 Coin). ⚠️ **AdConfig.rewardedAdUnitId BOŞ** → cihazda butonlar görünmez; Kaan LevelPlay konsolunda Rewarded ad unit açıp ID'yi girmeli. Editörde simüle.
+- **Faz 5 dükkân `72455058`:** `UpgradeShop` satırları (4 seviye, 30/75/180/420), `BumpPet` (120/260/520; 6/5/4 s cooldown, düşmanı iter, ÇİZMEZ).
+- **Faz 6 düşman kademeleri `98b5a5c2`:** `EnemyTierDirector` — Sprinter L6+, Tank L12+ (itilemez), tanıtım levelinde tek başına; 2 fail sonrası %10 yavaşlık.
+- **Açık:** cihaz testi (his, bant, eşikler), drop (DrawPart) görselleri hâlâ görünür (karar: kalsın mı?), tutorial'ın ray ipucu (`TutorialRailHint`) serbest çizime uyarlanmadı, rewarded ad unit ID, Faz 7 (D7 verisine bağlı).
+
 ## 🎮 KONTROL + KAMERA PROTOTİPİ (2026-10-26) — PLAN, Kaan "yap" demeden BAŞLAMA
 Kaynak: `reports/Draw Rush yeniden tasarım araştırması.md` (worktree game-issues-list-8d2b00). Dal: `claude-dev-feat-controls` (master'dan, main checkout). Raylar bu prototipte KALIYOR; serbest çizim sonraki aşama.
 - **Mevcut durum (kod):** `FloatingJoystick` zaten var (dokunulan yerde açılır) ama follow yok, deadzone yok, `movementRange` 80 canvas birimi. `ThirdPersonMovement` her sapmada sabit `playerSpeed` 2.7 (normalize ediyor), dönüş 0.1 s, hareket FixedUpdate'te. Kamera ayarı okunmadı (Unity kapalıydı).
