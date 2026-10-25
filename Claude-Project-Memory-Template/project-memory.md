@@ -25,13 +25,24 @@ Kaan 15 madde verdi, "bu paketi yap" dedi. Hepsi commit'li (ayrı conventional c
 + **Repo hijyeni:** ScreenFlash/DrawJuice/ButtonJuice + bazı klasör `.meta`'ları hiç commit'lenmemişti (temiz klonda Missing Script) → commit'lendi.
 
 ### ⏳ Kaan kararı bekleyen (bu oturumda fark edilen)
-- **Boyut 2. aşama (Player Settings, izin ister):** managed stripping Low→Medium, IL2CPP Code Generation = OptimizeSize, kullanılmayan paketler (VFX Graph, ProBuilder — Resources dokuları build'e giriyor), kullanılmıyorsa AppsFlyer/Facebook/GameAnalytics SDK'ları. `Assets/Scenes/Old/Level 1/ReflectionProbe-0.exr` (5MB) build'e giriyor.
+- ~~Boyut 2. aşama~~ → **YAPILDI (aşağıda).**
 - **Level başında kırmızı piksel kırıntıları** (düşman ölüm poof'u countdown'da timeScale=0 iken donmuş kalıyor gibi) — ekran görüntülerinde görüldü, dokunulmadı.
 - Duvar/direk tabanı y=0, görünen zemin y=-0.45 → yandan bakınca havada olabilir (tepeden fark edilmiyor).
 - Bir damlaya dokununca oyuncu, o damlanın kenarı yönünde itene kadar kilitli (eskiden beri böyle; ok yön gösteriyor).
 - Koleksiyona şu an sadece win panelinden gidiliyor — HUD'a buton istenirse eklenir.
 - Stil borcu: `CosmeticItem.price` ve `GameState.LastStars` public field (kural dışı, eski kod). Bir commit tipi yanlışlıkla `balance(...)` oldu (amend yok kuralı → bırakıldı).
 - **Release için:** cihaz testi, versionCode 5 bump + imzalı AAB + boyut ölçümü (play-console-release skill), master merge Kaan onayıyla.
+
+### 📦 BOYUT 2. AŞAMA (2026-10-25, Kaan onayıyla) — 3 commit, 74/74
+- **En büyük suçlu:** `Assets/Plugins/Roslyn/*.dll` (Unity MCP execute_code için, ~12MB IL) **Android'e dahildi** → libil2cpp'ye derleniyordu. Artık Editor-only.
+- managed stripping **Low→Medium**, IL2CPP **OptimizeSize**. `Assets/link.xml`: `Unity.LevelPlay` (AndroidJavaProxy callback'leri isimle çağrılır) + `DrawRush` preserve=all. Stripped DLL'de onInitSuccess/onAdLoaded… doğrulandı.
+- ProBuilder + VFX Graph paketleri kaldırıldı (hiç kullanılmıyordu, Resources dokuları build'e giriyordu).
+- Oyun sahnesi eski `Scenes/Old/Level 1/LightingData` kullanıyordu (1024 probe 5.3MB) → kendi LightingData'sı (GI kapalı, 128px probe 161KB).
+- **Ölçüm (debug-imzalı AAB, `Builds/SizeCheck/`, bundletool):** AAB 77.2→**55.4MB**; arm64 indirme 52.6→**38.4MB**; libil2cpp arm64 60.5→**23.6MB**; cihazda açılan veri ~112→~69MB → Play'deki "147MB" tahminen **~90-105MB**'a iner (tam değeri Play Console söyler).
+- arm64 emülatörde (`emulator-5554`, Android 15) kuruldu ve açıldı: ikon kalp + "Draw Rush" ✓, HUD safe-area ✓, duvar/köşe kırmızı ✓. LevelPlay init başladı ama sonuç callback'i gelmedi (emülatör/debug imza ortamı olabilir — stripping değil; reklam hâlâ GERÇEK CİHAZDA test edilmedi). Test APK'sı sonra kaldırıldı.
+- Tutorial'daki krem şerit = dikey beyaz `MainPlatform (1)` fon duvarı → renderer kapatıldı.
+- 🪤 `EditorApplication.delayCall` ile build başlatma tetiklenmedi; build'i doğrudan execute_code'da çalıştır (MCP timeout verir, build sürer, sonucu dosyaya yaz). Build ~26 dk.
+- 🪤 bundletool: `/Applications/Unity/Hub/Editor/6000.3.12f1/PlaybackEngines/AndroidPlayer/Tools/bundletool-all-1.17.2.jar` + aynı klasördeki OpenJDK java + SDK adb.
 
 ### 🪤 Bu oturumun tuzakları
 - **Unity editörü ANA checkout'ta açık** (`/Users/kaanusta/Unity Projects/DrawRush`), Claude oturumu worktree'de başladı → işler ana checkout'ta `claude-dev-feat-feedback` dalında yapıldı (Write hook'u ana checkout'u engelliyor, Bash/python ile yazıldı).
