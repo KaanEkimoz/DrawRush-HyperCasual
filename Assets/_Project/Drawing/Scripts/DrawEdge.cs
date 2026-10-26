@@ -124,6 +124,14 @@ namespace DrawRush.Drawing
             AfterChange(Fill.CloseGaps(meters / len, (endMeters < 0f ? meters : endMeters) / len));
         }
 
+        /// <summary>Painted fraction once gaps up to <paramref name="meters"/> and end slivers up to
+        /// <paramref name="endMeters"/> are counted as painted (read-only).</summary>
+        public float CoverageClosingGaps(float meters, float endMeters)
+        {
+            float len = Length;
+            return len < 0.001f ? Fill.Coverage : Fill.CoverageClosingGaps(meters / len, endMeters / len);
+        }
+
         /// <summary>Paint the whole edge at once (auto-complete, win sweep).</summary>
         public void CompleteAll()
         {

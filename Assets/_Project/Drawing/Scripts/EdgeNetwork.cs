@@ -40,6 +40,23 @@ namespace DrawRush.Drawing
                  "has its own drops, so the two drops at a corner sit a little apart — this must " +
                  "be larger than that gap but smaller than an edge length.")]
         [SerializeField] private float cornerMergeDistance = 1.5f;
+
+        [Header("Mid-edge drops")]
+        [Tooltip("Edges longer than this (m) get extra drops along them, so a long curve (a flower " +
+                 "petal, a watermelon rind) has markers to steer by, not only its two ends.")]
+        [SerializeField] private float markerMinEdge = 4.5f;
+        [Tooltip("Roughly this many metres between drops along a long edge.")]
+        [SerializeField] private float markerSpacing = 3f;
+        [Tooltip("Size of a mid-edge drop relative to a corner drop, before / after it is painted.")]
+        [SerializeField] private Vector2 markerScale = new(0.6f, 0.85f);
+
+        [Header("Shape fill")]
+        [Tooltip("Opacity of the tint that fills a closed part of the shape once it is finished.")]
+        [SerializeField, Range(0f, 1f)] private float fillAlpha = 0.7f;
+        [Tooltip("Seconds the fill takes to fade in.")]
+        [SerializeField] private float fillFadeSeconds = 0.5f;
+        [Tooltip("Fill height: above the ground, under the ghost and the paint.")]
+        [SerializeField] private float fillY = 0.006f;
         [Tooltip("Post height (world units).")]
         [SerializeField] private float cornerHeight = 1.0f;
         [Tooltip("Post thickness (world units, X/Z).")]
@@ -107,7 +124,12 @@ namespace DrawRush.Drawing
 
         private void OnEnable() => Rebuild();
 
-        private void OnDisable() => UnsubscribeAll();
+        private void OnDisable()
+        {
+            UnsubscribeAll();
+            ClearMarkers();
+            ClearFills();
+        }
 
         /// <summary>Appends every edge touching <paramref name="anchor"/> to
         /// <paramref name="results"/> (cleared first). The paint controller uses this to pick
@@ -138,14 +160,17 @@ namespace DrawRush.Drawing
                 edge.Completed += OnEdgeCompleted;
                 _edges.Add(edge);
                 _authors[edge] = author;
-                author.View.Bind(edge, author.WallColor(fallbackLineColor));
             }
             _remaining = _edges.Count;
+
+            // Corners first: they may move edge ends, and the views must draw the moved geometry.
+            BuildCorners();
+            foreach (DrawEdge edge in _edges) _authors[edge].View.Bind(edge, _authors[edge].WallColor(fallbackLineColor));
             _centroid = ComputeCentroid();
             Generation++;
-
-            BuildCorners();
             ComputeComponentInteriors();
+            BuildMarkers();
+            BuildFills();
         }
 
         // Group edges into connected components (two edges are connected when they share a
@@ -251,6 +276,7 @@ namespace DrawRush.Drawing
                     SpawnJoint(c);
                 }
             }
+            ShowFinishedFills();
 
             if (_remaining == 0) AllCompleted?.Invoke();
         }
@@ -314,8 +340,222 @@ namespace DrawRush.Drawing
                 if (!anyArc && TryEdgeIntersection(c.Edges[0], c.Edges[1], out Vector3 hit)
                     && (hit - c.Position).sqrMagnitude < 4f) pos = hit;
                 c.PostPosition = pos;
+                SnapEndsToCorner(c);
                 if (generateCornerPosts) c.Post = SpawnPost(pos, c.Edges);
             }
+        }
+
+        // Authored drops sit a little inside each corner, so two edges meeting there ended up to
+        // 1.3 m apart: turning at the one visible drop left the other edge's end unpainted and
+        // the edge stuck short of finishing. Move every end in the corner onto the true corner,
+        // so edges really meet. Skipped where it would fold an edge onto itself (both ends of a
+        // petal in one corner) or squash it.
+        private void SnapEndsToCorner(Corner c)
+        {
+            if (!Application.isPlaying) return;
+            foreach (DrawEdge e in c.Edges)
+            {
+                if (c.Drops.Contains(e.A) && c.Drops.Contains(e.B)) return;
+                DrawPart moving = c.Drops.Contains(e.A) ? e.A : e.B;
+                Vector3 other = (moving == e.A ? e.B : e.A).Transform.position;
+                if (Flat(other - c.PostPosition) < 1f) return;
+            }
+            foreach (DrawPart drop in c.Drops)
+            {
+                Vector3 p = drop.Transform.position;
+                drop.Transform.position = new Vector3(c.PostPosition.x, p.y, c.PostPosition.z);
+            }
+        }
+
+        private static float Flat(Vector3 v) { v.y = 0f; return v.magnitude; }
+
+        // --- mid-edge drops ----------------------------------------------------------------
+
+        private struct Marker
+        {
+            public DrawEdge Edge;
+            public float T;
+            public Transform Body;
+            public Vector3 Scale;   // full corner-drop scale
+            public float Pop;       // < 0 = not painted yet; then seconds into the pop
+        }
+
+        private readonly List<Marker> _markers = new();
+        private static readonly int MarkerBaseColorId = Shader.PropertyToID("_BaseColor");
+        private static readonly int MarkerColorId = Shader.PropertyToID("_Color");
+        private static readonly int MarkerEmissionId = Shader.PropertyToID("_EmissionColor");
+
+        private void ClearMarkers()
+        {
+            foreach (Marker m in _markers) if (m.Body != null) SafeDestroy(m.Body.gameObject);
+            _markers.Clear();
+        }
+
+        private void BuildMarkers()
+        {
+            ClearMarkers();
+            if (!Application.isPlaying) return;
+            var mpb = new MaterialPropertyBlock();
+            foreach (DrawEdge edge in _edges)
+            {
+                float len = edge.Length;
+                if (len < markerMinEdge) continue;
+                int count = Mathf.Max(1, Mathf.RoundToInt(len / Mathf.Max(0.5f, markerSpacing)) - 1);
+                Transform template = edge.A.Transform;
+                Vector3 scale = _dropScale.TryGetValue(template, out Vector3 s) ? s : template.localScale;
+                Color color = ColorOf(edge);
+                for (int k = 1; k <= count; k++)
+                {
+                    float t = k / (float)(count + 1);
+                    GameObject go = Instantiate(template.gameObject, template.parent);
+                    go.name = "EdgeDrop";
+                    StripToVisual(go);
+                    Vector3 at = edge.PointAt(t);
+                    go.transform.position = new Vector3(at.x, template.position.y, at.z);
+                    go.transform.localScale = scale * markerScale.x;
+                    foreach (Renderer r in go.GetComponentsInChildren<Renderer>())
+                    {
+                        if (r.gameObject.name == "DropOutline") continue;
+                        r.GetPropertyBlock(mpb);
+                        mpb.SetColor(MarkerBaseColorId, color);
+                        mpb.SetColor(MarkerColorId, color);
+                        mpb.SetColor(MarkerEmissionId, color * 0.45f);
+                        r.SetPropertyBlock(mpb);
+                    }
+                    _markers.Add(new Marker { Edge = edge, T = t, Body = go.transform, Scale = scale, Pop = -1f });
+                }
+            }
+        }
+
+        // A copy of a drop that is only a marker: no anchor, no collider, one outline rim (the
+        // copied rim is dropped; DropOutline builds its own on enable).
+        private static void StripToVisual(GameObject go)
+        {
+            foreach (Collider c in go.GetComponentsInChildren<Collider>()) SafeDestroy(c);
+            foreach (DrawPart p in go.GetComponentsInChildren<DrawPart>()) SafeDestroy(p);
+            var rims = new List<Transform>();
+            foreach (Transform t in go.GetComponentsInChildren<Transform>(true)) if (t.name == "DropOutline") rims.Add(t);
+            for (int i = 0; i < rims.Count - 1; i++) SafeDestroy(rims[i].gameObject);
+        }
+
+        // --- shape fill ---------------------------------------------------------------------
+
+        private sealed class Fill
+        {
+            public ShapeFill.Loop Loop;
+            public Color Color;
+            public MeshRenderer Renderer;
+            public float Age = -1f;   // < 0 = not shown yet
+        }
+
+        private readonly List<Fill> _fills = new();
+        private static Material _fillMaterial;
+        private MaterialPropertyBlock _fillBlock;
+
+        private void ClearFills()
+        {
+            foreach (Fill f in _fills)
+                if (f.Renderer != null) { SafeDestroy(f.Renderer.GetComponent<MeshFilter>().sharedMesh); SafeDestroy(f.Renderer.gameObject); }
+            _fills.Clear();
+        }
+
+        private void BuildFills()
+        {
+            ClearFills();
+            if (!Application.isPlaying || fillAlpha <= 0f) return;
+            var cornerOf = new Dictionary<DrawPart, int>();
+            for (int i = 0; i < _corners.Count; i++) foreach (DrawPart d in _corners[i].Drops) cornerOf[d] = i;
+            int Corner(DrawPart p) => p != null && cornerOf.TryGetValue(p, out int c) ? c : -1 - (p != null ? p.GetInstanceID() & 0xffff : 0);
+            bool Petal(DrawEdge e) => e.IsArc && Flat(e.A.Transform.position - e.B.Transform.position) <= cornerMergeDistance;
+            foreach (ShapeFill.Loop loop in ShapeFill.FindLoops(_edges, Corner, Petal))
+                _fills.Add(new Fill { Loop = loop, Color = LoopColor(loop) });
+        }
+
+        // The colour most of the loop's edges wear; on a tie a straight edge wins, so a watermelon
+        // (red straight top, green rind) fills red.
+        private Color LoopColor(ShapeFill.Loop loop)
+        {
+            Color best = fallbackLineColor;
+            int bestCount = -1;
+            bool bestStraight = false;
+            foreach (DrawEdge e in loop.Edges)
+            {
+                Color c = ColorOf(e);
+                int n = 0;
+                foreach (DrawEdge o in loop.Edges) if (ColorOf(o) == c) n++;
+                bool straight = !e.IsArc;
+                if (n > bestCount || (n == bestCount && straight && !bestStraight)) { best = c; bestCount = n; bestStraight = straight; }
+            }
+            return best;
+        }
+
+        private void ShowFinishedFills()
+        {
+            foreach (Fill f in _fills)
+            {
+                if (f.Age >= 0f || !AllEdgesComplete(f.Loop.Edges)) continue;
+                Mesh mesh = ShapeFill.BuildMesh(f.Loop.Points, fillY, Color.white);
+                f.Age = 0f;
+                if (mesh == null) continue;
+                var go = new GameObject("ShapeFill", typeof(MeshFilter), typeof(MeshRenderer));
+                // World-space mesh, so it stays unparented: a scaled level root would stretch it.
+                // ClearFills removes it when the level goes away.
+                go.GetComponent<MeshFilter>().sharedMesh = mesh;
+                f.Renderer = go.GetComponent<MeshRenderer>();
+                if (_fillMaterial == null) _fillMaterial = new Material(Shader.Find("Sprites/Default")) { name = "Auto_ShapeFill" };
+                f.Renderer.sharedMaterial = _fillMaterial;
+                f.Renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                f.Renderer.receiveShadows = false;
+                SetFillAlpha(f, 0f);
+            }
+        }
+
+        private void SetFillAlpha(Fill f, float alpha)
+        {
+            if (f.Renderer == null) return;
+            _fillBlock ??= new MaterialPropertyBlock();
+            f.Renderer.GetPropertyBlock(_fillBlock);
+            _fillBlock.SetColor(MarkerColorId, new Color(f.Color.r, f.Color.g, f.Color.b, alpha));
+            f.Renderer.SetPropertyBlock(_fillBlock);
+        }
+
+        private void Update()
+        {
+            foreach (Fill f in _fills)
+            {
+                if (f.Age < 0f || f.Age >= fillFadeSeconds || f.Renderer == null) continue;
+                f.Age += Time.deltaTime;
+                SetFillAlpha(f, fillAlpha * Mathf.Clamp01(f.Age / Mathf.Max(0.01f, fillFadeSeconds)));
+            }
+            UpdateMarkers();
+        }
+
+        private void UpdateMarkers()
+        {
+            const float popSeconds = 0.3f;
+            for (int i = 0; i < _markers.Count; i++)
+            {
+                Marker m = _markers[i];
+                if (m.Body == null) continue;
+                if (m.Pop < 0f)
+                {
+                    if (!Painted(m.Edge, m.T)) continue;
+                    m.Pop = 0f;
+                }
+                else if (m.Pop >= popSeconds) continue;
+                m.Pop += Time.deltaTime;
+                float k = Mathf.Clamp01(m.Pop / popSeconds);
+                float size = Mathf.Lerp(markerScale.x, markerScale.y, k) + 0.35f * Mathf.Sin(k * Mathf.PI);
+                m.Body.localScale = m.Scale * size;
+                _markers[i] = m;
+            }
+        }
+
+        private static bool Painted(DrawEdge edge, float t)
+        {
+            if (edge.IsComplete) return true;
+            foreach (Vector2 s in edge.Fill.Spans) if (t >= s.x && t <= s.y) return true;
+            return false;
         }
 
         // The drops sit a little inside each corner, so finished lines stopped short of it (the

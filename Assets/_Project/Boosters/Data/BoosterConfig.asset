@@ -37,8 +37,11 @@ MonoBehaviour:
   _shockwaveRadius: 6
   _shockwavePush: 3.5
   _shieldBreakGrace: 1
-  _firstSpawnDelay: 6
-  _spawnInterval: {x: 8, y: 12}
+  _firstSpawnDelay: 2.5
+  _spawnInterval: {x: 5, y: 8}
+  _preferredPlayerDistance: {x: 4, y: 10}
+  _sideOffset: 1.2
+  _dangerRadius: 5
   _pickupLifetime: 7
   _blinkSeconds: 2
   _minEnemyDistance: 2.5

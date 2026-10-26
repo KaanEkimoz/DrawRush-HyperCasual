@@ -39,6 +39,11 @@ namespace DrawRush.Drawing
         [Tooltip("Dash scroll speed (texture repeats per second): the \"marching ants\" that make the " +
                  "ghost read as a path still to walk, not as scenery.")]
         [SerializeField] private float ghostScroll = 0.6f;
+        [Tooltip("A soft dark track under the dashes, so the ghost reads on any ground (a green " +
+                 "edge on grass all but vanished). Opacity; 0 = off.")]
+        [SerializeField, Range(0f, 1f)] private float ghostShadowAlpha = 0.28f;
+        [Tooltip("Shadow track width as a multiple of the ghost width.")]
+        [SerializeField] private float ghostShadowWidthScale = 2f;
 
         [Header("Finished edge")]
         [Tooltip("Width multiple a finished edge keeps.")]
@@ -96,7 +101,7 @@ namespace DrawRush.Drawing
             _hidden = true;
             SetHighlight(false);
             foreach (LineRenderer lr in _spans) lr.enabled = false;
-            foreach (LineRenderer lr in _ghosts) lr.enabled = false;
+            foreach (LineRenderer lr in _ghosts) { lr.enabled = false; SyncShadow(lr); }
         }
 
         /// <summary>The edge is done: flash wide and bright, then settle a little wider and lighter
@@ -238,6 +243,7 @@ namespace DrawRush.Drawing
             lr.receiveShadows = false;
             lr.material = ResolveGhostMaterial();
             lr.enabled = false;
+            if (ghostShadowAlpha > 0f) CreateGhostShadow(lr, w);
             if (_ghostBlock != null || color != default)
             {
                 _ghostBlock ??= new MaterialPropertyBlock();
@@ -247,6 +253,37 @@ namespace DrawRush.Drawing
                 lr.SetPropertyBlock(_ghostBlock);
             }
             return lr;
+        }
+
+        private static Material _shadowMaterial;
+
+        private void CreateGhostShadow(LineRenderer ghost, float ghostWidth)
+        {
+            var go = new GameObject("Shadow");
+            go.transform.SetParent(ghost.transform, false);
+            var sh = go.AddComponent<LineRenderer>();
+            sh.useWorldSpace = true;
+            sh.positionCount = 2;
+            sh.numCapVertices = 4;
+            sh.startWidth = sh.endWidth = ghostWidth * ghostShadowWidthScale;
+            sh.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            sh.receiveShadows = false;
+            if (_shadowMaterial == null) _shadowMaterial = new Material(Shader.Find("Sprites/Default")) { name = "Auto_GhostShadow" };
+            sh.sharedMaterial = _shadowMaterial;
+            sh.startColor = sh.endColor = new Color(0f, 0f, 0f, ghostShadowAlpha);
+            sh.enabled = false;
+        }
+
+        // The shadow follows its ghost: same points, a hair lower, shown exactly when it is.
+        private static void SyncShadow(LineRenderer ghost)
+        {
+            if (ghost.transform.childCount == 0) return;
+            var sh = ghost.transform.GetChild(0).GetComponent<LineRenderer>();
+            if (sh == null) return;
+            sh.enabled = ghost.enabled;
+            if (!ghost.enabled) return;
+            sh.positionCount = ghost.positionCount;
+            for (int i = 0; i < ghost.positionCount; i++) sh.SetPosition(i, ghost.GetPosition(i) + Vector3.down * 0.004f);
         }
 
         private Material ResolveGhostMaterial()
@@ -317,6 +354,7 @@ namespace DrawRush.Drawing
             if (1f - cursor > 0.001f) _gaps.Add(new Vector2(cursor, 1f));
             for (int i = 0; i < _gaps.Count; i++) SetGhost(GhostAt(i), _gaps[i].x, _gaps[i].y);
             for (int i = _gaps.Count; i < _ghosts.Count; i++) _ghosts[i].enabled = false;
+            foreach (LineRenderer g in _ghosts) SyncShadow(g);
         }
 
         private static readonly Vector2[] Full = { new(0f, 1f) };

@@ -166,6 +166,10 @@ namespace DrawRush.Drawing
                 DrawEdge e = edges[i];
                 if (e.IsComplete) continue;
                 e.ConfirmPendingOlderThan(now - pendingSeconds);
+                // Finishing an edge is a save point: the moment it is all but painted it completes,
+                // fresh paint included, instead of waiting out the pending window first (that wait
+                // made finished edges light up a second or more after the player got there).
+                if (e.CoverageClosingGaps(microGapMeters, endGapMeters) >= edgeAutoComplete) { e.CompleteAll(); continue; }
                 if (!e.Fill.HasPending)
                 {
                     e.CloseGaps(microGapMeters, endGapMeters);

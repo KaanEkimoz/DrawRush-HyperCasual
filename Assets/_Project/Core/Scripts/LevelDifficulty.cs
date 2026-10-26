@@ -20,18 +20,25 @@ namespace DrawRush.Core
         // dial by design: adding one is a real step up, not a nudge.
         public const float EnemyWeight = 3.0f;
 
-        /// <summary>Intrinsic cost of drawing the shape, enemies excluded.</summary>
+        /// <summary>A long edge counts as this many metres per edge: a 9 m flower petal is real
+        /// drawing, not one edge's worth. Short edges still cost a whole edge (each one is a turn).</summary>
+        public const float MetersPerEdge = 4f;
+
+        /// <summary>Intrinsic cost of drawing the shape, enemies excluded: per edge, its length in
+        /// <see cref="MetersPerEdge"/> units (at least one edge), plus the arc bonus for curves.
+        /// Counting edges alone scored a 38 m flower like a 20 m hexagon and loaded it with enemies.</summary>
         public static float ShapeScore(Transform level)
         {
             if (level == null) return 0f;
-            int edges = 0, arcs = 0;
-            foreach (MonoBehaviour mb in level.GetComponentsInChildren<MonoBehaviour>(true))
+            float score = 0f;
+            foreach (DrawRush.Drawing.DrawEdgeAuthor author in level.GetComponentsInChildren<DrawRush.Drawing.DrawEdgeAuthor>(true))
             {
-                if (mb == null || mb.GetType().Name != "DrawEdgeAuthor") continue;
-                edges++;
-                if (mb.transform.Find("WP") != null) arcs++;   // authored waypoint => curved edge
+                if (author == null || !author.IsValid) continue;
+                var edge = new DrawRush.Drawing.DrawEdge(author.AnchorA, author.AnchorB) { Waypoint = author.Waypoint };
+                score += Mathf.Max(EdgeWeight, edge.Length / MetersPerEdge * EdgeWeight);
+                if (author.Waypoint != null) score += ArcBonus;   // authored waypoint => curved edge
             }
-            return edges * EdgeWeight + arcs * ArcBonus;
+            return score;
         }
 
         /// <summary>Enemies this level should field to land on <paramref name="target"/>, capped by

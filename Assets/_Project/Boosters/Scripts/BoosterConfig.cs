@@ -47,10 +47,18 @@ namespace DrawRush.Boosters
         [SerializeField] private float _shieldBreakGrace = 1f;
 
         [Header("Spawning")]
-        [Tooltip("Seconds after a level starts before the first pickup.")]
-        [SerializeField] private float _firstSpawnDelay = 6f;
+        [Tooltip("Seconds after a level starts before the first pickup (most levels last 6-16 s).")]
+        [SerializeField] private float _firstSpawnDelay = 2.5f;
         [Tooltip("Seconds between a pickup going (taken or expired) and the next one.")]
-        [SerializeField] private Vector2 _spawnInterval = new(8f, 12f);
+        [SerializeField] private Vector2 _spawnInterval = new(5f, 8f);
+
+        [Header("Placement")]
+        [Tooltip("Preferred distance (m) from the player: ahead on the drawing, not on top of them.")]
+        [SerializeField] private Vector2 _preferredPlayerDistance = new(4f, 10f);
+        [Tooltip("Pickups sit this far (m) beside the line, so taking one is a small detour (a choice).")]
+        [SerializeField] private float _sideOffset = 1.2f;
+        [Tooltip("Defensive boosters prefer spots within this distance (m) of an enemy: risk for reward.")]
+        [SerializeField] private float _dangerRadius = 5f;
         [Tooltip("Seconds a pickup waits before vanishing.")]
         [SerializeField] private float _pickupLifetime = 7f;
         [Tooltip("The pickup blinks for this many final seconds.")]
@@ -70,6 +78,9 @@ namespace DrawRush.Boosters
         public float ShockwavePush => _shockwavePush;
         public float ShieldBreakGrace => _shieldBreakGrace;
         public float FirstSpawnDelay => _firstSpawnDelay;
+        public Vector2 PreferredPlayerDistance => _preferredPlayerDistance;
+        public float SideOffset => _sideOffset;
+        public float DangerRadius => _dangerRadius;
         public Vector2 SpawnInterval => _spawnInterval;
         public float PickupLifetime => _pickupLifetime;
         public float BlinkSeconds => _blinkSeconds;
@@ -113,21 +124,33 @@ namespace DrawRush.Boosters
             };
         }
 
-        /// <summary>Weighted pick; defensive types weigh more when <paramref name="pity"/> is on.</summary>
-        public BoosterType Pick(bool pity, Func<float> random01)
+        /// <summary>True for boosters that only do something when enemies are on the field.</summary>
+        public static bool NeedsEnemies(BoosterType type) => type != BoosterType.Speed;
+
+        /// <summary>Weighted pick; defensive types weigh more when <paramref name="pity"/> is on. With
+        /// no enemies on the field only boosters that still help (speed) can come up.</summary>
+        public BoosterType Pick(bool pity, Func<float> random01, bool enemiesPresent = true)
         {
             float total = 0f;
-            foreach (Entry e in _entries) total += WeightOf(e, pity);
+            foreach (Entry e in _entries) total += WeightOf(e, pity, enemiesPresent);
+            if (total <= 0f) return BoosterType.Speed;
             float r = random01() * total;
             foreach (Entry e in _entries)
             {
-                r -= WeightOf(e, pity);
+                float w = WeightOf(e, pity, enemiesPresent);
+                if (w <= 0f) continue;
+                r -= w;
                 if (r <= 0f) return e.type;
             }
-            return _entries.Length > 0 ? _entries[_entries.Length - 1].type : BoosterType.Shield;
+            for (int i = _entries.Length - 1; i >= 0; i--)
+                if (WeightOf(_entries[i], pity, enemiesPresent) > 0f) return _entries[i].type;
+            return BoosterType.Speed;
         }
 
-        private float WeightOf(Entry e, bool pity)
-            => Mathf.Max(0f, e.weight) * (pity && (e.type == BoosterType.Shield || e.type == BoosterType.Freeze) ? _pityWeight : 1f);
+        private float WeightOf(Entry e, bool pity, bool enemiesPresent)
+        {
+            if (!enemiesPresent && NeedsEnemies(e.type)) return 0f;
+            return Mathf.Max(0f, e.weight) * (pity && (e.type == BoosterType.Shield || e.type == BoosterType.Freeze) ? _pityWeight : 1f);
+        }
     }
 }

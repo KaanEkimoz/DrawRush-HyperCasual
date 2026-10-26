@@ -4,12 +4,14 @@ using DrawRush.Drawing;
 using DrawRush.Enemy;
 using TMPro;
 using UnityEngine;
+using UnityEngine.AI;
 
 namespace DrawRush.Boosters
 {
     /// <summary>
-    /// Places one booster pickup at a time on the field: on an unpainted stretch of the shape (so
-    /// grabbing it is on the way), away from enemies and from the player. The first one comes a
+    /// Places one booster pickup at a time on the field: beside an unpainted stretch of the shape,
+    /// ahead of the player, defensive ones near danger, never on top of an enemy or the player.
+    /// In a level with no enemies only speed comes up. The first one comes a
     /// few seconds into a level; after one is taken or expires, the next follows 8-12 s later.
     /// After a recent hit, shield and freeze are likelier (quiet pity, never announced).
     /// </summary>
@@ -32,6 +34,8 @@ namespace DrawRush.Boosters
         private BoosterPickup _current;
         private float _nextSpawn = float.PositiveInfinity;
         private readonly List<DrawEdge> _open = new();
+        private readonly List<Vector3> _enemies = new();
+        private Vector3 _lastPos, _heading;
 
         private BoosterConfig Config => boosts != null ? boosts.Config : null;
 
@@ -52,6 +56,10 @@ namespace DrawRush.Boosters
 
         private void Update()
         {
+            Vector3 step = transform.position - _lastPos; step.y = 0f;
+            if (step.sqrMagnitude > 1e-6f) _heading = Vector3.Lerp(_heading, step.normalized, 0.1f);
+            _lastPos = transform.position;
+
             var state = GameServices.State;
             if (state != null && state.IsGameWon) { Clear(); return; }
             if (_current != null || Config == null || Time.time < _nextSpawn) return;
@@ -94,24 +102,59 @@ namespace DrawRush.Boosters
             foreach (DrawEdge e in net.Edges) if (!e.IsComplete) _open.Add(e);
             if (_open.Count == 0) return false;
 
-            var enemies = FindObjectsByType<EnemyFollow>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+            _enemies.Clear();
+            foreach (EnemyFollow en in FindObjectsByType<EnemyFollow>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+                if (en.isActiveAndEnabled) _enemies.Add(en.transform.position);
+
+            // Type first, then a spot that suits it. With no enemies only speed can come up:
+            // a shield or a freeze in an empty level is a pickup that does nothing.
+            BoosterType type = Config.Pick(boosts.RecentlyHit, () => Random.value, _enemies.Count > 0);
+            bool defensive = BoosterConfig.NeedsEnemies(type);
             Vector3 player = transform.position;
-            for (int attempt = 0; attempt < 12; attempt++)
+            Vector2 pref = Config.PreferredPlayerDistance;
+
+            float bestScore = float.NegativeInfinity;
+            Vector3 best = default;
+            for (int attempt = 0; attempt < 24; attempt++)
             {
                 DrawEdge e = _open[Random.Range(0, _open.Count)];
                 float t = RandomUnpaintedT(e);
                 if (t < 0f) continue;
-                Vector3 p = e.PointAt(t);
-                if (Flat(p - player) < Config.MinPlayerDistance) continue;
-                bool nearEnemy = false;
-                foreach (EnemyFollow en in enemies)
-                    if (en.isActiveAndEnabled && Flat(en.transform.position - p) < Config.MinEnemyDistance) { nearEnemy = true; break; }
-                if (nearEnemy) continue;
 
-                Spawn(Config.Pick(boosts.RecentlyHit, () => Random.value), p);
-                return true;
+                // Beside the line, not on it: walking the shape should not collect it by itself.
+                Vector3 onLine = e.PointAt(t);
+                Vector3 side = Vector3.Cross(Vector3.up, e.TangentAt(t));
+                side.y = 0f;
+                Vector3 p = side.sqrMagnitude > 1e-6f
+                    ? onLine + side.normalized * (Random.value < 0.5f ? -1f : 1f) * Config.SideOffset
+                    : onLine;
+                // Walkable? The NavMesh sits below the drawing height, so judge it on the ground plane.
+                p = NavMesh.SamplePosition(p, out NavMeshHit hit, 1.5f, NavMesh.AllAreas) && Flat(hit.position - p) < 0.6f
+                    ? new Vector3(hit.position.x, p.y, hit.position.z)
+                    : onLine;
+
+                float toPlayer = Flat(p - player);
+                if (toPlayer < Config.MinPlayerDistance) continue;
+                float toEnemy = NearestEnemy(p);
+                if (toEnemy < Config.MinEnemyDistance) continue;
+
+                // Ahead on the drawing (4-10 m, the way the player is heading), and for defensive
+                // boosters near danger: the research's risk-for-reward rule.
+                float score = -(toPlayer < pref.x ? pref.x - toPlayer : toPlayer > pref.y ? toPlayer - pref.y : 0f);
+                if (_heading.sqrMagnitude > 1e-4f && Vector3.Dot(p - player, _heading) > 0f) score += 2f;
+                if (defensive && toEnemy < float.PositiveInfinity) score -= Mathf.Max(0f, toEnemy - Config.DangerRadius) * 0.5f;
+                if (score > bestScore) { bestScore = score; best = p; }
             }
-            return false;
+            if (float.IsNegativeInfinity(bestScore)) return false;
+            Spawn(type, best);
+            return true;
+        }
+
+        private float NearestEnemy(Vector3 p)
+        {
+            float best = float.PositiveInfinity;
+            foreach (Vector3 e in _enemies) best = Mathf.Min(best, Flat(e - p));
+            return best;
         }
 
         private static float RandomUnpaintedT(DrawEdge e)

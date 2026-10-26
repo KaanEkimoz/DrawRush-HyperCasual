@@ -115,5 +115,21 @@ namespace DrawRush.Tests.EditMode
             }
             finally { Object.DestroyImmediate(config); }
         }
+
+        [Test]
+        public void NoEnemies_OnlySpeedComesUp()
+        {
+            var config = ScriptableObject.CreateInstance<BoosterConfig>();
+            try
+            {
+                for (int i = 0; i < 100; i++)
+                {
+                    float r = (i + 0.5f) / 100f;
+                    Assert.AreEqual(BoosterType.Speed, config.Pick(false, () => r, enemiesPresent: false));
+                    Assert.AreEqual(BoosterType.Speed, config.Pick(true, () => r, enemiesPresent: false));
+                }
+            }
+            finally { Object.DestroyImmediate(config); }
+        }
     }
 }

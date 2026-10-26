@@ -146,6 +146,27 @@ namespace DrawRush.Drawing
             return changed;
         }
 
+        /// <summary>Painted fraction (pending included) if gaps up to <paramref name="maxGap"/> and end
+        /// slivers up to <paramref name="maxEndGap"/> (t units) counted as painted, i.e. what
+        /// <see cref="CloseGaps"/> would leave. Read-only.</summary>
+        public float CoverageClosingGaps(float maxGap, float maxEndGap)
+        {
+            if (IsComplete) return 1f;
+            IReadOnlyList<Vector2> u = Union();
+            if (u.Count == 0) return 0f;
+            float covered = 0f;
+            float start = u[0].x <= maxEndGap ? 0f : u[0].x, end = u[0].y;
+            for (int i = 1; i < u.Count; i++)
+            {
+                if (u[i].x - end <= maxGap) { end = Mathf.Max(end, u[i].y); continue; }
+                covered += end - start;
+                start = u[i].x;
+                end = u[i].y;
+            }
+            if (1f - end <= maxEndGap) end = 1f;
+            return covered + (end - start);
+        }
+
         /// <summary>Paint the whole edge (auto-complete / win sweep).</summary>
         public void CompleteAll()
         {
