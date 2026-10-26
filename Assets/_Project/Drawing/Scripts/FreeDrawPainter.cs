@@ -56,6 +56,10 @@ namespace DrawRush.Drawing
         [Tooltip("Band multiple while the stall magnet is on.")]
         [SerializeField] private float stallBandScale = 1.6f;
 
+        [Tooltip("Pending paint this close (m) to the player cannot be eaten: an Eater only eats the " +
+                 "trail left behind, so one hugging the player cannot stall the level.")]
+        [SerializeField] private float brushProtectRadius = 1f;
+
         [SerializeField] private PlayerCombat combat;
 
         /// <summary>Whole-shape painted fraction (0-1), length-weighted.</summary>
@@ -199,6 +203,8 @@ namespace DrawRush.Drawing
         public void ErasePendingNear(Vector3 worldPos, float radius)
         {
             if (_network == null || _sweeping) return;
+            Vector3 toPlayer = worldPos - transform.position; toPlayer.y = 0f;
+            if (toPlayer.magnitude < brushProtectRadius) return;   // wet paint under the brush is safe
             bool lost = false;
             foreach (DrawEdge e in _network.Edges)
             {

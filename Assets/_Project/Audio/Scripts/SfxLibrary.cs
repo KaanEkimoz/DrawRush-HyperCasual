@@ -32,5 +32,13 @@ namespace DrawRush.Audio
         public Cue coin = new();
         [Tooltip("A UI button was pressed.")]
         public Cue uiClick = new();
+        [Tooltip("A booster was picked up.")]
+        public Cue boosterPickup = new();
+        [Tooltip("The shield absorbed a hit and broke.")]
+        public Cue shieldBreak = new();
+        [Tooltip("A Dasher starts flashing before its lunge (the audible half of the telegraph).")]
+        public Cue dashWindUp = new();
+        [Tooltip("Fresh paint was wiped (a hit or an Eater).")]
+        public Cue paintLost = new();
     }
 }

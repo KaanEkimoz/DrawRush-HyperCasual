@@ -93,6 +93,9 @@ namespace DrawRush.Enemy
         [SerializeField] private float dashRange = 6f;
         [SerializeField] private Color windUpColor = Color.white;
 
+        /// <summary>Raised when any Dasher starts its wind-up (audio and haptics listen).</summary>
+        public static event System.Action DashWindUpStarted;
+
         private enum DashPhase { Idle, WindUp, Lunge }
         private DashPhase _dash;
         private float _dashTimer;
@@ -184,6 +187,7 @@ namespace DrawRush.Enemy
                     if ((player.position - transform.position).sqrMagnitude > dashRange * dashRange) { _dashTimer = 0.5f; return false; }
                     _dash = DashPhase.WindUp;
                     _dashTimer = dashWindUp;
+                    DashWindUpStarted?.Invoke();
                     _agent.isStopped = true;
                     _agent.velocity = Vector3.zero;
                     _agent.SetDestination(player.position);   // aim now; the lunge commits to it

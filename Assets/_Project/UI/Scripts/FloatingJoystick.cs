@@ -36,12 +36,28 @@ namespace DrawRush.UI
         [Tooltip("Ring/knob art size relative to the reach. Below 1 keeps the art smaller than the " +
                  "thumb travel so the stick does not dominate the screen.")]
         [SerializeField, Range(0.4f, 1.5f)] private float artScale = 0.75f;
-        [Tooltip("Fraction of this rect, from the bottom, where a touch may spawn the stick.")]
+        [Tooltip("Fraction of the screen height, from the bottom, where a touch may spawn the stick.")]
         [SerializeField, Range(0.1f, 1f)] private float spawnZoneHeight = 0.45f;
         [Tooltip("Once the thumb is this many reaches from the center, the ring follows it.")]
         [SerializeField, Min(1f)] private float followThreshold = 1f;
         [Tooltip("Radial deadzone as a fraction of the reach; output is rescaled to start at 0 past it.")]
         [SerializeField, Range(0f, 0.5f)] private float deadzone = 0.1f;
+        [Tooltip("Fixed mode (Settings): where the always-visible stick sits, as a fraction of the " +
+                 "screen height from the bottom, horizontally centred.")]
+        [SerializeField, Range(0.05f, 0.45f)] private float fixedHeight = 0.17f;
+
+        private const string FixedKey = "JoystickFixed";
+
+        /// <summary>Raised when the player switches between floating and fixed in Settings.</summary>
+        public static event System.Action ModeChanged;
+
+        /// <summary>Player setting: false = floating (spawns under the thumb, the default),
+        /// true = fixed (always visible at the bottom centre, no follow).</summary>
+        public static bool FixedMode
+        {
+            get => PlayerPrefs.GetInt(FixedKey, 0) == 1;
+            set { PlayerPrefs.SetInt(FixedKey, value ? 1 : 0); PlayerPrefs.Save(); ModeChanged?.Invoke(); }
+        }
 
         [InputControl(layout = "Vector2")]
         [SerializeField] private string controlPath = "<Gamepad>/leftStick";
@@ -66,7 +82,40 @@ namespace DrawRush.UI
             _canvas = GetComponentInParent<Canvas>();
             if (background != null) _backgroundScale = background.localScale;
             if (handle != null) _handleScale = handle.localScale;
-            HideStick();
+            ModeChanged += ApplyMode;
+            ApplyMode();
+        }
+
+        private void OnDestroy() => ModeChanged -= ApplyMode;
+
+        // Fixed mode keeps the stick parked and visible; floating hides it until a touch.
+        private void ApplyMode()
+        {
+            if (background == null) return;
+            if (!FixedMode) { HideStick(); return; }
+            Sizing();
+            // From the visible screen, not this rect: the touch rect is scaled in the scene and
+            // is larger than the screen, so its own fractions do not land where they look.
+            var screenHome = new Vector2(Screen.width * 0.5f, Screen.height * fixedHeight);
+            if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(_rect, screenHome, EventCamera(), out Vector2 home)) return;
+            background.anchoredPosition = home;
+            if (handle != null) handle.anchoredPosition = home;
+            background.gameObject.SetActive(true);
+            if (handle != null) handle.gameObject.SetActive(true);
+        }
+
+        private UnityEngine.Camera EventCamera()
+        {
+            Canvas root = _canvas != null ? _canvas.rootCanvas : null;
+            return root != null && root.renderMode != RenderMode.ScreenSpaceOverlay ? root.worldCamera : null;
+        }
+
+        private void Sizing()
+        {
+            _reach = ResolveReach();
+            float art = (movementRange > 0f ? _reach / movementRange : 1f) * artScale;
+            background.localScale = _backgroundScale * art;
+            if (handle != null) handle.localScale = _handleScale * art;
         }
 
         // Reach in this rect's units for the device's density; recomputed per touch so a
@@ -84,13 +133,10 @@ namespace DrawRush.UI
             if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
                     _rect, eventData.position, eventData.pressEventCamera, out Vector2 local))
             {
-                Rect r = _rect.rect;
-                if ((local.y - r.yMin) / r.height > spawnZoneHeight) return;   // outside the thumb zone
+                if (eventData.position.y / Mathf.Max(1, Screen.height) > spawnZoneHeight) return;   // outside the thumb zone (screen fraction)
                 _pointerId = eventData.pointerId;
-                _reach = ResolveReach();
-                float art = (movementRange > 0f ? _reach / movementRange : 1f) * artScale;
-                background.localScale = _backgroundScale * art;
-                if (handle != null) handle.localScale = _handleScale * art;
+                Sizing();
+                if (FixedMode) { SendValueToControl(Vector2.zero); OnDrag(eventData); return; }   // parked stick: steer from its centre
                 background.anchoredPosition = local;
                 if (handle != null) handle.anchoredPosition = local;
                 background.gameObject.SetActive(true);
@@ -111,7 +157,7 @@ namespace DrawRush.UI
             // Thumb drifted past the ring: drag the ring along so the player never has to
             // come back to the spawn point to keep steering.
             float followAt = _reach * followThreshold;
-            if (delta.magnitude > followAt)
+            if (!FixedMode && delta.magnitude > followAt)
             {
                 background.anchoredPosition += delta.normalized * (delta.magnitude - followAt);
                 delta = local - background.anchoredPosition;
@@ -136,7 +182,7 @@ namespace DrawRush.UI
             if (eventData.pointerId != _pointerId) return;
             _pointerId = int.MinValue;
             SendValueToControl(Vector2.zero);
-            HideStick();
+            ApplyMode();   // floating: hide; fixed: knob back to the parked centre
         }
 
         // A disabled stick (pause, level end) must not keep a held direction or a stale owner.
@@ -145,6 +191,12 @@ namespace DrawRush.UI
             _pointerId = int.MinValue;
             HideStick();
             base.OnDisable();
+        }
+
+        protected override void OnEnable()
+        {
+            base.OnEnable();
+            if (_rect != null) ApplyMode();
         }
 
         // Both the ring and the knob are hidden when not in use, so nothing lingers on screen.

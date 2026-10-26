@@ -13,7 +13,10 @@ using UnityEngine;
 /// level (enemies off) by writing stick input the way a player would — walk to the nearest
 /// unpainted stretch of the ghost shape, then follow it — and logs PASS/FAIL per level.
 /// Catches "the shape can't be finished" after drawing changes.
-/// Menu: DrawRush > Dev > Autoplay Levels (enter Play mode first).
+/// The "with enemies" variant keeps every enemy on, dressed as campaign level 26 (all four
+/// variants), and keeps the bot invulnerable: it checks that Eaters, Dashers and the rest never
+/// break a level or throw, not whether a human would survive.
+/// Menu: DrawRush > Dev > Autoplay Levels [with Enemies] (enter Play mode first).
 /// </summary>
 public static class LevelAutoplay
 {
@@ -23,6 +26,12 @@ public static class LevelAutoplay
     private const BindingFlags Private = BindingFlags.NonPublic | BindingFlags.Instance;
 
     private static readonly FieldInfo MoveField = typeof(ThirdPersonMovement).GetField("_move", Private);
+    private static readonly FieldInfo InvulnerableField = typeof(PlayerCombat).GetField("_invulnerableUntil", Private);
+    private const int EnemyCampaignLevel = 26;
+
+    private static bool _withEnemies;
+    private static int _savedPlayed;
+    private static PlayerCombat _combat;
 
     private static Queue<int> _queue;
     private static LevelManager _levels;
@@ -38,14 +47,23 @@ public static class LevelAutoplay
     [MenuItem("DrawRush/Dev/Autoplay Levels")]
     private static void Run() => Run(null);
 
+    [MenuItem("DrawRush/Dev/Autoplay Levels with Enemies")]
+    private static void RunWithEnemies() => Run(null, true);
+
     /// <summary>Autoplay the given level indices (null = every level except the tutorial).</summary>
-    public static void Run(IEnumerable<int> indices)
+    public static void Run(IEnumerable<int> indices) => Run(indices, false);
+
+    /// <summary>Autoplay; <paramref name="withEnemies"/> keeps every enemy on (bot invulnerable).</summary>
+    public static void Run(IEnumerable<int> indices, bool withEnemies)
     {
+        _withEnemies = withEnemies;
         if (!EditorApplication.isPlaying) { Debug.LogWarning("[Autoplay] Enter Play mode first."); return; }
         _levels = Object.FindFirstObjectByType<LevelManager>();
         _player = GameServices.Player;
         if (_levels == null || _player == null) { Debug.LogWarning("[Autoplay] No LevelManager/Player."); return; }
         _movement = _player.GetComponent<ThirdPersonMovement>();
+        _combat = _player.GetComponent<PlayerCombat>();
+        if (_withEnemies) { _savedPlayed = PlayerProgress.LevelsPlayed; PlayerProgress.LevelsPlayed = EnemyCampaignLevel; }
 
         _queue = new Queue<int>();
         if (indices != null) foreach (int i in indices) _queue.Enqueue(i);
@@ -62,8 +80,10 @@ public static class LevelAutoplay
         _levels.ActivateLevel(index);
         _level = _levels.GetLevel(index);
         _network = _level.GetComponentInChildren<EdgeNetwork>();
-        foreach (EnemyFollow enemy in _level.GetComponentsInChildren<EnemyFollow>(true))
-            enemy.gameObject.SetActive(false);
+        if (_withEnemies) LevelDifficulty.ApplyEnemyBudget(_level, LevelDifficulty.AvailableEnemies(_level));
+        else
+            foreach (EnemyFollow enemy in _level.GetComponentsInChildren<EnemyFollow>(true))
+                enemy.gameObject.SetActive(false);
         _target = null;
         _levelStart = EditorApplication.timeSinceStartup;
     }
@@ -72,12 +92,14 @@ public static class LevelAutoplay
     {
         EditorApplication.update -= Tick;
         if (_movement != null) MoveField.SetValue(_movement, Vector2.zero);
+        if (_withEnemies) { PlayerProgress.LevelsPlayed = _savedPlayed; _withEnemies = false; }
     }
 
     private static void Tick()
     {
         if (!EditorApplication.isPlaying || _network == null) { Stop(); return; }
         Time.timeScale = 1f;   // skip the 3-2-1 countdown
+        if (_withEnemies && _combat != null) InvulnerableField.SetValue(_combat, Time.time + 1f);
 
         IReadOnlyList<DrawEdge> edges = _network.Edges;
         int done = 0;

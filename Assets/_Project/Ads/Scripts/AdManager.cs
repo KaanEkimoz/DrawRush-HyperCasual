@@ -74,7 +74,7 @@ namespace DrawRush.Ads
         public void ShowRewarded(string placement, Action onReward)
         {
 #if UNITY_EDITOR
-            if (config != null && config.SimulateRewardedInEditor) { onReward?.Invoke(); return; }
+            if (config != null && config.SimulateRewardedInEditor) { MarkAdShown(); onReward?.Invoke(); return; }
 #endif
             if (!IsRewardedReady) return;
             _onReward = onReward;
@@ -115,6 +115,7 @@ namespace DrawRush.Ads
             _rewarded.OnAdRewarded += (_, __) => _rewardEarned = true;
             _rewarded.OnAdClosed += _ =>
             {
+                MarkAdShown();
                 Action grant = _rewardEarned ? _onReward : null;
                 _onReward = null;
                 _rewardEarned = false;
@@ -124,6 +125,14 @@ namespace DrawRush.Ads
             _rewarded.OnAdDisplayFailed += (_, __) => { _onReward = null; _rewarded.LoadAd(); };
             if (config.VerboseLogging) _rewarded.OnAdLoadFailed += e => Debug.Log($"[Ads] Rewarded load failed: {e}");
             _rewarded.LoadAd();
+        }
+
+        // A rewarded video the player chose to watch counts as an ad shown: it resets the win
+        // count and the time gate, so no interstitial lands right after it (e.g. x2 Coins → Next).
+        private void MarkAdShown()
+        {
+            _winsSinceLastAd = 0;
+            _lastShownRealtime = Time.realtimeSinceStartup;
         }
 
         private void OnInitFailed(LevelPlayInitError error)

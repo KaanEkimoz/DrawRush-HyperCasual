@@ -6,9 +6,9 @@ namespace DrawRush.Boosters
 {
     /// <summary>
     /// Shop progression for boosters and the helpers, saved in PlayerPrefs. One currency (coins).
-    /// A win pays 6/12/20 by stars (about 12 on average, 18 with the x2 ad), so the first upgrade
-    /// costs about two wins and each later one about two to four: there is always something
-    /// within reach without a grind.
+    /// A win pays 6/12/20 by stars (about 12 on average, 18 with the x2 ad). The first level of
+    /// any booster costs under two wins, and with six things to upgrade the cheapest open step is
+    /// usually only a few wins away, so there is always something within reach without a grind.
     /// </summary>
     public static class BoosterUpgrades
     {
@@ -23,6 +23,11 @@ namespace DrawRush.Boosters
 
         private static readonly int[] UpgradePrices = { 20, 40, 70, 110 };
         private static readonly int[] PetPrices = { 60, 120, 200 };
+
+        /// <summary>Coins per booster level 1..MaxLevel (read-only view for tests and tuning).</summary>
+        public static System.Collections.Generic.IReadOnlyList<int> BoosterPriceSteps => UpgradePrices;
+        public static System.Collections.Generic.IReadOnlyList<int> PetPriceSteps => PetPrices;
+        public static System.Collections.Generic.IReadOnlyList<int> BuddyPriceSteps => BuddyPrices;
 
         /// <summary>Raised after any purchase so shop rows and HUDs can refresh.</summary>
         public static event Action Changed;

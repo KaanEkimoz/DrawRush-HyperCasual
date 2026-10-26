@@ -1,4 +1,5 @@
 using UnityEngine;
+using DrawRush.Boosters;
 using DrawRush.Core;
 using DrawRush.Drawing;
 using DrawRush.Player;
@@ -19,6 +20,12 @@ namespace DrawRush.Audio
         [SerializeField] private PlayerHealth playerHealth;
         [Tooltip("Game state SO. Falls back to GameServices.State, like the other listeners.")]
         [SerializeField] private GameState state;
+        [Tooltip("Player boosters (pickup sound). Optional.")]
+        [SerializeField] private PlayerBoosts boosts;
+        [Tooltip("Player combat (shield break sound). Optional.")]
+        [SerializeField] private PlayerCombat combat;
+        [Tooltip("Free-draw painter (lost-paint sound). Optional.")]
+        [SerializeField] private FreeDrawPainter painter;
 
         private AudioSource _source;
         private GameState _boundState;
@@ -49,6 +56,10 @@ namespace DrawRush.Audio
             ProceduralWall.Revealed += OnWallRevealed;
             DrawRush.UI.ButtonJuice.Clicked += OnUiClick;
             DrawRush.Enemy.EnemyDeath.EnemyDied += OnEnemyDied;
+            DrawRush.Enemy.EnemyFollow.DashWindUpStarted += OnDashWindUp;
+            if (boosts != null) boosts.Granted += OnBooster;
+            if (combat != null) combat.ShieldBroken += OnShieldBroken;
+            if (painter != null) painter.PaintLost += OnPaintLost;
         }
 
         private void OnDisable()
@@ -63,6 +74,23 @@ namespace DrawRush.Audio
             ProceduralWall.Revealed -= OnWallRevealed;
             DrawRush.UI.ButtonJuice.Clicked -= OnUiClick;
             DrawRush.Enemy.EnemyDeath.EnemyDied -= OnEnemyDied;
+            DrawRush.Enemy.EnemyFollow.DashWindUpStarted -= OnDashWindUp;
+            if (boosts != null) boosts.Granted -= OnBooster;
+            if (combat != null) combat.ShieldBroken -= OnShieldBroken;
+            if (painter != null) painter.PaintLost -= OnPaintLost;
+        }
+
+        private void OnBooster(BoosterType _) { Play(library != null ? library.boosterPickup : null); Haptics.Light(); }
+        private void OnShieldBroken() { Play(library != null ? library.shieldBreak : null); Haptics.Medium(); }
+        private void OnPaintLost() => Play(library != null ? library.paintLost : null);
+
+        // Several Dashers may flash together; one whine per moment is enough.
+        private float _lastDash = -1f;
+        private void OnDashWindUp()
+        {
+            if (Time.unscaledTime - _lastDash < 0.3f) return;
+            _lastDash = Time.unscaledTime;
+            Play(library != null ? library.dashWindUp : null);
         }
 
         // Enemies at the end of a level often die on the same frame; collapse the burst into one
@@ -85,7 +113,7 @@ namespace DrawRush.Audio
         // an actual drop counts as a hit.
         private void OnHealthChanged(int value)
         {
-            if (_lastHealth >= 0 && value < _lastHealth) Play(library != null ? library.hit : null);
+            if (_lastHealth >= 0 && value < _lastHealth) { Play(library != null ? library.hit : null); Haptics.Medium(); }
             _lastHealth = value;
         }
 
