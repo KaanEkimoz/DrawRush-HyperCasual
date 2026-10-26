@@ -84,7 +84,7 @@ namespace DrawRush.Ads
                 if (combat != null) combat.ResetForLevel();
                 RespawnEnemies();
                 if (boosts != null) boosts.Grant(BoosterType.Shield);
-                Time.timeScale = 1f;
+                MenuPause.SetGameTimeScale(1f);
             });
         }
 

@@ -41,7 +41,6 @@ namespace DrawRush.Shop
         [SerializeField] private Color equippedColor = new Color(1f, 0.82f, 0.15f, 1f);
 
         private readonly List<Cell> _cells = new();
-        private float _prevTimeScale = 1f;
 
         private sealed class Cell
         {
@@ -70,8 +69,7 @@ namespace DrawRush.Shop
         public void Open()
         {
             if (panel == null) return;
-            _prevTimeScale = Time.timeScale;
-            Time.timeScale = 0f;
+            MenuPause.Open();
             panel.SetActive(true);
             if (coinText != null) coinText.text = PlayerProgress.Coins.ToString();
             Refresh();
@@ -80,7 +78,7 @@ namespace DrawRush.Shop
         public void Close()
         {
             if (panel != null) panel.SetActive(false);
-            Time.timeScale = _prevTimeScale;   // exactly what it was, so a countdown isn't skipped
+            MenuPause.Close();
         }
 
         private void BuildCells()

@@ -65,13 +65,13 @@ namespace DrawRush.Core
 
         public void StartTheGame()
         {
-            Time.timeScale = 1.0f;
+            MenuPause.SetGameTimeScale(1f);
         }
 
         public void RestartLevel()
         {
             if (levelManager == null) return;
-            Time.timeScale = 1f;   // in-scene switch: no scene reload to un-pause for us
+            MenuPause.SetGameTimeScale(1f);   // in-scene switch: no scene reload to un-pause for us
             // Deliberately does NOT draw or advance the curve: a retry is the same level at the
             // same difficulty, otherwise dying would quietly reshuffle the player's run.
             levelManager.ActivateLevel(levelManager.CurrentIndex);
@@ -82,7 +82,7 @@ namespace DrawRush.Core
         public void NextLevel()
         {
             if (levelManager == null || levelManager.LevelCount == 0) return;
-            Time.timeScale = 1f;
+            MenuPause.SetGameTimeScale(1f);
 
             int played = PlayerProgress.LevelsPlayed;
             // One win/advance: let the ad layer decide whether to show (it caps by win-count AND a

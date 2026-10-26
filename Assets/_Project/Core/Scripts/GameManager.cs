@@ -56,7 +56,7 @@ namespace DrawRush.Core
         private void OnPlayerDied()
         {
             if (hudPanels != null) hudPanels.ShowLosePanel();
-            Time.timeScale = 0f;
+            MenuPause.SetGameTimeScale(0f);
         }
 
         #region Legacy facade (UI button bindings)

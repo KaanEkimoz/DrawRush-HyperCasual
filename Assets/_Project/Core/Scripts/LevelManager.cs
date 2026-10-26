@@ -189,7 +189,7 @@ namespace DrawRush.Core
             // GameManager.Awake parks timeScale at 0 and the countdown is the ONLY thing that
             // restores it — and FindFirstObjectByType skips inactive objects. Without this the
             // game boots permanently frozen, silently, whenever the countdown is missing.
-            else Time.timeScale = 1f;
+            else MenuPause.SetGameTimeScale(1f);
         }
 
         // The player-facing number is how far along the campaign they are (1, 2, 3 …), not the

@@ -36,7 +36,6 @@ namespace DrawRush.Collection
         [SerializeField] private Sprite starSprite;
 
         private readonly List<Cell> _cells = new();
-        private float _prevTimeScale = 1f;
 
         private sealed class Cell
         {
@@ -58,8 +57,7 @@ namespace DrawRush.Collection
         public void Open()
         {
             if (panel == null) return;
-            _prevTimeScale = Time.timeScale;
-            Time.timeScale = 0f;
+            MenuPause.Open();
             panel.SetActive(true);
             Refresh();
         }
@@ -67,7 +65,7 @@ namespace DrawRush.Collection
         public void Close()
         {
             if (panel != null) panel.SetActive(false);
-            Time.timeScale = _prevTimeScale;
+            MenuPause.Close();
         }
 
         private void BuildCells()

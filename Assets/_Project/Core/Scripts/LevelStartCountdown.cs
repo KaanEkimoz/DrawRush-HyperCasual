@@ -24,7 +24,7 @@ namespace DrawRush.Core
         public void Begin()
         {
             _runToken++;
-            Time.timeScale = 0f;
+            MenuPause.SetGameTimeScale(0f);
             if (countdownText != null) countdownText.gameObject.SetActive(true);
             _ = RunAsync(_runToken);
         }
@@ -41,7 +41,7 @@ namespace DrawRush.Core
                     {
                         await Awaitable.NextFrameAsync(destroyCancellationToken);
                         if (token != _runToken) return;     // superseded by a newer Begin()
-                        t += Time.unscaledDeltaTime;
+                        if (!MenuPause.IsOpen) t += Time.unscaledDeltaTime;   // a menu holds the count
                     }
                 }
             }
@@ -49,7 +49,7 @@ namespace DrawRush.Core
 
             if (token != _runToken) return;                 // a newer countdown owns the state
             if (countdownText != null) countdownText.gameObject.SetActive(false);
-            Time.timeScale = 1f;
+            MenuPause.SetGameTimeScale(1f);
         }
     }
 }

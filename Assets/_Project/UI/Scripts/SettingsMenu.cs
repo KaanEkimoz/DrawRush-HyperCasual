@@ -27,7 +27,6 @@ namespace DrawRush.UI
         private GameObject _panel;
         private TextMeshProUGUI _vibrationLabel, _joystickLabel;
         private Image _vibrationButton, _joystickButton;
-        private float _prevTimeScale = 1f;
 
         private void Awake()
         {
@@ -104,8 +103,7 @@ namespace DrawRush.UI
 
         public void Open()
         {
-            _prevTimeScale = Time.timeScale;
-            Time.timeScale = 0f;
+            MenuPause.Open();
             Refresh();
             _panel.SetActive(true);
         }
@@ -113,7 +111,7 @@ namespace DrawRush.UI
         public void Close()
         {
             _panel.SetActive(false);
-            Time.timeScale = _prevTimeScale;
+            MenuPause.Close();
         }
 
         private void ToggleVibration() { Haptics.Enabled = !Haptics.Enabled; Refresh(); if (Haptics.Enabled) Haptics.Light(); }
