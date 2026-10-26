@@ -16,10 +16,11 @@ namespace DrawRush.Boosters
     {
         [SerializeField] private BoosterConfig config;
         [SerializeField] private TMP_FontAsset font;
-        [Tooltip("List area inside the shop panel, from its centre (canvas units).")]
-        [SerializeField] private Vector2 areaPosition = new(0f, -500f);
-        [SerializeField] private Vector2 areaSize = new(900f, 500f);
-        [SerializeField] private float rowHeight = 80f;
+        [Tooltip("List area inside the shop panel, from its centre (canvas units): between the " +
+                 "skin grid (bottom at -250) and the Close button (top near -770).")]
+        [SerializeField] private Vector2 areaPosition = new(0f, -470f);
+        [SerializeField] private Vector2 areaSize = new(900f, 430f);
+        [SerializeField] private float rowHeight = 70f;
         [SerializeField] private Color rowColor = new(0.16f, 0.17f, 0.24f, 1f);
         [SerializeField] private Color buyColor = new(0.25f, 0.8f, 0.4f, 1f);
         [SerializeField] private Color cantColor = new(0.35f, 0.35f, 0.4f, 1f);
