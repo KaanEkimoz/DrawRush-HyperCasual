@@ -5,6 +5,11 @@
 
 ---
 
+## 📦 1.2.1 (versionCode 7) HAZIR — 26 Eki 2026, YÜKLENMEDİ
+- LevelPlay'de Draw Rush için **Rewarded ad unit** açıldı: `yucbr0o8l7jz27n7` (ödül "Reward" x1; oyun ödülü kendisi veriyor). `AdConfig.rewardedAdUnitId`'ye girildi → İkinci şans / Kalkanla yeniden dene / x2 Coin butonları cihazda görünecek.
+- İmzalı AAB `Builds/DrawRush_release.aab` (1.2.1 / 7). Notlar `PlayStore/release_notes_1.2.1.md`. **1.2.0 onaylanınca** ayrı güncelleme olarak gönderilecek (1.2.0 review'dayken eklemek review'ı yeniden başlatır).
+- 1.2.0 ile birlikte mağaza görselleri v1.2 (4 adet) + "rails" geçmeyen yeni açıklama da review'da (review bir kez yeniden başlatıldı).
+
 ## 🚀 1.2.0 (versionCode 6) REVIEW'DA — 26 Eki 2026
 - `claude-dev-feat-controls` master'a merge edildi (`15529395`, merge-tree + commit-tree ile; Unity açıkken dosyalar oynamadı) ve push'landı.
 - AAB'yi Kaan sürükledi; Console: 6 (1.2.0), API 26+, target 36; desteklenen cihaz kaybı **0** (11.063 telefon); yeni kurulum **39.5 MB** (+1.08 MB); yalnız 2 standart uyarı (deobfuscation / native symbols). Notlar en-US + tr-TR (`PlayStore/release_notes_1.2.0.md`). "Changes in review" (quick checks). Managed publishing kapalı → onaylanınca otomatik yayın.
