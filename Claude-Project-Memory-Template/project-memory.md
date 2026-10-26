@@ -5,6 +5,11 @@
 
 ---
 
+## 🚀 1.2.0 (versionCode 6) REVIEW'DA — 26 Eki 2026
+- `claude-dev-feat-controls` master'a merge edildi (`15529395`, merge-tree + commit-tree ile; Unity açıkken dosyalar oynamadı) ve push'landı.
+- AAB'yi Kaan sürükledi; Console: 6 (1.2.0), API 26+, target 36; desteklenen cihaz kaybı **0** (11.063 telefon); yeni kurulum **39.5 MB** (+1.08 MB); yalnız 2 standart uyarı (deobfuscation / native symbols). Notlar en-US + tr-TR (`PlayStore/release_notes_1.2.0.md`). "Changes in review" (quick checks). Managed publishing kapalı → onaylanınca otomatik yayın.
+- **Yayından sonra:** `PlayStore/screenshots/v1.2/` görsellerini mağazaya yükle; LevelPlay'de Rewarded ad unit açıp `AdConfig.rewardedAdUnitId`'ye gir (yoksa ödüllü butonlar görünmez).
+
 ## 📦 1.2.0 HAZIR (2026-10-26 sabaha karşı) — dal `claude-dev-feat-controls` push'lu, master'a MERGE EDİLMEDİ, YÜKLENMEDİ
 Kaan "bensiz çalış, kararlarımı sona sakla, tam yetki" dedi. Yapılanlar (hepsi editörde doğrulandı, cihazda değil):
 - `05127fa3` ray sistemi + eski `CM vcam2` silindi (Player.prefab + sahne temiz, missing script yok).
