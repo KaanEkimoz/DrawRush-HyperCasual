@@ -5,6 +5,16 @@
 
 ---
 
+## 📦 1.2.0 HAZIR (2026-10-26 sabaha karşı) — dal `claude-dev-feat-controls` push'lu, master'a MERGE EDİLMEDİ, YÜKLENMEDİ
+Kaan "bensiz çalış, kararlarımı sona sakla, tam yetki" dedi. Yapılanlar (hepsi editörde doğrulandı, cihazda değil):
+- `05127fa3` ray sistemi + eski `CM vcam2` silindi (Player.prefab + sahne temiz, missing script yok).
+- `dd2a410d` Faz 7: **Eater** (L18, onaylanmamış boyayı yer), **Dasher** (L25, yanıp söner sonra atılır), her biri ilk levelinde tek başına; **hard tier**: 34 levellik turdan sonra her turda her tipten +1 ve +%8 hız (max %25); **Brush Buddy** dükkânda (90/160/260; 20/16/12 s'de 1.5/2/2.5 m boyar, son kenara dokunmaz); yükseltme fiyatları ucuzladı (20/40/70/110, pet 60/120/200); **PlaytestLog** (sadece dev/editör): `persistentDataPath/playtest_log.csv`, deneme başına satır.
+- `13213c51` yeni mağaza görselleri `PlayStore/screenshots/v1.2/` (01 serbest çizim, 02 booster duyurusu, 03 yükseltme dükkânı), sürüm notu taslağı `PlayStore/release_notes_1.2.0.md` (en-US + tr-TR); dükkân satırları Close'a binmesin diye sıkıştırıldı.
+- `4f93e7dc` **1.2.0 / versionCode 6**, imzalı AAB `Builds/DrawRush_release.aab` (56 MB, O=Ekimoz Games, bundletool ile code 6 doğrulandı).
+- Testler: EditMode 89/89, autoplay tüm leveller %99'da PASS.
+- **Kaan'ın kararları (bekliyor):** (1) telefonda son hali deneyip onay; (2) dalı master'a merge; (3) AAB'yi Play Console'a sürükleyip review'a göndermek (notlar hazır; file_upload 10MB sınırı yüzünden sürükleme Kaan'da); (4) mağaza görsellerini 1.2.0 canlıya çıkınca yüklemek; (5) LevelPlay'de Rewarded ad unit açıp `AdConfig.rewardedAdUnitId`'ye girmek (girmeden ödüllü butonlar görünmez); (6) köşe damlaları kalsın mı (şimdilik duruyor).
+- Not: editördeki autoplay koşuları kazanılan coin'leri editör PlayerPrefs'ine ekliyor (cihazı etkilemez).
+
 ## 🧪 YENİDEN TASARIM PROTOTİPİ — FAZ 0-6 YAPILDI (2026-10-26 gece), dal `claude-dev-feat-controls`, master'a MERGE EDİLMEDİ
 Kaynak: araştırma raporu (`reports/Draw Rush yeniden tasarım araştırması.md`, worktree game-issues-list-8d2b00). Kaan "tüm fazları bu gece bitir" dedi. Hepsi editörde doğrulandı; **cihazda his testi YAPILMADI** (bkz. feedback-verification-claims).
 - **Faz 0 kontrol/kamera `825a521e`:** 60 fps + 60 Hz fizik; joystick dp tabanlı (64 dp), takip eden, alt %45, deadzone 0.1 yeniden ölçekli; analog hız eğrisi (`GameConfig._speedByDeflection`), ivme 0.08 / fren 0.05 s, dönüş 0.05; yeni CM3 `CM GameplayCamera` + `GameplayCameraRig` + `CameraConfig` (pitch 58, FOV 40, 10.5 m genişlik, oyuncu y 0.58, damping 0.25, tehdit zoom ≤1.5x 6/8 m histerezis); eski `CM vcam2` kapalı duruyor (geri dönüş için); ekran dışı oklar; dev build FPS göstergesi. ⚠️ Cinemachine aslında **3.1.6** (2.10 değil).
