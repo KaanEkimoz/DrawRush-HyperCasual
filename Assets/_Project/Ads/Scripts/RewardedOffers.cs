@@ -10,7 +10,8 @@ using UnityEngine.UI;
 namespace DrawRush.Ads
 {
     /// <summary>
-    /// The three rewarded-video offers from the redesign research, all opt-in and never mid-level:
+    /// The rewarded-video offers from the redesign research, all opt-in and never mid-level:
+    ///   • level start (during the 3-2-1, after a fail on this same level): "Start with a shield";
     ///   • lose panel: "Second chance" — once per attempt: full health, a shield, enemies sent back
     ///     to their spawns, the painted progress kept;
     ///   • lose panel (after the second chance is spent): "Retry with a shield";
@@ -35,10 +36,18 @@ namespace DrawRush.Ads
         [SerializeField] private float loseButtonY = -400f;
         [Tooltip("Under the win panel's Shop/Collection row (at -380).")]
         [SerializeField] private float winButtonY = -560f;
+        [Tooltip("Pre-level offer, from the screen centre, under the 3-2-1.")]
+        [SerializeField] private float startButtonY = -330f;
+        [Tooltip("Fails on the same level before the pre-level shield is offered.")]
+        [SerializeField] private int failsBeforeStartOffer = 1;
         [SerializeField] private Color buttonColor = new(1f, 0.75f, 0.1f, 1f);
 
-        private Button _revive, _shieldRetry, _doubleCoins;
-        private bool _reviveUsed, _doubleUsed;
+        [SerializeField] private LevelStartCountdown countdown;
+        [SerializeField] private LevelManager levels;
+
+        private Button _revive, _shieldRetry, _doubleCoins, _startShield;
+        private bool _reviveUsed, _doubleUsed, _startShieldTaken;
+        private int _failLevel = -1, _failsHere;
 
         private void Start()
         {
@@ -53,15 +62,39 @@ namespace DrawRush.Ads
             }
             if (hud.WinPanel != null)
                 _doubleCoins = MakeButton(hud.WinPanel.transform, "x2 Coins (Ad)", winButtonY, OnDoubleCoins);
+            if (countdown == null) countdown = FindFirstObjectByType<LevelStartCountdown>();
+            if (levels == null) levels = FindFirstObjectByType<LevelManager>();
+            // On the HUD canvas itself (the panels' parent), since no panel is open at level start.
+            Transform canvas = hud.LosePanel != null ? hud.LosePanel.transform.parent : null;
+            if (canvas != null) _startShield = MakeButton(canvas, "Start with Shield (Ad)", startButtonY, OnStartShield);
         }
 
-        private void OnEnable() { if (painter != null) painter.LevelBound += OnLevelBound; }
-        private void OnDisable() { if (painter != null) painter.LevelBound -= OnLevelBound; }
+        private void OnEnable()
+        {
+            if (painter != null) painter.LevelBound += OnLevelBound;
+            if (health != null) health.Died += OnDied;
+        }
+
+        private void OnDisable()
+        {
+            if (painter != null) painter.LevelBound -= OnLevelBound;
+            if (health != null) health.Died -= OnDied;
+        }
 
         private void OnLevelBound(EdgeNetwork _)
         {
             _reviveUsed = false;
             _doubleUsed = false;
+            _startShieldTaken = false;
+        }
+
+        private int CurrentLevel => levels != null ? levels.CurrentIndex : -1;
+
+        private void OnDied()
+        {
+            int level = CurrentLevel;
+            if (level == _failLevel) _failsHere++;
+            else { _failLevel = level; _failsHere = 1; }
         }
 
         private void Update()
@@ -72,6 +105,9 @@ namespace DrawRush.Ads
             Show(_revive, ready && losing && !_reviveUsed);
             Show(_shieldRetry, ready && losing && _reviveUsed);
             Show(_doubleCoins, ready && winning && !_doubleUsed && CoinsThisWin() > 0);
+            bool starting = countdown != null && countdown.IsRunning && !MenuPause.IsOpen;
+            bool failedHere = CurrentLevel == _failLevel && _failsHere >= failsBeforeStartOffer;
+            Show(_startShield, ready && starting && failedHere && !_startShieldTaken);
         }
 
         private void OnRevive()
@@ -94,6 +130,19 @@ namespace DrawRush.Ads
             {
                 if (boosts != null) boosts.GrantOnNextLevel(BoosterType.Shield);
                 if (game != null) game.RestartLevel();
+            });
+        }
+
+        // The 3-2-1 runs before the painter binds the level (no fixed steps at timeScale 0), and
+        // binding clears boosters: so queue it for the bind, and show the bubble right away too.
+        private void OnStartShield()
+        {
+            _startShieldTaken = true;
+            ads.ShowRewarded("start_shield", () =>
+            {
+                if (boosts == null) return;
+                boosts.GrantOnNextLevel(BoosterType.Shield);
+                boosts.Grant(BoosterType.Shield);
             });
         }
 

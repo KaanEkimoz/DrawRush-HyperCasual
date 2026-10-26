@@ -36,6 +36,9 @@ namespace DrawRush.Drawing
                  "Dash density lives in GhostPath.mat's tiling, not here — LineTextureMode.Tile " +
                  "already repeats by world length.")]
         [SerializeField] private float ghostY = 0.012f;
+        [Tooltip("Dash scroll speed (texture repeats per second): the \"marching ants\" that make the " +
+                 "ghost read as a path still to walk, not as scenery.")]
+        [SerializeField] private float ghostScroll = 0.6f;
 
         [Header("Gap highlight (late in a level)")]
         [Tooltip("Ghost opacity while the remaining gaps are highlighted.")]
@@ -54,6 +57,9 @@ namespace DrawRush.Drawing
         private MaterialPropertyBlock _ghostBlock;
         private static readonly int GhostBaseColorId = Shader.PropertyToID("_BaseColor");
         private static readonly int GhostColorId = Shader.PropertyToID("_Color");
+        private static readonly int GhostBaseMapStId = Shader.PropertyToID("_BaseMap_ST");
+        private static readonly int GhostMainTexStId = Shader.PropertyToID("_MainTex_ST");
+        private Vector4 _ghostTiling = new(1f, 1f, 0f, 0f);
 
         /// <summary>Wire this view to an edge with the given line color (EdgeNetwork passes the
         /// edge's wall color so the painted line matches the wall).</summary>
@@ -90,9 +96,26 @@ namespace DrawRush.Drawing
 
         private void Update()
         {
-            if (!_highlight || _hidden) return;
+            if (_hidden) return;
+            ScrollGhost();
+            if (!_highlight) return;
             float k = 0.5f + 0.5f * Mathf.Sin(Time.time * highlightPulse * 2f * Mathf.PI);
             ApplyGhostColor(Mathf.Lerp(ghostAlpha, highlightAlpha, k), Mathf.Lerp(1f, highlightWidthScale, k));
+        }
+
+        private void ScrollGhost()
+        {
+            if (ghostScroll == 0f || _ghosts.Count == 0) return;
+            _ghostBlock ??= new MaterialPropertyBlock();
+            var st = new Vector4(_ghostTiling.x, _ghostTiling.y, -(Time.time * ghostScroll) % 1f, _ghostTiling.w);
+            foreach (LineRenderer lr in _ghosts)
+            {
+                if (!lr.enabled) continue;
+                lr.GetPropertyBlock(_ghostBlock);
+                _ghostBlock.SetVector(GhostBaseMapStId, st);
+                _ghostBlock.SetVector(GhostMainTexStId, st);
+                lr.SetPropertyBlock(_ghostBlock);
+            }
         }
 
         private void ApplyColor()
@@ -183,7 +206,16 @@ namespace DrawRush.Drawing
 
         private Material ResolveGhostMaterial()
         {
-            if (ghostMaterial != null) return ghostMaterial;
+            if (ghostMaterial != null)
+            {
+                // The property block replaces the whole _ST, so keep the material's dash tiling.
+                if (ghostMaterial.HasProperty(GhostBaseMapStId))
+                {
+                    Vector2 sc = ghostMaterial.GetTextureScale("_BaseMap");
+                    _ghostTiling = new Vector4(sc.x, sc.y, 0f, 0f);
+                }
+                return ghostMaterial;
+            }
             // Editor-only net. In a build URP/Unlit is stripped unless referenced, so this returns
             // null and the ghost renders magenta — the exact failure the walls once shipped with.
             Shader s = Shader.Find("Universal Render Pipeline/Unlit");

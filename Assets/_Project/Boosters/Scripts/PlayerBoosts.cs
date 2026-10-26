@@ -20,6 +20,7 @@ namespace DrawRush.Boosters
         [SerializeField] private ThirdPersonMovement movement;
         [SerializeField] private PlayerCombat combat;
         [SerializeField] private FreeDrawPainter painter;
+        [SerializeField] private BrushTrail trail;
         [Tooltip("Transparent material for the shield bubble around the player.")]
         [SerializeField] private Material shieldMaterial;
 
@@ -49,6 +50,7 @@ namespace DrawRush.Boosters
             if (movement == null) movement = GetComponent<ThirdPersonMovement>();
             if (combat == null) combat = GetComponent<PlayerCombat>();
             if (painter == null) painter = GetComponent<FreeDrawPainter>();
+            if (trail == null) trail = GetComponent<BrushTrail>();
         }
 
         private void OnEnable()
@@ -121,6 +123,7 @@ namespace DrawRush.Boosters
                     break;
                 case BoosterType.Speed:
                     if (movement != null) movement.SpeedMultiplier = config.SpeedMultiplier;
+                    if (trail != null) trail.SetBoost(config.ColorOf(BoosterType.Speed));
                     break;
             }
         }
@@ -135,6 +138,7 @@ namespace DrawRush.Boosters
                     break;
                 case BoosterType.Speed:
                     if (movement != null) movement.SpeedMultiplier = 1f;
+                    if (trail != null) trail.SetBoost(null);
                     break;
             }
         }

@@ -107,7 +107,7 @@ namespace DrawRush.Boosters
 
         private static string Initial(BoosterType t) => t switch
         {
-            BoosterType.Shield => "S", BoosterType.Freeze => "F", BoosterType.Speed => "H", _ => "M",
+            BoosterType.Shield => "S", BoosterType.Freeze => "F", BoosterType.Speed => "H", _ => "W",
         };
 
         private Ring MakeRing()

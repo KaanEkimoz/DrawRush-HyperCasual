@@ -80,6 +80,9 @@ namespace DrawRush.Drawing
         /// <summary>Extra band multiple from boosters (1 = none). Set by the booster system.</summary>
         public float BandBoost { get; set; } = 1f;
 
+        /// <summary>True on steps where the brush laid paint on the shape (for the brush glow).</summary>
+        public bool IsPainting { get; private set; }
+
         /// <summary>Band currently in effect for straight edges (m).</summary>
         public float CurrentBand => band * BandBoost * (_stallMagnet ? stallBandScale : 1f);
 
@@ -132,6 +135,7 @@ namespace DrawRush.Drawing
                 Bind(found);
             }
             var state = GameServices.State;
+            IsPainting = false;
             if (_sweeping || (state != null && state.IsGameWon) || _network.IsComplete) return;
 
             Vector3 p = transform.position;
@@ -169,6 +173,7 @@ namespace DrawRush.Drawing
                 }
             }
 
+            IsPainting = painted;
             if (painted) _lastPaintTime = now;
             float cov = _network.Coverage;
             SetCoverage(cov);

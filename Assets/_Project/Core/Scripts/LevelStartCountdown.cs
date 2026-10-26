@@ -19,11 +19,15 @@ namespace DrawRush.Core
 
         private int _runToken;
 
+        /// <summary>True from <see cref="Begin"/> until play starts (pre-level offers show then).</summary>
+        public bool IsRunning { get; private set; }
+
         /// <summary>Freeze, count down, then unfreeze. Safe to call repeatedly; a new call
         /// supersedes any in-flight countdown.</summary>
         public void Begin()
         {
             _runToken++;
+            IsRunning = true;
             MenuPause.SetGameTimeScale(0f);
             if (countdownText != null) countdownText.gameObject.SetActive(true);
             _ = RunAsync(_runToken);
@@ -49,6 +53,7 @@ namespace DrawRush.Core
 
             if (token != _runToken) return;                 // a newer countdown owns the state
             if (countdownText != null) countdownText.gameObject.SetActive(false);
+            IsRunning = false;
             MenuPause.SetGameTimeScale(1f);
         }
     }
