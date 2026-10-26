@@ -63,6 +63,28 @@ namespace DrawRush.Tests.EditMode
         }
 
         [Test]
+        public void ErasePending_CutsOnlyTheEatenStretch()
+        {
+            var fill = new EdgeFill();
+            fill.PaintRange(0f, 0.2f);                 // kept: an Eater cannot touch it
+            fill.PaintPending(0.2f, 0.8f, time: 0f);
+            Assert.IsTrue(fill.ErasePending(0.4f, 0.5f));
+            Assert.AreEqual(0.7f, fill.Coverage, 1e-4f);
+            Assert.AreEqual(2, fill.Spans.Count);        // [0, 0.4] and [0.5, 0.8]
+            Assert.IsFalse(fill.ErasePending(0f, 0.15f), "kept paint is never eaten");
+        }
+
+        [Test]
+        public void CloseGaps_EndSliversUseTheirOwnLimit()
+        {
+            var fill = new EdgeFill();
+            fill.PaintRange(0.1f, 0.9f);
+            Assert.IsFalse(fill.CloseGaps(0.05f, 0.05f));
+            Assert.IsTrue(fill.CloseGaps(0.05f, 0.12f));
+            Assert.IsTrue(fill.IsComplete);
+        }
+
+        [Test]
         public void CloseGaps_FillsShortGapsOnly()
         {
             var fill = new EdgeFill();

@@ -17,13 +17,14 @@ namespace DrawRush.Boosters
         [SerializeField] private BoosterConfig config;
         [SerializeField] private TMP_FontAsset font;
         [Tooltip("List area inside the shop panel, from its centre (canvas units).")]
-        [SerializeField] private Vector2 areaPosition = new(0f, -510f);
-        [SerializeField] private Vector2 areaSize = new(900f, 470f);
-        [SerializeField] private float rowHeight = 86f;
+        [SerializeField] private Vector2 areaPosition = new(0f, -500f);
+        [SerializeField] private Vector2 areaSize = new(900f, 500f);
+        [SerializeField] private float rowHeight = 80f;
         [SerializeField] private Color rowColor = new(0.16f, 0.17f, 0.24f, 1f);
         [SerializeField] private Color buyColor = new(0.25f, 0.8f, 0.4f, 1f);
         [SerializeField] private Color cantColor = new(0.35f, 0.35f, 0.4f, 1f);
         [SerializeField] private Color petColor = new(1f, 0.55f, 0.75f, 1f);
+        [SerializeField] private Color buddyColor = new(0.3f, 0.9f, 0.85f, 1f);
 
         private sealed class Row { public TextMeshProUGUI Name, Level, Price; public Image Button; public System.Func<int> Price01; public System.Func<bool> Buy; }
         private readonly List<Row> _rows = new();
@@ -48,6 +49,9 @@ namespace DrawRush.Boosters
             AddRow("Bump Pet", petColor,
                 () => BoosterUpgrades.PetLevel == 0 ? "Not owned" : $"Lv {BoosterUpgrades.PetLevel}/{BoosterUpgrades.PetMaxLevel}",
                 () => BoosterUpgrades.PetNextPrice, BoosterUpgrades.TryUpgradePet);
+            AddRow("Brush Buddy", buddyColor,
+                () => BoosterUpgrades.BuddyLevel == 0 ? "Not owned" : $"Lv {BoosterUpgrades.BuddyLevel}/{BoosterUpgrades.BuddyMaxLevel}",
+                () => BoosterUpgrades.BuddyNextPrice, BoosterUpgrades.TryUpgradeBuddy);
         }
 
         private void OnEnable()

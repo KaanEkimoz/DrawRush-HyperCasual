@@ -99,6 +99,22 @@ namespace DrawRush.Drawing
             return lost;
         }
 
+        /// <summary>Paint [t0, t1] for good at once (a helper's stroke).</summary>
+        public void PaintKept(float t0, float t1)
+        {
+            float before = Fill.Coverage;
+            Fill.PaintRange(t0, t1);
+            AfterChange(Fill.Coverage != before);
+        }
+
+        /// <summary>Wipe pending paint within [t0, t1] only. True if any was lost.</summary>
+        public bool ErasePending(float t0, float t1)
+        {
+            bool lost = Fill.ErasePending(t0, t1);
+            if (lost) Changed?.Invoke();
+            return lost;
+        }
+
         /// <summary>Close gaps shorter than <paramref name="meters"/> along this edge, and slivers
         /// at either end shorter than <paramref name="endMeters"/> (defaults to the same).</summary>
         public void CloseGaps(float meters, float endMeters = -1f)

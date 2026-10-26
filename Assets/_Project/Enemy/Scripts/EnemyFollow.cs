@@ -4,6 +4,16 @@ using DrawRush.Core;
 
 namespace DrawRush.Enemy
 {
+    /// <summary>What a fielded enemy has been turned into for the current level.</summary>
+    public enum EnemyVariant
+    {
+        Normal = 0,
+        Sprinter = 1,   // fast and small
+        Tank = 2,       // slow, big, cannot be pushed
+        Eater = 3,      // eats paint that is not kept for good yet
+        Dasher = 4,     // winds up (flashing), then lunges
+    }
+
     /// <summary>
     /// Chases the player via NavMeshAgent. Subscribes to GameState.GameWonChanged
     /// to halt cleanly instead of polling IsGameWon every frame.
@@ -68,14 +78,36 @@ namespace DrawRush.Enemy
         /// <summary>True for heavy enemies that pushes (pet, blast) cannot move.</summary>
         public bool Unpushable { get; private set; }
 
+        /// <summary>The variant this enemy plays as in the current level.</summary>
+        public EnemyVariant Variant { get; private set; }
+
+        [Header("Dasher")]
+        [Tooltip("Seconds between lunges.")]
+        [SerializeField] private float dashInterval = 4f;
+        [Tooltip("Seconds of flashing wind-up before a lunge (the telegraph).")]
+        [SerializeField] private float dashWindUp = 0.6f;
+        [Tooltip("Seconds the lunge lasts.")]
+        [SerializeField] private float dashDuration = 0.7f;
+        [SerializeField] private float dashSpeedMultiplier = 3f;
+        [Tooltip("Only lunges at a player closer than this (m).")]
+        [SerializeField] private float dashRange = 6f;
+        [SerializeField] private Color windUpColor = Color.white;
+
+        private enum DashPhase { Idle, WindUp, Lunge }
+        private DashPhase _dash;
+        private float _dashTimer;
+
         /// <summary>True while a Freeze booster holds this enemy.</summary>
         public bool IsFrozen => _frozen;
 
         /// <summary>Turn this enemy into a variant for the level: speed, size, pushability and an
         /// optional tint. Reverted to the authored enemy by <see cref="ClearVariant"/>.</summary>
-        public void ApplyVariant(float speed, float scale, bool unpushable, Color? tint)
+        public void ApplyVariant(EnemyVariant variant, float speed, float scale, bool unpushable, Color? tint)
         {
             CaptureAuthored();
+            Variant = variant;
+            _dash = DashPhase.Idle;
+            _dashTimer = dashInterval;
             speedMultiplier = speed;
             transform.localScale = _authoredScale * scale;
             Unpushable = unpushable;
@@ -88,6 +120,8 @@ namespace DrawRush.Enemy
         public void ClearVariant()
         {
             CaptureAuthored();
+            Variant = EnemyVariant.Normal;
+            _dash = DashPhase.Idle;
             speedMultiplier = _authoredSpeedMultiplier;
             transform.localScale = _authoredScale;
             Unpushable = false;
@@ -132,8 +166,56 @@ namespace DrawRush.Enemy
 
         private void ApplySpeed()
         {
-            if (_agent != null) _agent.speed = _baseSpeed * Mathf.Max(0.05f, speedMultiplier) * _pressure;
+            float lunge = _dash == DashPhase.Lunge ? dashSpeedMultiplier : 1f;
+            if (_agent != null) _agent.speed = _baseSpeed * Mathf.Max(0.05f, speedMultiplier) * _pressure * lunge;
         }
+
+        // Dasher: every few seconds near the player it stops and flashes (the telegraph the
+        // research asks for, so a hit never comes from nowhere), then lunges at where the player
+        // stood when the flash began.
+        // Returns true while the dash owns movement this frame.
+        private bool UpdateDash(Transform player)
+        {
+            _dashTimer -= Time.deltaTime;
+            switch (_dash)
+            {
+                case DashPhase.Idle:
+                    if (_dashTimer > 0f) return false;
+                    if ((player.position - transform.position).sqrMagnitude > dashRange * dashRange) { _dashTimer = 0.5f; return false; }
+                    _dash = DashPhase.WindUp;
+                    _dashTimer = dashWindUp;
+                    _agent.isStopped = true;
+                    _agent.velocity = Vector3.zero;
+                    _agent.SetDestination(player.position);   // aim now; the lunge commits to it
+                    return true;
+                case DashPhase.WindUp:
+                    SetColor(Mathf.Repeat(_dashTimer * 10f, 1f) < 0.5f ? windUpColor : (_tierColor ?? fastColor));
+                    if (_dashTimer > 0f) return true;
+                    _dash = DashPhase.Lunge;
+                    _dashTimer = dashDuration;
+                    _agent.isStopped = false;
+                    ApplySpeed();
+                    ApplyTint();
+                    return true;
+                default:
+                    if (_dashTimer > 0f) return true;
+                    _dash = DashPhase.Idle;
+                    _dashTimer = dashInterval;
+                    ApplySpeed();
+                    return false;
+            }
+        }
+
+        // Eater: wipes any not-yet-kept paint it walks over.
+        private void EatPaint(Transform player)
+        {
+            var painter = player.GetComponent<DrawRush.Drawing.FreeDrawPainter>();
+            if (painter != null) painter.ErasePendingNear(transform.position, eatRadius);
+        }
+
+        [Header("Eater")]
+        [Tooltip("Pending paint within this distance (m) of an Eater is wiped.")]
+        [SerializeField] private float eatRadius = 0.6f;
 
         private Renderer[] _renderers;
         private MaterialPropertyBlock _mpb;
@@ -170,6 +252,8 @@ namespace DrawRush.Enemy
             _pressure = 1f;
             _frozen = false;
             _frozenUntil = 0f;
+            _dash = DashPhase.Idle;
+            _dashTimer = dashInterval;
 
             // Restart: send the enemy back to its authored spawn. Warp keeps the agent on
             // the NavMesh; transform.SetPositionAndRotation handles the off-NavMesh edge
@@ -257,6 +341,9 @@ namespace DrawRush.Enemy
                 _awake = true;
                 ApplyTint();
             }
+
+            if (Variant == EnemyVariant.Eater) EatPaint(player);
+            if (Variant == EnemyVariant.Dasher && UpdateDash(player)) { SetAnimSpeed(_agent.velocity.magnitude); return; }
 
             // Throttled re-target — SetDestination throws off-mesh (handled above) and is wasteful
             // every frame, so re-plan a few times a second toward the player's current position.

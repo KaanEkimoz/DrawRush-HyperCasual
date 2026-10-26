@@ -194,6 +194,29 @@ namespace DrawRush.Drawing
             _sweep = null;
         }
 
+        /// <summary>Wipe not-yet-kept paint within <paramref name="radius"/> m of
+        /// <paramref name="worldPos"/> (a paint-eating enemy walking over it).</summary>
+        public void ErasePendingNear(Vector3 worldPos, float radius)
+        {
+            if (_network == null || _sweeping) return;
+            bool lost = false;
+            foreach (DrawEdge e in _network.Edges)
+            {
+                if (e.IsComplete || !e.Fill.HasPending) continue;
+                float len = e.Length;
+                if (len < 0.001f) continue;
+                float t = e.ClosestT(worldPos, out float dist);
+                if (dist > radius) continue;
+                float half = Mathf.Sqrt(radius * radius - dist * dist) / len;
+                lost |= e.ErasePending(t - half, t + half);
+            }
+            if (!lost) return;
+            SetCoverage(_network.Coverage);
+            if (Time.time - _lastLossFlash > 0.5f) { _lastLossFlash = Time.time; PaintLost?.Invoke(); }
+        }
+
+        private float _lastLossFlash = -1f;
+
         private void OnDamaged()
         {
             if (_network == null || _sweeping) return;
