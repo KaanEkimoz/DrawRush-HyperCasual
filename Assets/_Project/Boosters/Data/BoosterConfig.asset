@@ -29,12 +29,13 @@ MonoBehaviour:
     color: {r: 1, g: 0.85, b: 0.15, a: 1}
     weight: 1
   - type: 3
-    duration: 6
-    upgradeStep: 1
-    color: {r: 0.8, g: 0.35, b: 1, a: 1}
+    duration: 1.5
+    upgradeStep: 0.4
+    color: {r: 1, g: 0.45, b: 0.2, a: 1}
     weight: 1
   _speedMultiplier: 1.35
-  _magnetBandMultiplier: 1.5
+  _shockwaveRadius: 6
+  _shockwavePush: 3.5
   _shieldBreakGrace: 1
   _firstSpawnDelay: 6
   _spawnInterval: {x: 8, y: 12}

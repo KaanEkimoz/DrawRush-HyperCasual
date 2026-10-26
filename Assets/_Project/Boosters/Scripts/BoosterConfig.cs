@@ -6,7 +6,7 @@ namespace DrawRush.Boosters
     /// <summary>
     /// Booster tunables: what each booster does and for how long, and when and where pickups
     /// appear. Durations are the base values; shop upgrades add <see cref="UpgradeStep"/> per
-    /// level on top (see <see cref="Duration"/>).
+    /// level on top (see <see cref="Duration"/>). Shockwave is instant: its "duration" is the stun.
     /// </summary>
     [CreateAssetMenu(fileName = "BoosterConfig", menuName = "DrawRush/Boosters/Booster Config", order = 0)]
     public sealed class BoosterConfig : ScriptableObject
@@ -34,12 +34,15 @@ namespace DrawRush.Boosters
             new() { type = BoosterType.Shield, duration = 12f, upgradeStep = 3f, color = new Color(0.25f, 0.6f, 1f), weight = 1f },
             new() { type = BoosterType.Freeze, duration = 3f, upgradeStep = 0.5f, color = new Color(0.55f, 0.95f, 1f), weight = 1f },
             new() { type = BoosterType.Speed, duration = 5f, upgradeStep = 1f, color = new Color(1f, 0.85f, 0.15f), weight = 1f },
-            new() { type = BoosterType.Magnet, duration = 6f, upgradeStep = 1f, color = new Color(0.8f, 0.35f, 1f), weight = 1f },
+            new() { type = BoosterType.Shockwave, duration = 1.5f, upgradeStep = 0.4f, color = new Color(1f, 0.45f, 0.2f), weight = 1f },
         };
 
         [Header("Effects")]
         [SerializeField] private float _speedMultiplier = 1.35f;
-        [SerializeField] private float _magnetBandMultiplier = 1.5f;
+        [Tooltip("Shockwave reach (m) around the player.")]
+        [SerializeField] private float _shockwaveRadius = 6f;
+        [Tooltip("How far (m) the shockwave throws each enemy it reaches.")]
+        [SerializeField] private float _shockwavePush = 3.5f;
         [Tooltip("Invulnerable seconds after a shield breaks.")]
         [SerializeField] private float _shieldBreakGrace = 1f;
 
@@ -63,7 +66,8 @@ namespace DrawRush.Boosters
         [SerializeField] private float _pityWeight = 3f;
 
         public float SpeedMultiplier => _speedMultiplier;
-        public float MagnetBandMultiplier => _magnetBandMultiplier;
+        public float ShockwaveRadius => _shockwaveRadius;
+        public float ShockwavePush => _shockwavePush;
         public float ShieldBreakGrace => _shieldBreakGrace;
         public float FirstSpawnDelay => _firstSpawnDelay;
         public Vector2 SpawnInterval => _spawnInterval;
@@ -105,7 +109,7 @@ namespace DrawRush.Boosters
                 BoosterType.Shield => "Blocks the next hit",
                 BoosterType.Freeze => "Enemies freeze in place",
                 BoosterType.Speed => "You run faster",
-                _ => "Drawing gets easier",
+                _ => "Blasts nearby enemies away",
             };
         }
 

@@ -40,7 +40,7 @@ namespace DrawRush.Boosters
             _area.sizeDelta = areaSize;
             _area.anchoredPosition = areaPosition;
 
-            foreach (BoosterType t in new[] { BoosterType.Shield, BoosterType.Freeze, BoosterType.Speed, BoosterType.Magnet })
+            foreach (BoosterType t in new[] { BoosterType.Shield, BoosterType.Freeze, BoosterType.Speed, BoosterType.Shockwave })
             {
                 BoosterType type = t;
                 AddRow(type.ToString(), config != null ? config.ColorOf(type) : Color.white,

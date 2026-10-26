@@ -145,10 +145,11 @@ namespace DrawRush.Enemy
         }
 
         /// <summary>Shove this enemy <paramref name="distance"/> m along <paramref name="direction"/>
-        /// (ground plane), staying on the NavMesh. Heavy enemies ignore it.</summary>
-        public void Push(Vector3 direction, float distance)
+        /// (ground plane), staying on the NavMesh. Heavy enemies ignore it unless
+        /// <paramref name="evenHeavy"/> (a shockwave moves everything).</summary>
+        public void Push(Vector3 direction, float distance, bool evenHeavy = false)
         {
-            if (Unpushable || _agent == null || !_agent.isOnNavMesh) return;
+            if ((Unpushable && !evenHeavy) || _agent == null || !_agent.isOnNavMesh) return;
             direction.y = 0f;
             if (direction.sqrMagnitude < 1e-6f) return;
             Vector3 target = transform.position + direction.normalized * distance;

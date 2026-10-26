@@ -1,5 +1,7 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using DrawRush.Core;
 using DrawRush.Drawing;
 using DrawRush.Enemy;
 using DrawRush.Player;
@@ -71,6 +73,14 @@ namespace DrawRush.Boosters
                 foreach (EnemyFollow e in FindObjectsByType<EnemyFollow>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
                     e.Freeze(length);
 
+            if (type == BoosterType.Shockwave)
+            {
+                // Instant, so it never occupies a running slot or a HUD ring.
+                Blast(length);
+                Granted?.Invoke(type);
+                return;
+            }
+
             int existing = _active.FindIndex(a => a.Type == type);
             if (existing >= 0) _active.RemoveAt(existing);
             else if (_active.Count >= config.MaxActiveTypes)
@@ -112,9 +122,6 @@ namespace DrawRush.Boosters
                 case BoosterType.Speed:
                     if (movement != null) movement.SpeedMultiplier = config.SpeedMultiplier;
                     break;
-                case BoosterType.Magnet:
-                    if (painter != null) painter.BandBoost = config.MagnetBandMultiplier;
-                    break;
             }
         }
 
@@ -129,10 +136,57 @@ namespace DrawRush.Boosters
                 case BoosterType.Speed:
                     if (movement != null) movement.SpeedMultiplier = 1f;
                     break;
-                case BoosterType.Magnet:
-                    if (painter != null) painter.BandBoost = 1f;
-                    break;
             }
+        }
+
+        // Throw every enemy in reach straight away from the player and stun it; heavy enemies
+        // fly half as far.
+        private void Blast(float stunSeconds)
+        {
+            float radius = config.ShockwaveRadius;
+            Vector3 p = transform.position;
+            foreach (EnemyFollow e in FindObjectsByType<EnemyFollow>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+            {
+                Vector3 away = e.transform.position - p;
+                away.y = 0f;
+                if (away.magnitude > radius) continue;
+                if (away.sqrMagnitude < 1e-4f) away = transform.forward;
+                e.Push(away, e.Unpushable ? config.ShockwavePush * 0.5f : config.ShockwavePush, evenHeavy: true);
+                e.Freeze(stunSeconds);
+            }
+            Haptics.Medium();
+            StartCoroutine(Ring(radius, config.ColorOf(BoosterType.Shockwave)));
+        }
+
+        private IEnumerator Ring(float radius, Color color)
+        {
+            const int segments = 48;
+            const float seconds = 0.35f;
+            var go = new GameObject("ShockwaveRing", typeof(LineRenderer));
+            var lr = go.GetComponent<LineRenderer>();
+            lr.useWorldSpace = true;
+            lr.loop = true;
+            lr.positionCount = segments;
+            lr.alignment = LineAlignment.TransformZ;
+            go.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+            lr.material = new Material(Shader.Find("Sprites/Default"));
+            lr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            Vector3 c = transform.position + Vector3.up * 0.05f;
+            for (float t = 0f; t < seconds; t += Time.deltaTime)
+            {
+                float k = t / seconds;
+                float r = Mathf.Lerp(0.5f, radius, 1f - (1f - k) * (1f - k));
+                for (int i = 0; i < segments; i++)
+                {
+                    float a = i * Mathf.PI * 2f / segments;
+                    lr.SetPosition(i, c + new Vector3(Mathf.Cos(a) * r, 0f, Mathf.Sin(a) * r));
+                }
+                lr.widthMultiplier = Mathf.Lerp(0.6f, 0.15f, k);
+                lr.startColor = lr.endColor = new Color(color.r, color.g, color.b, 1f - k);
+                yield return null;
+            }
+            Destroy(lr.material);
+            Destroy(go);
         }
 
         private void OnShieldBroken()

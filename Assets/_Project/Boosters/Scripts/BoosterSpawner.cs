@@ -147,7 +147,7 @@ namespace DrawRush.Boosters
             Destroy(visual.GetComponent<Collider>());
             visual.transform.SetParent(root.transform, false);
             visual.transform.localScale = type == BoosterType.Speed ? new Vector3(0.5f, 0.45f, 0.5f) * pickupSize * 1.4f
-                : type == BoosterType.Magnet ? new Vector3(1f, 0.25f, 1f) * pickupSize
+                : type == BoosterType.Shockwave ? new Vector3(1f, 0.25f, 1f) * pickupSize
                 : Vector3.one * pickupSize;
             if (type == BoosterType.Freeze) visual.transform.localRotation = Quaternion.Euler(45f, 0f, 45f);
             var r = visual.GetComponent<Renderer>();

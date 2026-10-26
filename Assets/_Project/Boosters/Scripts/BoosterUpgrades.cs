@@ -32,7 +32,22 @@ namespace DrawRush.Boosters
         /// <summary>Raised after any purchase so shop rows and HUDs can refresh.</summary>
         public static event Action Changed;
 
-        public static int Level(BoosterType type) => Mathf.Clamp(PlayerPrefs.GetInt(LevelKeyPrefix + type, 0), 0, MaxLevel);
+        public static int Level(BoosterType type)
+        {
+            MigrateMagnet();
+            return Mathf.Clamp(PlayerPrefs.GetInt(LevelKeyPrefix + type, 0), 0, MaxLevel);
+        }
+
+        // Shockwave replaced Magnet in the same slot: levels bought for Magnet carry over.
+        private static void MigrateMagnet()
+        {
+            const string oldKey = LevelKeyPrefix + "Magnet";
+            if (!PlayerPrefs.HasKey(oldKey)) return;
+            string newKey = LevelKeyPrefix + BoosterType.Shockwave;
+            PlayerPrefs.SetInt(newKey, Mathf.Max(PlayerPrefs.GetInt(newKey, 0), PlayerPrefs.GetInt(oldKey, 0)));
+            PlayerPrefs.DeleteKey(oldKey);
+            PlayerPrefs.Save();
+        }
 
         /// <summary>Coins for the next level of <paramref name="type"/>, or -1 when maxed.</summary>
         public static int NextPrice(BoosterType type)
