@@ -183,7 +183,7 @@ namespace DrawRush.Tests.EditMode
         {
             // Same semicircle bowing +Z. At the start the tangent must head +Z (up and over),
             // at the end it must head -Z (coming back down) — i.e. it follows A→B, and the sign
-            // is what RailPaintController uses to convert stick input into progress.
+            // is what painting converts walking distance into progress with.
             DrawPart a = NewPart(new Vector3(-1, 0, 0));
             DrawPart b = NewPart(new Vector3(1, 0, 0));
             var wp = NewPart(new Vector3(0, 0, 1));

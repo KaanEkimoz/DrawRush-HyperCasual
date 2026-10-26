@@ -1,4 +1,5 @@
 using UnityEngine;
+using System;
 using Unity.Services.LevelPlay;
 
 namespace DrawRush.Ads
@@ -22,7 +23,10 @@ namespace DrawRush.Ads
         [SerializeField] private AdConfig config;
 
         private LevelPlayInterstitialAd _interstitial;
+        private LevelPlayRewardedAd _rewarded;
         private bool _initialised;
+        private Action _onReward;
+        private bool _rewardEarned;
 
         private int _winsSinceLastAd;
         private float _lastShownRealtime = float.NegativeInfinity;  // so the first eligible ad isn't time-gated
@@ -50,12 +54,40 @@ namespace DrawRush.Ads
             LevelPlay.OnInitSuccess -= OnInitSuccess;
             LevelPlay.OnInitFailed -= OnInitFailed;
             _interstitial?.Dispose();
+            _rewarded?.Dispose();
+        }
+
+        /// <summary>True when a rewarded video can be shown right now.</summary>
+        public bool IsRewardedReady
+        {
+            get
+            {
+#if UNITY_EDITOR
+                if (config != null && config.SimulateRewardedInEditor) return true;
+#endif
+                return _initialised && _rewarded != null && _rewarded.IsAdReady();
+            }
+        }
+
+        /// <summary>Show a rewarded video; <paramref name="onReward"/> runs only if the player
+        /// watched it through. <paramref name="placement"/> names the offer for LevelPlay reports.</summary>
+        public void ShowRewarded(string placement, Action onReward)
+        {
+#if UNITY_EDITOR
+            if (config != null && config.SimulateRewardedInEditor) { MarkAdShown(); onReward?.Invoke(); return; }
+#endif
+            if (!IsRewardedReady) return;
+            _onReward = onReward;
+            _rewardEarned = false;
+            _rewarded.ShowAd(placement);
         }
 
         private void OnInitSuccess(LevelPlayConfiguration _)
         {
             _initialised = true;
             if (config.VerboseLogging) Debug.Log("[Ads] LevelPlay init success.");
+
+            SetUpRewarded();
 
             if (string.IsNullOrEmpty(config.InterstitialAdUnitId))
             {
@@ -72,6 +104,35 @@ namespace DrawRush.Ads
                 _interstitial.OnAdLoadFailed += e => Debug.Log($"[Ads] Interstitial load failed: {e}");
             }
             _interstitial.LoadAd();
+        }
+
+        // Rewarded: grant on the reward callback, but hand it out after the ad closes so the game
+        // resumes under a fresh frame rather than behind the ad activity.
+        private void SetUpRewarded()
+        {
+            if (string.IsNullOrEmpty(config.RewardedAdUnitId)) return;
+            _rewarded = new LevelPlayRewardedAd(config.RewardedAdUnitId);
+            _rewarded.OnAdRewarded += (_, __) => _rewardEarned = true;
+            _rewarded.OnAdClosed += _ =>
+            {
+                MarkAdShown();
+                Action grant = _rewardEarned ? _onReward : null;
+                _onReward = null;
+                _rewardEarned = false;
+                _rewarded.LoadAd();
+                grant?.Invoke();
+            };
+            _rewarded.OnAdDisplayFailed += (_, __) => { _onReward = null; _rewarded.LoadAd(); };
+            if (config.VerboseLogging) _rewarded.OnAdLoadFailed += e => Debug.Log($"[Ads] Rewarded load failed: {e}");
+            _rewarded.LoadAd();
+        }
+
+        // A rewarded video the player chose to watch counts as an ad shown: it resets the win
+        // count and the time gate, so no interstitial lands right after it (e.g. x2 Coins → Next).
+        private void MarkAdShown()
+        {
+            _winsSinceLastAd = 0;
+            _lastShownRealtime = Time.realtimeSinceStartup;
         }
 
         private void OnInitFailed(LevelPlayInitError error)

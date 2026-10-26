@@ -5,6 +5,49 @@
 
 ---
 
+## 📦 1.2.0 HAZIR (2026-10-26 sabaha karşı) — dal `claude-dev-feat-controls` push'lu, master'a MERGE EDİLMEDİ, YÜKLENMEDİ
+Kaan "bensiz çalış, kararlarımı sona sakla, tam yetki" dedi. Yapılanlar (hepsi editörde doğrulandı, cihazda değil):
+- `05127fa3` ray sistemi + eski `CM vcam2` silindi (Player.prefab + sahne temiz, missing script yok).
+- `dd2a410d` Faz 7: **Eater** (L18, onaylanmamış boyayı yer), **Dasher** (L25, yanıp söner sonra atılır), her biri ilk levelinde tek başına; **hard tier**: 34 levellik turdan sonra her turda her tipten +1 ve +%8 hız (max %25); **Brush Buddy** dükkânda (90/160/260; 20/16/12 s'de 1.5/2/2.5 m boyar, son kenara dokunmaz); yükseltme fiyatları ucuzladı (20/40/70/110, pet 60/120/200); **PlaytestLog** (sadece dev/editör): `persistentDataPath/playtest_log.csv`, deneme başına satır.
+- `13213c51` yeni mağaza görselleri `PlayStore/screenshots/v1.2/` (01 serbest çizim, 02 booster duyurusu, 03 yükseltme dükkânı), sürüm notu taslağı `PlayStore/release_notes_1.2.0.md` (en-US + tr-TR); dükkân satırları Close'a binmesin diye sıkıştırıldı.
+- `4f93e7dc` **1.2.0 / versionCode 6**, imzalı AAB `Builds/DrawRush_release.aab` (56 MB, O=Ekimoz Games, bundletool ile code 6 doğrulandı).
+- Testler: EditMode 89/89, autoplay tüm leveller %99'da PASS.
+- **Kaan'ın kararları (bekliyor):** (1) telefonda son hali deneyip onay; (2) dalı master'a merge; (3) AAB'yi Play Console'a sürükleyip review'a göndermek (notlar hazır; file_upload 10MB sınırı yüzünden sürükleme Kaan'da); (4) mağaza görsellerini 1.2.0 canlıya çıkınca yüklemek; (5) LevelPlay'de Rewarded ad unit açıp `AdConfig.rewardedAdUnitId`'ye girmek (girmeden ödüllü butonlar görünmez); (6) köşe damlaları kalsın mı (şimdilik duruyor).
+- Not: editördeki autoplay koşuları kazanılan coin'leri editör PlayerPrefs'ine ekliyor (cihazı etkilemez).
+- **Ek eksikler kapatıldı (2026-10-26 öğlen):** 4 yeni sentez ses (booster alma, kalkan kırılma, Dasher wind-up, boya kaybı) + kısa titreşim (`Core/Haptics`, Android VibrationEffect); ödüllü reklam sonrası interstitial çıkmıyor (zaman kapısı sıfırlanıyor); **Ayarlar menüsü** (Mute'un altında: Titreşim aç/kapa, Joystick Floating/Fixed); joystick bölgesi/konumu artık ekran koordinatında (sahnedeki touch rect ~1.9x ölçekli olduğu için eski "alt %45" aslında ~%36'ydı); **Eater oyuncunun 1 m yakınındaki boyayı yiyemez** (yapışık Eater level'i kilitliyordu); `ProgressionTests` (7 test); autoplay "with Enemies" modu (dokunulmaz bot, L26 kademeleri) tüm leveller PASS; CLAUDE.md Cinemachine 3.1.6 + serbest çizim notu. EditMode 96/96. AAB bu değişikliklerle **yeniden alındı** (26 Eki 14:13, `Builds/DrawRush_release.aab`, 1.2.0/code 6, imzalı, VIBRATE izni var, PVRTC filtresi yok) → yüklemeye hazır. 🪤 Unity arka plandayken (başka Space/App Nap) build "takılmış" görünebiliyor: Unity'yi öne getirince devam etti, diyalog yoktu.
+
+## 🧪 YENİDEN TASARIM PROTOTİPİ — FAZ 0-6 YAPILDI (2026-10-26 gece), dal `claude-dev-feat-controls`, master'a MERGE EDİLMEDİ
+Kaynak: araştırma raporu (`reports/Draw Rush yeniden tasarım araştırması.md`, worktree game-issues-list-8d2b00). Kaan "tüm fazları bu gece bitir" dedi. Hepsi editörde doğrulandı; **cihazda his testi YAPILMADI** (bkz. feedback-verification-claims).
+- **Faz 0 kontrol/kamera `825a521e`:** 60 fps + 60 Hz fizik; joystick dp tabanlı (64 dp), takip eden, alt %45, deadzone 0.1 yeniden ölçekli; analog hız eğrisi (`GameConfig._speedByDeflection`), ivme 0.08 / fren 0.05 s, dönüş 0.05; yeni CM3 `CM GameplayCamera` + `GameplayCameraRig` + `CameraConfig` (pitch 58, FOV 40, 10.5 m genişlik, oyuncu y 0.58, damping 0.25, tehdit zoom ≤1.5x 6/8 m histerezis); eski `CM vcam2` kapalı duruyor (geri dönüş için); ekran dışı oklar; dev build FPS göstergesi. ⚠️ Cinemachine aslında **3.1.6** (2.10 değil).
+- **Faz 1 serbest çizim `427c7c81`:** raylar kapalı (`RailPaintController`, `RailDirectionArrow` disabled, kod duruyor). `EdgeFill` artık span kümesi; `FreeDrawPainter` 0.5 m bant (yay x1.25), pending 1.2 s, kenar %85'te kendini tamamlar, <0.3 m boşluk kapanır, %90'da sweep + kazanma, %70'te boşluk nabzı, %80+4 s duraksamada bant x1.6. `CoverageHud` üst bar. Autoplay serbest çizime yeniden yazıldı (33/33).
+- **Faz 2 `cab86a4c`:** `ChasePressure` %50/%80'de düşman +%10; `EnemyFollow` Pressure/Freeze/Push/ApplyVariant.
+- **Faz 3 boosterlar `29025eea`:** Shield/Freeze/Speed/Magnet; `BoosterConfig` asset; tek pickup, ilk 6 s, sonra 8-12 s, 7 s ömür; max 2 aktif tür; pity; `BoosterHud` halkalar. `_Project/Boosters/`.
+- **Faz 4 ödüllü reklam `360666cc`:** `RewardedOffers` (İkinci şans / Kalkanla yeniden dene / x2 Coin). ⚠️ **AdConfig.rewardedAdUnitId BOŞ** → cihazda butonlar görünmez; Kaan LevelPlay konsolunda Rewarded ad unit açıp ID'yi girmeli. Editörde simüle.
+- **Faz 5 dükkân `72455058`:** `UpgradeShop` satırları (4 seviye, 30/75/180/420), `BumpPet` (120/260/520; 6/5/4 s cooldown, düşmanı iter, ÇİZMEZ).
+- **Faz 6 düşman kademeleri `98b5a5c2`:** `EnemyTierDirector` — Sprinter L6+, Tank L12+ (itilemez), tanıtım levelinde tek başına; 2 fail sonrası %10 yavaşlık.
+- **Kaan cihaz testi (2026-10-26): "çok çok daha eğlenceli".** 4 sorun → `c74f90fb` ile düzeltildi: joystick küçüldü (46 dp, art x0.75); tam itme yerine **zamanla hızlanma** (0.6 s'de %55→%100, 100°+ dönüşte sıfırlanır); boosterlar okunur (pickup üstünde isim + parlayan disk, toplarken ortada "SPEED / You run faster", halkaların altında isim); **kazanma %99** (kenar kendini %99'da tamamlar, kenar uçlarındaki ≤0.6 m şerit damla altında kaldığı için kapanır). Coverage bar + halkalar Level etiketinin altına alındı. Tutorial ipucu artık baştan görünüyor. Autoplay %99'da tüm levelleri geçiyor (çiçek/petal levelleri için yerel t takibi).
+- **Açık:** düzeltmelerin cihazda tekrar denenmesi; drop (DrawPart) görselleri duruyor (Kaan testte şikâyet etmedi); **rewarded ad unit ID** (Kaan'ın LevelPlay hesabında oluşturulmalı); Faz 7 (D7 verisine bağlı). Dal push'lanmadı/merge edilmedi.
+
+## 🎮 KONTROL + KAMERA PROTOTİPİ (2026-10-26) — PLAN, Kaan "yap" demeden BAŞLAMA
+Kaynak: `reports/Draw Rush yeniden tasarım araştırması.md` (worktree game-issues-list-8d2b00). Dal: `claude-dev-feat-controls` (master'dan, main checkout). Raylar bu prototipte KALIYOR; serbest çizim sonraki aşama.
+- **Mevcut durum (kod):** `FloatingJoystick` zaten var (dokunulan yerde açılır) ama follow yok, deadzone yok, `movementRange` 80 canvas birimi. `ThirdPersonMovement` her sapmada sabit `playerSpeed` 2.7 (normalize ediyor), dönüş 0.1 s, hareket FixedUpdate'te. Kamera ayarı okunmadı (Unity kapalıydı).
+- **0 ÖLÇÜM SONUCU (2026-10-26, editörden okundu):**
+  - Kamera DÖNMÜYOR (tahmin yanlıştı): `CM vcam2` Transposer **WorldSpace**, offset (-0.21, 10.94, -8.67), mesafe ~14 m, pitch 49°, **FOV 60**, X/Y/Z damping **1** (kamera ~1 s geriden geliyor), x offset yüzünden ~0.3° yaw + 0.5° roll. Brain SmartUpdate.
+  - **Görüş:** 20:9 telefonda oyuncu hizasında görünen genişlik **7.5 m**, arena **18.8 x 17.8 m**. Oyuncunun **arkası 6.5 m**, önü 23 m görünüyor (ekranın üstü boşa). 16:9'da 9.4 m, tablette 12.6 m. "Düşmanı göremiyorum" şikâyetinin ölçülü karşılığı.
+  - **Joystick:** dokunma alanı tüm ekran, `movementRange` 110 (ref 1080 genişlik, match 0) ≈ telefonda **~7 mm** başparmak yolu; hareket normalize olduğundan **~0.7 mm** titreme bile tam hızda koşturuyor. Hassas kontrol imkânsız.
+  - **Kare hızı:** `Application.targetFrameRate` hiç set edilmiyor → Android varsayılanı **30 fps** (Unity dokümanı; cihazda FPS ile doğrulanacak). Hareket FixedUpdate 50 Hz → 30 fps'te kare başına 1-2 adım = takılma/judder şüphesi.
+  - **Revize öncelik:** (a) 60 fps + hareketi Update'e al ya da interpolasyon, (b) joystick fiziksel boyut + analog hız, (c) kamera: damping 1 → ~0.2-0.3, x offset 0, pitch ~60°, karakteri ekranda biraz yukarı al ki arkası görünsün, sonra tehdit zoom'u.
+  - **Baseline:** elle oynama gerekiyor → Kaan canlı 1.1.0'da level 1-5 süre + vuruş sayısı + ekran kaydı.
+- **0 Ölçüm (0.5 g):** vcam body/binding mode (karakterle dönüyor mu?), FOV, offset, damping, CanvasScaler; seviye 1-5 elle süre + vuruş sayısı; video.
+- **1 Kamera (1 g):** yaw sabit, pitch ~55°, FOV ~35, Framing Transposer + TargetGroup, lookahead 0; ayarlar yeni `CameraConfig` SO (`_Project/Camera/`).
+- **2 Joystick (1 g):** follow (parmak yarıçapı aşınca taban kayar), spawn alanı alt %45 safe area, yarıçap dp ile (60-75 dp), radyal deadzone 0.1 + yeniden ölçek, tek pointerId, alfa %40.
+- **3 Hareket (1 g):** analog hız eğrisi (GameConfig AnimationCurve: hafif itiş yürüme, tam itiş koşu), ivme 0.08 s / fren 0.05 s, yön anında, model dönüşü 0.05 s; Update vs FixedUpdate titremesini kontrol et; anim hızı gerçek hıza bağlı.
+- **4 Tehdit kamerası (1 g):** `ThreatFramer`: en yakın 3 düşman (6 m gir / 8 m çık histerezis, min 1 s tutma) TargetGroup'a ağırlık rampasıyla; Dolly Only, max mesafe tabanın 1.5 katı, damping ~0.6 s. Düşman listesi runtime-set SO (singleton yok).
+- **5 Ekran dışı ok (0.5 g):** havuzlu 4 ok, safe area kenarına clamp, mesafeye göre alfa, görünürken gizle.
+- **6 Test (1 g):** dev ayar paneli (yalnız Development build), EditMode testleri (eğri, deadzone, kenar clamp), autoplay 34/34, dev APK ile Kaan + iki testçi; kriter: "istediğin yöne kaçabildin mi", görünmeyen düşmandan vuruş, 1-5 süre kıyası, düşük cihazda 60 fps.
+
+---
+
 ## 🚀 1.1.0 (versionCode 5) CANLIDA — "Available on Google Play", 25 Eki 2026 16:40 (178 ülke)
 - Feedback dalı master'a `--no-ff` merge (`0a11cae7`, commit-tree ile — Unity açıkken dosyalar oynamadı), bump `44d8ceb2`, ikisi de push'lu.
 - İmzalı AAB `Builds/DrawRush_release.aab` 55.4MB (yayın anahtarı, O=Ekimoz Games doğrulandı). Console önizleme: **cihaz kaybı 0** (11.021 telefon), yeni kurulum **38.4MB (−13.2MB)**, güncelleme 29.8MB. 2 standart uyarı (deobfuscation / native symbols).

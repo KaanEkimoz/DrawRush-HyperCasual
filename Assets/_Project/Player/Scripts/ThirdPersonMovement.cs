@@ -27,26 +27,30 @@ namespace DrawRush.Player
         [SerializeField] private int idleArmsLayer = 1;
         [SerializeField] private float idleArmsBlend = 10f;
 
-        // Minimum raw stick deflection that counts as input. Direction is normalised afterwards,
-        // so anything past this moves at the SAME speed — the stick steers, it never throttles.
-        private const float InputDeadzone = 0.1f;
+        // The on-screen stick applies its own radial deadzone and rescales past it, so this only
+        // filters gamepad drift. Past it the stick only steers: speed builds up with time spent
+        // moving (GameConfig.SpeedFactor), so it never has to be pushed all the way.
+        private const float InputDeadzone = 0.02f;
 
         private PlayerControls _controls;
         private Vector2 _move;
         private float _turnSmoothVelocity;
         private Vector3 _velocity = Vector3.zero;
+        private Vector3 _planarVelocity = Vector3.zero;
+        private float _movingTime;
+        private Vector3 _lastDirection;
         private CharacterController _characterController;
         private GameState _state;
         private bool _hasWon;
         private int _idleStateHash;
 
-        /// <summary>Latest movement input vector. Exposed so RailPaintController can reuse
+        /// <summary>Latest movement input vector. Exposed so other systems can reuse
         /// the same input source while it drives edge-constrained movement.</summary>
         public Vector2 MoveInput => _move;
 
-        /// <summary>When true, free movement is suspended (rail-drawing owns the player).
-        /// Gravity still applies so the character stays grounded.</summary>
-        public bool MovementLocked { get; set; }
+        /// <summary>Speed multiple from boosters (1 = none).</summary>
+        public float SpeedMultiplier { get; set; } = 1f;
+
 
         private void Awake()
         {
@@ -94,35 +98,54 @@ namespace DrawRush.Player
             if (_hasWon) return;
             // Yield to PlayerKnockback while it's pushing the player away from an enemy;
             // gravity still applies so the character stays grounded.
-            if (knockback != null && knockback.IsActive) { ApplyGravity(); return; }
-            if (!MovementLocked) Move();
+            if (knockback != null && knockback.IsActive) { _planarVelocity = Vector3.zero; ApplyGravity(); return; }
+            Move();
             ApplyGravity();
-            // Drive the Run ↔ Idle blend from input magnitude. RailPaintController locks
-            // movement while sliding, but the player is still actively moving on the rail —
-            // report the rail's input so the run anim stays active.
-            if (playerAnim != null) playerAnim.SetFloat(AnimatorIds.Speed, _move.magnitude);
+            // Drive the Run ↔ Idle blend from the real speed, so the build-up animates too.
+            if (playerAnim != null)
+                playerAnim.SetFloat(AnimatorIds.Speed, _planarVelocity.magnitude / Mathf.Max(0.01f, ResolveSpeed()));
         }
 
         private void Move()
         {
-            // Dead-zone the RAW stick, then normalise. The check used to run on the already
-            // normalised vector, whose magnitude is only ever 1 or 0 — so it gated nothing and
-            // the faintest touch or stick drift launched the player at full speed.
-            if (_move.sqrMagnitude < InputDeadzone * InputDeadzone) return;
-            var direction = new Vector3(_move.x, 0f, _move.y).normalized;
-
-            var camera = GameServices.MainCamera;
-            float cameraY = camera != null ? camera.eulerAngles.y : 0f;
             float speed = ResolveSpeed();
-            float turn = ResolveTurnSmoothTime();
+            Vector3 target = Vector3.zero;
+            if (_move.magnitude < InputDeadzone) { _movingTime = 0f; _lastDirection = Vector3.zero; }
+            else
+            {
+                var camera = GameServices.MainCamera;
+                float cameraY = camera != null ? camera.eulerAngles.y : 0f;
+                var direction = new Vector3(_move.x, 0f, _move.y).normalized;
+                float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cameraY;
+                Vector3 heading = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
 
-            float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cameraY;
-            float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref _turnSmoothVelocity, turn);
-            transform.rotation = Quaternion.Euler(0f, angle, 0f);
+                // Build speed while moving; a sharp turn falls back toward the start speed. The
+                // reference heading trails the stick by ~0.1 s so a quick thumb sweep still counts.
+                float sharp = GameServices.Config != null ? GameServices.Config.sharpTurnAngle : 100f;
+                if (_lastDirection == Vector3.zero) _lastDirection = heading;
+                if (Vector3.Angle(_lastDirection, heading) > sharp) { _movingTime = 0f; _lastDirection = heading; }
+                _movingTime += Time.deltaTime;
+                _lastDirection = Vector3.Slerp(_lastDirection, heading, 1f - Mathf.Exp(-10f * Time.deltaTime));
+                target = heading * (speed * SpeedFactor(_movingTime) * SpeedMultiplier);
 
-            var moveDirection = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
-            _characterController.Move(moveDirection.normalized * (speed * Time.deltaTime));
+                // Only the model's facing is smoothed; the velocity below follows the stick.
+                float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref _turnSmoothVelocity, ResolveTurnSmoothTime());
+                transform.rotation = Quaternion.Euler(0f, angle, 0f);
+            }
+
+            // Short ramps instead of instant on/off: full speed in accelerationTime, a stop in
+            // decelerationTime. Short enough to read as instant, long enough to kill the jolt.
+            bool stopping = target.sqrMagnitude < 0.0001f;
+            float rampTime = Mathf.Max(0.001f, stopping ? ResolveDecelerationTime() : ResolveAccelerationTime());
+            _planarVelocity = Vector3.MoveTowards(_planarVelocity, target, speed / rampTime * Time.deltaTime);
+            if (_planarVelocity.sqrMagnitude > 0f) _characterController.Move(_planarVelocity * Time.deltaTime);
         }
+
+        private float SpeedFactor(float movingSeconds)
+            => GameServices.Config != null ? GameServices.Config.SpeedFactor(movingSeconds) : 1f;
+
+        private float ResolveAccelerationTime() => GameServices.Config != null ? GameServices.Config.accelerationTime : 0.08f;
+        private float ResolveDecelerationTime() => GameServices.Config != null ? GameServices.Config.decelerationTime : 0.05f;
 
         private void ApplyGravity()
         {

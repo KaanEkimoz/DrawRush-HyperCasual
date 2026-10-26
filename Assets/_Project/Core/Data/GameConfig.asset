@@ -13,12 +13,15 @@ MonoBehaviour:
   m_Name: GameConfig
   m_EditorClassIdentifier: Studios208.DrawRush::Studios208.DrawRush.Core.GameConfig
   _playerSpeed: 2.7
-  _turnSmoothTime: 0.1
+  _startSpeedFactor: 0.55
+  _speedRampTime: 0.6
+  _sharpTurnAngle: 100
+  _accelerationTime: 0.08
+  _decelerationTime: 0.05
+  _turnSmoothTime: 0.05
   _gravity: -9.81
+  _targetFrameRate: 60
   _playerStartingHealth: 3
   _enemyTouchDamage: 1
-  _lineDestroyDelay: 2
   _lineWidth: 0.4
-  _trailCatchUpLerp: 100
   _gameWonDelay: 3
-  _splashWaitSeconds: 2.1

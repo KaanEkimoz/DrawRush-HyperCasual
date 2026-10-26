@@ -68,20 +68,111 @@ namespace DrawRush.Drawing
         /// </summary>
         public void PaintFrom(DrawPart fromEnd, float t)
         {
-            float low = Fill.PaintedLow;
-            float high = Fill.PaintedHigh;
-
+            float before = Fill.Coverage;
             if (fromEnd == A) Fill.PaintFromA(t);
             else if (fromEnd == B) Fill.PaintFromB(t);
             else return;
+            AfterChange(Fill.Coverage != before);
+        }
 
-            if (Fill.PaintedLow != low || Fill.PaintedHigh != high) Changed?.Invoke();
+        /// <summary>Free drawing: lay wipeable paint over [t0, t1] (A→B axis), stamped with
+        /// <paramref name="time"/> so it can be confirmed later.</summary>
+        public void PaintPending(float t0, float t1, float time)
+        {
+            float before = Fill.Coverage;
+            int spans = Fill.Spans.Count;
+            Fill.PaintPending(t0, t1, time);
+            AfterChange(Fill.Coverage != before || Fill.Spans.Count != spans);
+        }
 
+        /// <summary>Keep pending paint laid at or before <paramref name="time"/> for good.</summary>
+        public void ConfirmPendingOlderThan(float time) => Fill.ConfirmPendingOlderThan(time);
+
+        /// <summary>Keep all pending paint for good.</summary>
+        public void ConfirmAll() => Fill.ConfirmAll();
+
+        /// <summary>Wipe paint that is not confirmed yet (enemy hit). True if any was lost.</summary>
+        public bool ClearPending()
+        {
+            bool lost = Fill.ClearPending();
+            if (lost) Changed?.Invoke();
+            return lost;
+        }
+
+        /// <summary>Paint [t0, t1] for good at once (a helper's stroke).</summary>
+        public void PaintKept(float t0, float t1)
+        {
+            float before = Fill.Coverage;
+            Fill.PaintRange(t0, t1);
+            AfterChange(Fill.Coverage != before);
+        }
+
+        /// <summary>Wipe pending paint within [t0, t1] only. True if any was lost.</summary>
+        public bool ErasePending(float t0, float t1)
+        {
+            bool lost = Fill.ErasePending(t0, t1);
+            if (lost) Changed?.Invoke();
+            return lost;
+        }
+
+        /// <summary>Close gaps shorter than <paramref name="meters"/> along this edge, and slivers
+        /// at either end shorter than <paramref name="endMeters"/> (defaults to the same).</summary>
+        public void CloseGaps(float meters, float endMeters = -1f)
+        {
+            float len = Length;
+            if (len < 0.001f) return;
+            AfterChange(Fill.CloseGaps(meters / len, (endMeters < 0f ? meters : endMeters) / len));
+        }
+
+        /// <summary>Paint the whole edge at once (auto-complete, win sweep).</summary>
+        public void CompleteAll()
+        {
+            if (Fill.IsComplete) return;
+            Fill.CompleteAll();
+            AfterChange(true);
+        }
+
+        private void AfterChange(bool changed)
+        {
+            if (changed) Changed?.Invoke();
             if (!_completedRaised && Fill.IsComplete)
             {
                 _completedRaised = true;
+                Fill.ConfirmAll();
                 Completed?.Invoke(this);
             }
+        }
+
+        /// <summary>Parameter (A→B, 0-1) of the point on this edge nearest to
+        /// <paramref name="worldPoint"/> on the ground plane, and that ground distance.</summary>
+        public float ClosestT(Vector3 worldPoint, out float distance)
+        {
+            Vector2 p = new(worldPoint.x, worldPoint.z);
+            float t;
+            if (TryComputeArc(out Vector2 center, out float radius, out float angA, out float sweep, out _))
+            {
+                // Angle of p around the centre, measured from A in the sweep's direction.
+                float ang = Mathf.Atan2(p.y - center.y, p.x - center.x);
+                float rel = sweep >= 0f ? Norm2Pi(ang - angA) : Norm2Pi(angA - ang);
+                float span = Mathf.Abs(sweep);
+                if (rel <= span) t = rel / span;
+                else
+                {
+                    // Outside the arc: snap to whichever end is angularly nearer.
+                    float pastEnd = rel - span, beforeStart = 2f * Mathf.PI - rel;
+                    t = pastEnd < beforeStart ? 1f : 0f;
+                }
+            }
+            else
+            {
+                Vector3 a3 = A.Transform.position, b3 = B.Transform.position;
+                Vector2 a = new(a3.x, a3.z), ab = new Vector2(b3.x, b3.z) - a;
+                float len2 = ab.sqrMagnitude;
+                t = len2 > 1e-8f ? Mathf.Clamp01(Vector2.Dot(p - a, ab) / len2) : 0f;
+            }
+            Vector3 q = PointAt(t);
+            distance = Vector2.Distance(p, new Vector2(q.x, q.z));
+            return t;
         }
 
         /// <summary>World-space point along the edge at parameter <paramref name="t"/> (A→B).</summary>

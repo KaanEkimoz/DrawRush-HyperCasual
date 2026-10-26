@@ -42,6 +42,9 @@ namespace DrawRush.Core
             if (levelText != null) this.levelText = levelText;
         }
 
+        public GameObject WinPanel => winPanel;
+        public GameObject LosePanel => losePanel;
+
         public void SetLevelLabel(int level)
         {
             if (levelText != null) levelText.text = string.Format(levelLabelFormat, level);

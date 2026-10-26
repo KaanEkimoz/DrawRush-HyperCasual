@@ -33,3 +33,15 @@ MonoBehaviour:
   uiClick:
     clip: {fileID: 8300000, guid: 7616b72f7b84d4cb1b7f7bb6d68e3784, type: 3}
     volume: 0.55
+  boosterPickup:
+    clip: {fileID: 8300000, guid: 4fb622a2c4c1245ecb55bc0c411f84bb, type: 3}
+    volume: 0.8
+  shieldBreak:
+    clip: {fileID: 8300000, guid: 29697c7d9edb54aeeaadeb2ae2697576, type: 3}
+    volume: 0.8
+  dashWindUp:
+    clip: {fileID: 8300000, guid: 3bff67e89dc694112a08865d241f9ce0, type: 3}
+    volume: 0.6
+  paintLost:
+    clip: {fileID: 8300000, guid: c5cf1c25e0ab848499ceeabb996a69a1, type: 3}
+    volume: 0.5

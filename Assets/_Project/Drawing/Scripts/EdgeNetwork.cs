@@ -68,6 +68,33 @@ namespace DrawRush.Drawing
         /// <summary>True once every edge is painted. False when there are no edges yet.</summary>
         public bool IsComplete => _edges.Count > 0 && _remaining == 0;
 
+        /// <summary>Bumped on every rebuild (level start or restart), so painters can tell a
+        /// fresh edge set from the one they were tracking even on the same component.</summary>
+        public int Generation { get; private set; }
+
+        /// <summary>Painted fraction of the whole shape (0-1), weighted by edge length.</summary>
+        public float Coverage
+        {
+            get
+            {
+                float total = 0f, painted = 0f;
+                for (int i = 0; i < _edges.Count; i++)
+                {
+                    float len = _edges[i].Length;
+                    total += len;
+                    painted += len * _edges[i].Fill.Coverage;
+                }
+                return total > 0f ? painted / total : 0f;
+            }
+        }
+
+        /// <summary>Pulse the still-unpainted stretches of every edge (late-level help).</summary>
+        public void SetGapHighlight(bool on)
+        {
+            foreach (DrawEdgeAuthor author in _authors.Values)
+                if (author != null && author.View != null) author.View.SetHighlight(on);
+        }
+
         /// <summary>The authored colour of <paramref name="edge"/> — the same one its paint and
         /// wall use. Lets anything pointing AT an edge (the overhead arrow) say which edge it
         /// means by colour rather than by position alone. Unknown edges get the fallback.</summary>
@@ -113,6 +140,7 @@ namespace DrawRush.Drawing
             }
             _remaining = _edges.Count;
             _centroid = ComputeCentroid();
+            Generation++;
 
             BuildCorners();
             ComputeComponentInteriors();

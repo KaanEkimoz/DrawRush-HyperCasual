@@ -222,11 +222,6 @@ namespace DrawRush.Core
             // Wipe any in-progress chain/trail so the new level starts clean.
             playerTf.GetComponent<PlayerInteract>()?.ResetChain();
 
-            // The paint controller lives on the persistent Player, so its disable/enable
-            // never fires on a level switch. Detach explicitly so stale _currentPart /
-            // _edge refs from the previous level don't re-engage the rail at the new spawn.
-            playerTf.GetComponent<DrawRush.Player.RailPaintController>()?.Detach();
-
             // Same persistence problem for the post-hit window: start every level hittable and
             // not blinking, however the last one ended.
             playerTf.GetComponent<PlayerCombat>()?.ResetForLevel();

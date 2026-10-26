@@ -33,6 +33,7 @@ namespace DrawRush.Core
         private void Awake()
         {
             ResolveSceneReferences();
+            if (config != null) Application.targetFrameRate = config.targetFrameRate;
 
             if (state != null) state.Reset();
             if (playerHealth != null) playerHealth.ResetToStarting();

@@ -24,8 +24,8 @@ Ek referans (lazım oldukça aç):
   - **Namespace `DrawRush.*`** (2026-07-17'de `Studios208.DrawRush.*`'tan taşındı), asmdef'ler `DrawRush` + `DrawRush.Tests.EditMode`. Şirket adı bilerek koda girmedi — marka değişse kod etkilenmesin.
   - Kodda `Studios208` geçen **tek yer** `PersistentObject.cs`'teki `[MovedFrom]` satırı: o bir tarihî kayıt, eski serialize veriyi eşliyor. **Yeniden adlandırma.**
 - **Tür:** Hyper-casual mobile drawing/puzzle + chase combat
-- **Engine / Stack:** Unity 6000.3.12f1 LTS + URP 17.3.0 + Input System + AI Navigation + Cinemachine 2.10.7
-- **Hedef:** Android öncelik (mobile portrait), kullanıcı parmak çizimiyle parçaları birleştirip duvarı/şekli tamamlar; bu sırada düşmanlardan kaçar/onlarla çarpışır
+- **Engine / Stack:** Unity 6000.3.12f1 LTS + URP 17.3.0 + Input System + AI Navigation + Cinemachine 3.1.6 (CM3: `CinemachineCamera` + `CinemachineFollow`, `GameplayCameraRig` sürer)
+- **Hedef:** Android öncelik (mobile portrait). **1.2.0'dan itibaren serbest çizim:** oyuncu joystick'le yürür, zemindeki kesikli şablonun üstünden geçtiği yer boyanır (raylar kaldırıldı); şeklin %99'u boyanınca level biter. Düşmanlar kovalar, sahada booster'lar çıkar.
 - **Repo:** https://github.com/KaanEkimoz/DrawRush-HyperCasual (public, 39★, 6 fork)
 - **Default branch:** `master` — Claude `claude-dev` branch'inde çalışmalı
 

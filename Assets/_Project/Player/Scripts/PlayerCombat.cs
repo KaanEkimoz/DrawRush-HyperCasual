@@ -1,3 +1,4 @@
+using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -21,8 +22,19 @@ namespace DrawRush.Player
         [Tooltip("Invulnerability window after taking damage, in seconds. Further hits are " +
                  "ignored until it elapses.")]
         [SerializeField] private float invulnerabilityDuration = 3f;
+        [Tooltip("Invulnerable seconds after a shield absorbs a hit.")]
+        [SerializeField] private float shieldGrace = 1f;
 
         private float _invulnerableUntil;
+
+        /// <summary>Raised after a hit actually lands (not during invulnerability).</summary>
+        public event Action Damaged;
+
+        /// <summary>Raised when a shield charge absorbs a hit instead.</summary>
+        public event Action ShieldBroken;
+
+        /// <summary>Hits that will be absorbed without damage (Shield booster).</summary>
+        public int ShieldCharges { get; set; }
 
         /// <summary>True while the post-hit invulnerability window is active.</summary>
         public bool IsInvulnerable => Time.time < _invulnerableUntil;
@@ -56,10 +68,19 @@ namespace DrawRush.Player
         {
             if (amount <= 0 || IsInvulnerable) return;
 
+            if (ShieldCharges > 0)
+            {
+                ShieldCharges--;
+                _invulnerableUntil = Time.time + shieldGrace;
+                ShieldBroken?.Invoke();
+                return;
+            }
+
             if (health != null) health.TakeDamage(amount);
             if (playerAnim != null) playerAnim.SetTrigger(AnimatorIds.Hit);
             if (hitFeedback != null) hitFeedback.Play();
             _invulnerableUntil = Time.time + invulnerabilityDuration;
+            Damaged?.Invoke();
         }
 
         /// <summary>Fresh-level reset: drop the post-hit invulnerability window and any running
@@ -69,6 +90,7 @@ namespace DrawRush.Player
         public void ResetForLevel()
         {
             _invulnerableUntil = 0f;
+            ShieldCharges = 0;
             if (hitFeedback != null) hitFeedback.Stop();
             GetComponent<PlayerKnockback>()?.Stop();
         }
