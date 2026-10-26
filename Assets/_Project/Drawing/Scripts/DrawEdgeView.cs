@@ -40,6 +40,16 @@ namespace DrawRush.Drawing
                  "ghost read as a path still to walk, not as scenery.")]
         [SerializeField] private float ghostScroll = 0.6f;
 
+        [Header("Finished edge")]
+        [Tooltip("Width multiple a finished edge keeps.")]
+        [SerializeField] private float finishedWidthScale = 1.35f;
+        [Tooltip("Width multiple at the peak of the finish flash.")]
+        [SerializeField] private float finishFlashWidthScale = 2f;
+        [Tooltip("Seconds the finish flash takes to settle.")]
+        [SerializeField] private float finishFlashSeconds = 0.6f;
+        [Tooltip("How much a finished edge is lifted toward white (0 = own colour).")]
+        [SerializeField, Range(0f, 1f)] private float finishedBrighten = 0.25f;
+
         [Header("Gap highlight (late in a level)")]
         [Tooltip("Ghost opacity while the remaining gaps are highlighted.")]
         [SerializeField, Range(0.1f, 1f)] private float highlightAlpha = 0.95f;
@@ -54,6 +64,7 @@ namespace DrawRush.Drawing
         private readonly List<Vector2> _gaps = new();
         private bool _hidden;
         private bool _highlight;
+        private Coroutine _finishFlash;
         private MaterialPropertyBlock _ghostBlock;
         private static readonly int GhostBaseColorId = Shader.PropertyToID("_BaseColor");
         private static readonly int GhostColorId = Shader.PropertyToID("_Color");
@@ -69,8 +80,10 @@ namespace DrawRush.Drawing
             _edge = edge;
             _hidden = false;
             color = lineColor;
+            if (_finishFlash != null) { StopCoroutine(_finishFlash); _finishFlash = null; }
 
             EnsureRenderers();
+            SetSpanLook(1f, color);
             ApplyColor();
             if (_edge != null) _edge.Changed += Refresh;
             Refresh();
@@ -84,6 +97,38 @@ namespace DrawRush.Drawing
             SetHighlight(false);
             foreach (LineRenderer lr in _spans) lr.enabled = false;
             foreach (LineRenderer lr in _ghosts) lr.enabled = false;
+        }
+
+        /// <summary>The edge is done: flash wide and bright, then settle a little wider and lighter
+        /// than paint in progress, so finished edges read as finished.</summary>
+        public void Finish()
+        {
+            if (_hidden) return;
+            SetHighlight(false);
+            Refresh();
+            if (_finishFlash != null) StopCoroutine(_finishFlash);
+            _finishFlash = StartCoroutine(FinishFlash());
+        }
+
+        private System.Collections.IEnumerator FinishFlash()
+        {
+            Color settled = Color.Lerp(color, Color.white, finishedBrighten);
+            Color peak = Color.Lerp(color, Color.white, 0.75f);
+            for (float t = 0f; t < finishFlashSeconds; t += Time.deltaTime)
+            {
+                float k = t / finishFlashSeconds;
+                float e = 1f - (1f - k) * (1f - k);
+                SetSpanLook(Mathf.Lerp(finishFlashWidthScale, finishedWidthScale, e), Color.Lerp(peak, settled, e));
+                yield return null;
+            }
+            SetSpanLook(finishedWidthScale, settled);
+            _finishFlash = null;
+        }
+
+        private void SetSpanLook(float widthScale, Color c)
+        {
+            float w = ResolveWidth() * widthScale;
+            foreach (LineRenderer lr in _spans) { lr.startWidth = lr.endWidth = w; lr.startColor = lr.endColor = c; }
         }
 
         /// <summary>Make the still-unpainted stretches stand out (pulse, wider, brighter).</summary>
@@ -306,6 +351,14 @@ namespace DrawRush.Drawing
             }
             lr.enabled = true;
         }
+
+        /// <summary>World Y of the painted line.</summary>
+        public float LineY => lineY;
+        /// <summary>Material the painted spans use.</summary>
+        public Material LineMaterial => _spans.Count > 0 ? _spans[0].sharedMaterial : lineMaterial;
+        /// <summary>Width and colour a finished edge settles at (corner joints match it).</summary>
+        public float FinishedWidth => ResolveWidth() * finishedWidthScale;
+        public Color FinishedColor => Color.Lerp(color, Color.white, finishedBrighten);
 
         private float ResolveWidth()
             => width > 0f ? width : (GameServices.Config != null ? GameServices.Config.lineWidth : 0.4f);

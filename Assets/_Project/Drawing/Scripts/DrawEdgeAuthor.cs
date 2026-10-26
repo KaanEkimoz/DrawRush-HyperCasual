@@ -97,19 +97,17 @@ namespace DrawRush.Drawing
             r.SetPropertyBlock(_mpb);
         }
 
-        /// <summary>Build + raise this edge's procedural wall along the edge geometry, clear the
-        /// painted line, and hide the two endpoint drops. Called by EdgeNetwork when the edge
+        /// <summary>Raised when an edge is finished: its midpoint and colour (juice + sound).</summary>
+        public static event System.Action<Vector3, Color> EdgeFinished;
+
+        /// <summary>The edge is fully painted: the line lights up and stays. No wall rises any more
+        /// (Kaan, 1.2.2: with free drawing a wall only blocked enemy paths and hid the shape), and
+        /// the drops stay as the shape's corner markers. Called by EdgeNetwork when the edge
         /// fills.</summary>
         public void Reveal(DrawEdge edge, Vector3 interiorPoint, Vector3 endA, Vector3 endB)
         {
-            if (Wall != null)
-            {
-                Wall.Build(edge, wallHeight, wallThickness, wallMaterial, wallColor, interiorPoint, endA, endB);
-                Wall.Reveal();
-            }
-            View.Hide();
-            if (anchorA != null) anchorA.gameObject.SetActive(false);
-            if (anchorB != null) anchorB.gameObject.SetActive(false);
+            View.Finish();
+            EdgeFinished?.Invoke(edge.PointAt(0.5f), wallColor);
         }
 
         /// <summary>This edge's color (for the painted line / corner). Fallback kept for

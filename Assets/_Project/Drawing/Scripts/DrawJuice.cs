@@ -7,7 +7,7 @@ namespace DrawRush.Core
     /// Feel for the core action. Completing an edge used to just raise a wall in silence (the sound
     /// aside); now each wall that rises throws a short burst of its own colour where it appears, so
     /// finishing a stretch of the shape lands as a small reward. Reads
-    /// <see cref="ProceduralWall.Revealed"/>, so it stays decoupled from the drawing code.
+    /// <see cref="DrawEdgeAuthor.EdgeFinished"/>, so it stays decoupled from the drawing code.
     ///
     /// One world-space particle system, repositioned and recoloured per burst — cheap, and bursts
     /// left behind by rapid completions still play out where they were thrown.
@@ -25,17 +25,15 @@ namespace DrawRush.Core
 
         private void Awake() => BuildSystem();
 
-        private void OnEnable() => ProceduralWall.Revealed += OnWallRevealed;
-        private void OnDisable() => ProceduralWall.Revealed -= OnWallRevealed;
+        private void OnEnable() => DrawEdgeAuthor.EdgeFinished += OnEdgeFinished;
+        private void OnDisable() => DrawEdgeAuthor.EdgeFinished -= OnEdgeFinished;
 
-        private void OnWallRevealed(ProceduralWall wall)
+        private void OnEdgeFinished(Vector3 midpoint, Color color)
         {
-            if (wall == null || _ps == null) return;
-            Vector3 at = wall.TryGetWorldBounds(out Bounds b) ? new Vector3(b.center.x, b.max.y + 0.1f, b.center.z)
-                                                              : wall.transform.position;
-            _ps.transform.position = at;
+            if (_ps == null) return;
+            _ps.transform.position = midpoint + Vector3.up * 0.4f;
             var main = _ps.main;
-            Color c = wall.Color; c.a = 1f;
+            Color c = color; c.a = 1f;
             main.startColor = c;
             _ps.Emit(burstCount);
         }

@@ -29,7 +29,7 @@ namespace DrawRush.Drawing
 
         [Header("Corner posts")]
         [Tooltip("Generate rising filler posts where edges meet. Off = no corner pieces.")]
-        [SerializeField] private bool generateCornerPosts = true;
+        [SerializeField] private bool generateCornerPosts = false;
         [Tooltip("Corner material when no edge author supplies one. Serialized so the shader " +
                  "survives build stripping (a primitive's default material renders magenta on device).")]
         [SerializeField] private Material fallbackCornerMaterial;
@@ -60,6 +60,8 @@ namespace DrawRush.Drawing
         private readonly Dictionary<DrawEdge, Vector3> _edgeInterior = new();
         private int _remaining;
         private Transform _cornerRoot;
+        private Transform _jointRoot;
+        private readonly Dictionary<Transform, Vector3> _dropScale = new();
         private Vector3 _centroid;   // global fallback interior point (lone/unconnected edges)
 
         /// <summary>The edges built for the active level (read-only).</summary>
@@ -241,11 +243,12 @@ namespace DrawRush.Drawing
             for (int i = 0; i < _corners.Count; i++)
             {
                 Corner c = _corners[i];
-                if (c.Post == null || c.Revealed || !c.Edges.Contains(edge)) continue;
+                if (c.Edges.Count < 2 || c.Revealed || !c.Edges.Contains(edge)) continue;
                 if (AllEdgesComplete(c.Edges))
                 {
                     c.Revealed = true;
-                    c.Post.Reveal();
+                    if (c.Post != null) c.Post.Reveal();
+                    SpawnJoint(c);
                 }
             }
 
@@ -269,13 +272,11 @@ namespace DrawRush.Drawing
             for (int i = transform.childCount - 1; i >= 0; i--)
             {
                 Transform child = transform.GetChild(i);
-                if (child != null && child.name == "CornerPosts") SafeDestroy(child.gameObject);
+                if (child != null && (child.name == "CornerPosts" || child.name == "CornerJoints")) SafeDestroy(child.gameObject);
             }
             _cornerRoot = null;
-            if (!generateCornerPosts || _edges.Count == 0) return;
-
-            _cornerRoot = new GameObject("CornerPosts").transform;
-            _cornerRoot.SetParent(transform, worldPositionStays: false);
+            _jointRoot = null;
+            if (_edges.Count == 0) return;
 
             // Group edge endpoints that sit on the same spot into corners.
             float mergeSqr = cornerMergeDistance * cornerMergeDistance;
@@ -284,8 +285,16 @@ namespace DrawRush.Drawing
                 AddEndpointToCorner(edge, edge.A, mergeSqr);
                 AddEndpointToCorner(edge, edge.B, mergeSqr);
             }
+            ShowOneDropPerCorner();
 
-            // A real corner has 2+ distinct edges meeting; spawn a post there.
+            if (generateCornerPosts)
+            {
+                _cornerRoot = new GameObject("CornerPosts").transform;
+                _cornerRoot.SetParent(transform, worldPositionStays: false);
+            }
+
+            // A real corner has 2+ distinct edges meeting: find where the edges truly meet (the
+            // finished-corner joint closes the gap to there), and spawn a post if posts are on.
             for (int i = 0; i < _corners.Count; i++)
             {
                 Corner c = _corners[i];
@@ -305,8 +314,56 @@ namespace DrawRush.Drawing
                 if (!anyArc && TryEdgeIntersection(c.Edges[0], c.Edges[1], out Vector3 hit)
                     && (hit - c.Position).sqrMagnitude < 4f) pos = hit;
                 c.PostPosition = pos;
-                c.Post = SpawnPost(pos, c.Edges);
+                if (generateCornerPosts) c.Post = SpawnPost(pos, c.Edges);
             }
+        }
+
+        // The drops sit a little inside each corner, so finished lines stopped short of it (the
+        // wall used to hide that). Once every edge at a corner is done, a short stroke from each
+        // drop to the true corner closes it, in the finished-line look.
+        private void SpawnJoint(Corner c)
+        {
+            if (!Application.isPlaying) return;
+            if (_jointRoot == null)
+            {
+                _jointRoot = new GameObject("CornerJoints").transform;
+                _jointRoot.SetParent(transform, worldPositionStays: false);
+            }
+            DrawEdgeView view = _authors.TryGetValue(c.Edges[0], out DrawEdgeAuthor author) ? author.View : null;
+            if (view == null) return;
+            Vector3 corner = c.PostPosition; corner.y = view.LineY;
+            foreach (DrawPart drop in c.Drops)
+            {
+                Vector3 from = drop.Transform.position; from.y = view.LineY;
+                if ((from - corner).sqrMagnitude < 0.0025f) continue;
+                var go = new GameObject("Joint", typeof(LineRenderer));
+                go.transform.SetParent(_jointRoot, worldPositionStays: false);
+                var lr = go.GetComponent<LineRenderer>();
+                lr.useWorldSpace = true;
+                lr.positionCount = 2;
+                lr.numCapVertices = 4;
+                lr.SetPosition(0, from);
+                lr.SetPosition(1, corner);
+                lr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                lr.sharedMaterial = view.LineMaterial;
+                lr.startWidth = lr.endWidth = view.FinishedWidth;
+                lr.startColor = lr.endColor = view.FinishedColor;
+            }
+        }
+
+        // Every edge owns a drop at each end, so a corner where two edges meet showed two drops
+        // side by side. Keep one visible per corner (Kaan, 1.2.2); the others stay in place as
+        // edge anchors (only their position is used) but shrink to nothing — scale rather than
+        // renderers, because the drop's outline rim is built later, on its own enable.
+        private void ShowOneDropPerCorner()
+        {
+            foreach (Corner c in _corners)
+                for (int i = 0; i < c.Drops.Count; i++)
+                {
+                    Transform t = c.Drops[i].Transform;
+                    if (!_dropScale.TryGetValue(t, out Vector3 scale)) _dropScale[t] = scale = t.localScale;
+                    t.localScale = i == 0 ? scale : Vector3.zero;
+                }
         }
 
         private void AddEndpointToCorner(DrawEdge edge, DrawPart anchor, float mergeSqr)
@@ -318,6 +375,7 @@ namespace DrawRush.Drawing
                 Corner c = _corners[i];
                 if ((c.Position - p).sqrMagnitude <= mergeSqr)
                 {
+                    if (!c.Drops.Contains(anchor)) c.Drops.Add(anchor);
                     if (!c.Edges.Contains(edge)) c.Edges.Add(edge);
                     c.Sum += p;
                     c.Count++;
@@ -325,7 +383,7 @@ namespace DrawRush.Drawing
                     return;
                 }
             }
-            _corners.Add(new Corner { Position = p, Sum = p, Count = 1, Edges = { edge } });
+            _corners.Add(new Corner { Position = p, Sum = p, Count = 1, Edges = { edge }, Drops = { anchor } });
         }
 
         private CornerPost SpawnPost(Vector3 corner, List<DrawEdge> edges)
@@ -408,6 +466,7 @@ namespace DrawRush.Drawing
             public Vector3 Sum;
             public int Count;
             public readonly List<DrawEdge> Edges = new();
+            public readonly List<DrawPart> Drops = new();
             public CornerPost Post;
             public Vector3 PostPosition;   // where the post sits — walls extend their ends to here
             public bool Revealed;
