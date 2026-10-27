@@ -12,5 +12,7 @@ namespace DrawRush.Core
         public static readonly int EnemyDie = Animator.StringToHash("t_die");
         public static readonly int Speed = Animator.StringToHash("f_speed");
         public static readonly int Hit = Animator.StringToHash("t_hit");
+        public static readonly int EnemyWindUp = Animator.StringToHash("t_windup");
+        public static readonly int EnemyLunge = Animator.StringToHash("t_lunge");
     }
 }

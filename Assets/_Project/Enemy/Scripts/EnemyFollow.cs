@@ -47,6 +47,9 @@ namespace DrawRush.Enemy
         [SerializeField] private Color sleepColor = new Color(0.45f, 0.35f, 0.85f, 1f);
         [Tooltip("Tint while frozen by the Freeze booster.")]
         [SerializeField] private Color frozenColor = new Color(0.55f, 0.85f, 1f, 1f);
+        [Tooltip("How strongly behaviour colours tint the enemy (0 = never, 1 = full). The eraser " +
+                 "model is textured pink, and a full-strength tint multiplied it into mud.")]
+        [SerializeField, Range(0f, 1f)] private float tintStrength = 0.6f;
 
         // SetDestination every frame is wasted work — the agent re-plans far faster than it needs to.
         // Re-target a few times a second; the chase looks identical and the pathfinding cost drops.
@@ -80,6 +83,12 @@ namespace DrawRush.Enemy
 
         /// <summary>The variant this enemy plays as in the current level.</summary>
         public EnemyVariant Variant { get; private set; }
+
+        [Tooltip("Skin per variant, indexed by EnemyVariant (Normal, Sprinter, Tank, Eater, Dasher). " +
+                 "A variant with a skin wears it instead of a tint; empty slots fall back to tinting.")]
+        [SerializeField] private Material[] variantSkins;
+        private Material _authoredSkin;
+        private bool _skinned;
 
         [Header("Dasher")]
         [Tooltip("Seconds between lunges.")]
@@ -115,6 +124,7 @@ namespace DrawRush.Enemy
             transform.localScale = _authoredScale * scale;
             Unpushable = unpushable;
             _tierColor = tint;
+            ApplySkin(variant);
             ApplySpeed();
             ApplyTint();
         }
@@ -129,8 +139,24 @@ namespace DrawRush.Enemy
             transform.localScale = _authoredScale;
             Unpushable = false;
             _tierColor = null;
+            ApplySkin(EnemyVariant.Normal);
             ApplySpeed();
             ApplyTint();
+        }
+
+        // The eraser comes in coloured skins (Meshy retextures on the same UVs); a skinned variant
+        // reads by its own colours, so its tier tint is dropped.
+        private void ApplySkin(EnemyVariant variant)
+        {
+            _renderers ??= GetComponentsInChildren<Renderer>(true);
+            if (_authoredSkin == null)
+                foreach (var r in _renderers) if (r != null && r.sharedMaterial != null) { _authoredSkin = r.sharedMaterial; break; }
+            int i = (int)variant;
+            Material skin = variantSkins != null && i < variantSkins.Length ? variantSkins[i] : null;
+            _skinned = skin != null;
+            Material use = skin != null ? skin : _authoredSkin;
+            if (use == null) return;
+            foreach (var r in _renderers) if (r != null) r.sharedMaterial = use;
         }
 
         /// <summary>Stop in place for <paramref name="seconds"/>, tinted icy, then resume.</summary>
@@ -141,6 +167,7 @@ namespace DrawRush.Enemy
             if (_frozen) return;
             _frozen = true;
             if (_agent != null && _agent.isOnNavMesh) { _agent.isStopped = true; _agent.velocity = Vector3.zero; }
+            if (_anim != null) _anim.speed = 0f;   // frozen mid-pose, not jogging in place
             SetColor(frozenColor);
         }
 
@@ -157,6 +184,7 @@ namespace DrawRush.Enemy
             _agent.Warp(target);
             _agent.velocity = Vector3.zero;
             _retargetTimer = 0.25f;   // a beat of stagger before it re-plans
+            if (_anim != null && !_frozen) _anim.SetTrigger(AnimatorIds.Hit);
         }
 
         // Variants can be applied to an enemy that has never been active (no Awake yet).
@@ -189,6 +217,7 @@ namespace DrawRush.Enemy
                     _dash = DashPhase.WindUp;
                     _dashTimer = dashWindUp;
                     DashWindUpStarted?.Invoke();
+                    if (_anim != null) _anim.SetTrigger(AnimatorIds.EnemyWindUp);
                     _agent.isStopped = true;
                     _agent.velocity = Vector3.zero;
                     _agent.SetDestination(player.position);   // aim now; the lunge commits to it
@@ -198,6 +227,7 @@ namespace DrawRush.Enemy
                     if (_dashTimer > 0f) return true;
                     _dash = DashPhase.Lunge;
                     _dashTimer = dashDuration;
+                    if (_anim != null) _anim.SetTrigger(AnimatorIds.EnemyLunge);
                     _agent.isStopped = false;
                     ApplySpeed();
                     ApplyTint();
@@ -257,6 +287,7 @@ namespace DrawRush.Enemy
             _pressure = 1f;
             _frozen = false;
             _frozenUntil = 0f;
+            if (_anim != null) _anim.speed = 1f;
             _dash = DashPhase.Idle;
             _dashTimer = dashInterval;
 
@@ -294,7 +325,8 @@ namespace DrawRush.Enemy
             Color c;
             if (_frozen) c = frozenColor;
             else if (!_awake) c = sleepColor;                  // dormant guardian
-            else if (_tierColor.HasValue) c = _tierColor.Value;
+            else if (_tierColor.HasValue && !_skinned) c = _tierColor.Value;
+            else if (_skinned) c = Color.white;
             else if (speedMultiplier > 1.01f) c = fastColor;   // fast chaser
             else if (_hasAuthoredColor) c = _authoredColor;    // plain chaser — leave it be
             else return;
@@ -303,6 +335,7 @@ namespace DrawRush.Enemy
 
         private void SetColor(Color c)
         {
+            c = Color.Lerp(Color.white, c, tintStrength);
             _mpb ??= new MaterialPropertyBlock();
             foreach (var r in _renderers)
             {
@@ -332,6 +365,7 @@ namespace DrawRush.Enemy
                 if (Time.time < _frozenUntil) return;
                 _frozen = false;
                 _agent.isStopped = false;
+                if (_anim != null) _anim.speed = 1f;
                 ApplyTint();
             }
 

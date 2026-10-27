@@ -1,0 +1,100 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &565122944647092294
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1456479521961827480}
+  m_Layer: 0
+  m_Name: P_candy_gumdrops
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1456479521961827480
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 565122944647092294}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 813464610645598420}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1001 &918937448495220543
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 1456479521961827480}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: 4946754b5b24e4194b9f570aef62b4c2, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0.001273537
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 4946754b5b24e4194b9f570aef62b4c2, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.17833507
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 4946754b5b24e4194b9f570aef62b4c2, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -0.001925976
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 4946754b5b24e4194b9f570aef62b4c2, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 4946754b5b24e4194b9f570aef62b4c2, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 4946754b5b24e4194b9f570aef62b4c2, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 4946754b5b24e4194b9f570aef62b4c2, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 4946754b5b24e4194b9f570aef62b4c2, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 4946754b5b24e4194b9f570aef62b4c2, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 4946754b5b24e4194b9f570aef62b4c2, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 4946754b5b24e4194b9f570aef62b4c2, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 1b90115455c1b4b03b101324a85810a2, type: 2}
+    - target: {fileID: 919132149155446097, guid: 4946754b5b24e4194b9f570aef62b4c2, type: 3}
+      propertyPath: m_Name
+      value: candy_gumdrops
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 4946754b5b24e4194b9f570aef62b4c2, type: 3}
+--- !u!4 &813464610645598420 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 4946754b5b24e4194b9f570aef62b4c2, type: 3}
+  m_PrefabInstance: {fileID: 918937448495220543}
+  m_PrefabAsset: {fileID: 0}
