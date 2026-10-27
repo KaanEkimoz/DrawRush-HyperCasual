@@ -5,9 +5,31 @@
 
 ---
 
-## 📦 1.2.1 (versionCode 7) HAZIR — 26 Eki 2026, YÜKLENMEDİ
+## 🚀 1.2.3 (versionCode 9) REVIEW'DA — 27 Eki 2026, API ile gönderildi, master `53a6bc60`
+- İçerik: sorun raporu düzeltmeleri + Meshy sanat paketi + Input System only (EventSystem'ler InputSystemUIInputModule) + ASTC dokular (AAB 102→66 MB) + AAB boyut kontrolü kapalı.
+
+## 🎨 Meshy sanat paketi — 27 Eki 2026 (`f1665401`)
+- Düşmanlar "silgi gremlin" (Meshy, rig'li): pembe temel + aynı UV'de skin: Sprinter mavi, Tank gri, Eater yeşil, Dasher sarı. `EraserEnemy.controller`: idle/walk/run/fast-run (f_speed), hit, wind-up stomp, lunge, die; Freeze animasyonu durduruyor.
+- 31 level aynı Farm setini kullanıyordu → 11 level Candy (pembe zemin, cupcake, lolipop, şeker kamışı, jelibon), 10 level Winter (kar, iglo, çam, kardan adam, kristal); 10 Farm kaldı. Farm objeleri kapatıldı (silinmedi).
+- Proplar Meshy remesh ile ~1.2k üçgen; level başına ~55k (farm 48k). Assetler `Assets/_Project/Art/Meshy/`. Remesh FBX'leri gömülü 4k doku taşıyor (repo/LFS şişkin, build'e girmiyor).
+- Skill: `~/.claude/skills/meshy-3d-assets` (+ `~/Downloads/meshy-3d-assets.skill`). Cihazda denenmedi.
+
+## ✅ 1.2.3'e girdi — sorun raporu düzeltmeleri (`ab68a4c4`)
+- Sorun raporu `reports/Draw Rush 1.2.2 sorun araştırması.md` (worktree). Beşi de düzeltildi:
+  köşe uçları gerçek köşeye taşınıyor + kenar %99'da anında bitiyor; düşmansızsa sadece Speed, ilk booster 2.5 sn, 4-10 m ileride, çizginin 1.2 m yanında; uzun kenarlarda ~3 m'de bir damla + hayalet çizgiye koyu iz; zorluk metreye göre (4 m = 1 kenar); biten döngü renkle doluyor (alpha 0.7).
+- Editörde 35 levelin hepsinde döngü+dolgu üretildi; çiçek ve karpuz görsel kontrol edildi. Cihazda denenmedi.
+
+## 🚀 1.2.2 (versionCode 8) REVIEW'DA — 26 Eki 2026 21:50, Play API ile gönderildi (`9d88d560`, master'a fast-forward edildi)
+- `d245c15b` Settings geri sayım sırasında açılıp kapanınca oyun donuyordu → `MenuPause` (menüler + oyun akışı timeScale'i tek yerden).
+- `fe0ef607` `BrushTrail` (karakter her yerde 2.5 sn'de sönen iz bırakır, level boya renginde, yüzdeye sayılmaz) + Magnet → **Shockwave** (6 m, 3.5 m itme, Tank yarı, 1.5 sn stun; Magnet seviyeleri taşınır). Kaan'ın seçimleri.
+- `0cfff3a5` Duvarlar ve köşe direkleri kalktı (NavMesh engeli yok); biten kenar parlayıp kalınlaşıyor, köşede kısa birleşim çizgisi; her köşede tek damla (fazlası scale 0). Kaan'ın kararı.
+- Editörde doğrulandı (veri/kablo + ekran görüntüsü): settings resume, trail, shockwave, köşeler, level 3 + çiçek level 23 kazanıldı. **Cihazda his testi yapılmadı.** 1.2.1 review'dayken 1.2.2 onun yerine geçti.
+- `8fe89fc1` Plandaki son eksikler: "+N%" yazıları, yürüyen hayalet çizgi, boyarken fırça altı parıltı, Speed'de kalın sarı iz, level öncesi "Start with Shield" (aynı levelde 1 fail sonrası, geri sayımda). Raporun faz 0-6 listesi artık tam; faz 7'den yalnız Splitter düşman yok (D7 verisine bağlı, bilerek ertelendi).
+
+## 📦 1.2.1 (versionCode 7) REVIEW'DA — 26 Eki 2026, API ile gönderildi
 - LevelPlay'de Draw Rush için **Rewarded ad unit** açıldı: `yucbr0o8l7jz27n7` (ödül "Reward" x1; oyun ödülü kendisi veriyor). `AdConfig.rewardedAdUnitId`'ye girildi → İkinci şans / Kalkanla yeniden dene / x2 Coin butonları cihazda görünecek.
 - İmzalı AAB `Builds/DrawRush_release.aab` (1.2.1 / 7). Notlar `PlayStore/release_notes_1.2.1.md`. **1.2.0 onaylanınca** ayrı güncelleme olarak gönderilecek (1.2.0 review'dayken eklemek review'ı yeniden başlatır).
+- **API ile yükleme (26 Eki):** `~/.claude/skills/play-console-release/scripts/play-publish.mjs` hazır (Play Developer API, servis hesabı, sürükle-bırak yok). Dry run: `node <script> upload --project . --notes PlayStore/release_notes_1.2.1.md --name 1.2.1`, yayın için `--commit`. **Erişim açık (26 Eki):** ortak `play-publisher` servis hesabı tüm oyunlar için yetkili; 1.2.1 dry run geçti. 1.2.0 26 Eki'de yayınlandı. 1.2.1 `--commit` ile gönderildi (Changes in review). Uyarı: androidx.fragment 1.1.0 eski (engelleyici değil, sonraki sürümde güncelle).
 - 1.2.0 ile birlikte mağaza görselleri v1.2 (4 adet) + "rails" geçmeyen yeni açıklama da review'da (review bir kez yeniden başlatıldı).
 
 ## 🚀 1.2.0 (versionCode 6) REVIEW'DA — 26 Eki 2026
