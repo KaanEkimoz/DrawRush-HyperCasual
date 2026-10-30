@@ -20,6 +20,8 @@ namespace DrawRush.Shop
         [Tooltip("Shop preview: a render of the actual character in this colour. Optional — the " +
                  "cell falls back to a tinted silhouette if unset.")]
         public Sprite preview;
+        [Tooltip("Colouring of the pencil hero for this skin (same UVs as the default pencil).")]
+        public Texture2D pencilTexture;
     }
 
     /// <summary>

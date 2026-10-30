@@ -22,8 +22,9 @@ namespace DrawRush.Drawing
         [SerializeField] private float width = 0.3f;
         [Tooltip("Seconds a stretch of trail takes to fade out.")]
         [SerializeField] private float fadeSeconds = 2.5f;
-        [Tooltip("Height (m) above the player's feet, under the painted template line.")]
-        [SerializeField] private float lift = 0.015f;
+        [Tooltip("World height of the trail: on the page, just under the painted line, wherever the " +
+                 "player's pivot is.")]
+        [SerializeField] private float groundY = 0.015f;
         [Tooltip("Ground speed (m/s) below which no new trail is laid.")]
         [SerializeField] private float minSpeed = 0.2f;
 
@@ -125,7 +126,7 @@ namespace DrawRush.Drawing
             // Same colour as the line being painted, so the trail reads as that paint.
             if (network != null && network.Edges.Count > 0) { _paintColor = network.ColorOf(network.Edges[0]); ApplyLook(); }
             _lastPos = transform.position;
-            _trail.transform.position = _lastPos + Vector3.up * lift;
+            _trail.transform.position = OnGround(_lastPos);
             _trail.Clear();
         }
 
@@ -136,13 +137,15 @@ namespace DrawRush.Drawing
             bool show = _glowAlpha > 0.01f;
             if (_glow.gameObject.activeSelf != show) _glow.gameObject.SetActive(show);
             if (!show) return;
-            _glow.position = p + Vector3.up * (lift * 0.5f);
+            _glow.position = OnGround(p) + Vector3.down * 0.005f;
             float pulse = 0.85f + 0.15f * Mathf.Sin(Time.time * glowPulse * 2f * Mathf.PI);
             _glow.localScale = Vector3.one * glowSize * pulse;
             Color c = Color.Lerp(_paintColor, Color.white, 0.35f);
             c.a = 0.7f * _glowAlpha;
             _glowMaterial.color = c;
         }
+
+        private Vector3 OnGround(Vector3 p) => new(p.x, groundY, p.z);
 
         private void SetColor(Color c)
         {
@@ -163,7 +166,7 @@ namespace DrawRush.Drawing
             var state = GameServices.State;
             bool playing = _painter.Network != null && (state == null || !state.IsGameWon);
             _trail.emitting = playing && moving;
-            _trail.transform.position = p + Vector3.up * lift;
+            _trail.transform.position = OnGround(p);
             UpdateGlow(p, playing && _painter.IsPainting);
         }
     }

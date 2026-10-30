@@ -40,5 +40,9 @@ namespace DrawRush.Audio
         public Cue dashWindUp = new();
         [Tooltip("Fresh paint was wiped (a hit or an Eater).")]
         public Cue paintLost = new();
+        [Tooltip("Looping pencil scratch while the player is painting the shape.")]
+        public Cue drawLoop = new();
+        [Tooltip("Enemy noises, by EnemyVariant: Normal, Sprinter, Tank, Eater, Dasher, Boss.")]
+        public Cue[] enemyVoices = new Cue[0];
     }
 }

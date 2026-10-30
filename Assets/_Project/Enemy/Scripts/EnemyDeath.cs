@@ -42,6 +42,9 @@ namespace DrawRush.Enemy
         private Color _color = new Color(0.94f, 0.14f, 0f, 1f);
         private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
 
+        // The size this enemy should be alive: a Tank or the boss is bigger than authored.
+        private Vector3 FullScale => _follow != null ? _follow.VariantScale : _baseScale;
+
         private void Awake()
         {
             _anim = GetComponentInChildren<Animator>(true);
@@ -64,7 +67,7 @@ namespace DrawRush.Enemy
             // Die() switched it off, and a SetActive cycle does NOT restore a disabled component.
             _dead = false;
             _shrinkT = 0f;
-            transform.localScale = _baseScale;
+            transform.localScale = FullScale;
             SetVisible(true);
             if (_follow != null) _follow.enabled = true;
 
@@ -118,11 +121,11 @@ namespace DrawRush.Enemy
             if (!_dead || _shrinkT <= 0f) return;
             _shrinkT -= Time.unscaledDeltaTime;
             float t = Mathf.Clamp01(_shrinkT / shrinkDuration);
-            transform.localScale = _baseScale * Mathf.SmoothStep(0f, 1f, t);
+            transform.localScale = FullScale * Mathf.SmoothStep(0f, 1f, t);
             if (_shrinkT <= 0f)
             {
                 SetVisible(false);
-                transform.localScale = _baseScale;   // hidden now; ready for next reuse
+                transform.localScale = FullScale;   // hidden now; ready for next reuse
             }
         }
 

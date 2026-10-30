@@ -45,3 +45,19 @@ MonoBehaviour:
   paintLost:
     clip: {fileID: 8300000, guid: c5cf1c25e0ab848499ceeabb996a69a1, type: 3}
     volume: 0.5
+  drawLoop:
+    clip: {fileID: 8300000, guid: f5614f05aa8564024bd519734cb0f156, type: 3}
+    volume: 0.35
+  enemyVoices:
+  - clip: {fileID: 8300000, guid: 41d8ca4f0789c40589f45423a6444fdd, type: 3}
+    volume: 0.45
+  - clip: {fileID: 8300000, guid: 3a29cf03293844f3e90dd8064c1202bb, type: 3}
+    volume: 0.45
+  - clip: {fileID: 8300000, guid: 09de6710cf6ff43cea32c6d6914eaaa0, type: 3}
+    volume: 0.45
+  - clip: {fileID: 8300000, guid: f48b2c4f9cf15477b9f28e154e3a1d1d, type: 3}
+    volume: 0.45
+  - clip: {fileID: 8300000, guid: a405c6a830ff7467ea07b92c0e3fa7cd, type: 3}
+    volume: 0.45
+  - clip: {fileID: 8300000, guid: ab4e4aeb8f021486786bfec8270615b9, type: 3}
+    volume: 0.45

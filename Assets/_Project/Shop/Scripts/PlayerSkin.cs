@@ -16,7 +16,7 @@ namespace DrawRush.Shop
     public sealed class PlayerSkin : MonoBehaviour
     {
         [SerializeField] private CosmeticLibrary library;
-        [Tooltip("Character body renderer (the stickman). Auto-found in children if empty.")]
+        [Tooltip("The hero's renderer (the pencil). Auto-found in children if empty.")]
         [SerializeField] private Renderer body;
         [Tooltip("Draw trail. Auto-found in children if empty.")]
         [SerializeField] private TrailRenderer trail;
@@ -24,6 +24,7 @@ namespace DrawRush.Shop
         private MaterialPropertyBlock _block;
         private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
         private static readonly int ColorId = Shader.PropertyToID("_Color");
+        private static readonly int BaseMapId = Shader.PropertyToID("_BaseMap");
 
         private void Awake()
         {
@@ -61,7 +62,8 @@ namespace DrawRush.Shop
             {
                 _block ??= new MaterialPropertyBlock();
                 body.GetPropertyBlock(_block);
-                _block.SetColor(BaseColorId, c);   // TCP2 Hybrid body reads _BaseColor for its albedo
+                if (item.pencilTexture != null) _block.SetTexture(BaseMapId, item.pencilTexture);
+                else _block.SetColor(BaseColorId, c);
                 body.SetPropertyBlock(_block);
             }
             if (trail != null)

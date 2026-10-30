@@ -15,6 +15,8 @@ namespace DrawRush.Enemy
     ///   • Dasher from the 25th: flashes, then lunges (read the telegraph, sidestep).
     /// Each type's first level fields it alone. Once the campaign has been played through, every
     /// further lap is a harder tier: one more variant of each kind and slightly faster enemies.
+    /// Every tenth level is a boss level: the Giant Eraser joins the field (a level whose budget
+    /// gave it no enemies gets one for the boss).
     /// After two losses in a row on the same level the enemies quietly slow down a little
     /// (silent DDA, never announced).
     /// </summary>
@@ -51,6 +53,12 @@ namespace DrawRush.Enemy
         [Header("Dasher")]
         [SerializeField] private Color dasherColor = new(1f, 0.3f, 0.55f, 1f);
 
+        [Header("Boss: Giant Eraser")]
+        [Tooltip("Every Nth campaign level is a boss level.")]
+        [SerializeField] private int bossEvery = 10;
+        [SerializeField] private float bossSpeed = 0.75f;
+        [SerializeField] private float bossScale = 1.8f;
+
         [Header("Silent help")]
         [SerializeField] private int failsBeforeHelp = 2;
         [SerializeField] private float helpSpeed = 0.9f;
@@ -86,14 +94,22 @@ namespace DrawRush.Enemy
             foreach (EnemyFollow e in network.transform.root.GetComponentsInChildren<EnemyFollow>(false))
                 if (e.isActiveAndEnabled) enemies.Add(e);
             foreach (EnemyFollow e in enemies) e.ClearVariant();
-            if (enemies.Count == 0) return;
 
             int number = PlayerProgress.LevelsPlayed;
+            EnemyFollow boss = IsBossLevel(number) ? FieldBoss(network, enemies) : null;
+            if (enemies.Count == 0) return;
             Plan(number, out int sprinters, out int tanks, out int eaters, out int dashers, out bool intro);
             if (intro)
                 for (int i = 1; i < enemies.Count; i++) enemies[i].gameObject.SetActive(false);   // the new type, alone
 
             float speed = (_fails >= failsBeforeHelp ? helpSpeed : 1f) * TierSpeed(number);
+            if (boss != null)
+            {
+                enemies.Remove(boss);
+                boss.ApplyVariant(EnemyVariant.Boss, bossSpeed * speed, bossScale, true, null);
+                var hud = FindFirstObjectByType<DrawRush.Boosters.BoosterHud>();
+                if (hud != null) hud.Toast("GIANT ERASER!", "Keep moving, it wipes fresh paint", new Color(0.9f, 0.25f, 0.4f));
+            }
             int k = 0;
             k = Dress(enemies, k, tanks, EnemyVariant.Tank, tankSpeed * speed, tankScale, true, tankColor);
             k = Dress(enemies, k, dashers, EnemyVariant.Dasher, speed, 1f, false, dasherColor);
@@ -113,6 +129,25 @@ namespace DrawRush.Enemy
                 count--;
             }
             return k;
+        }
+
+        /// <summary>True for a boss level (0-based count of levels played).</summary>
+        public bool IsBossLevel(int levelNumber) => bossEvery > 0 && levelNumber > 0 && levelNumber % bossEvery == 0;
+
+        // The level's one enemy that carries the boss visual, switched on if the budget left it off.
+        private static EnemyFollow FieldBoss(EdgeNetwork network, List<EnemyFollow> enemies)
+        {
+            // The root holds every level: climb only to this level, or the boss comes from another.
+            Transform level = network.transform;
+            while (level.parent != null && level.parent.parent != null) level = level.parent;
+            foreach (EnemyFollow e in level.GetComponentsInChildren<EnemyFollow>(true))
+            {
+                if (!e.CanBeBoss) continue;
+                if (!e.gameObject.activeSelf) e.gameObject.SetActive(true);
+                if (!enemies.Contains(e)) enemies.Add(e);
+                return e;
+            }
+            return null;
         }
 
         /// <summary>Hard-tier lap for a campaign level number: 0 on the first play-through.</summary>

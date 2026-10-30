@@ -12,6 +12,7 @@ namespace DrawRush.Enemy
         Tank = 2,       // slow, big, cannot be pushed
         Eater = 3,      // eats paint that is not kept for good yet
         Dasher = 4,     // winds up (flashing), then lunges
+        Boss = 5,       // the Giant Eraser: huge, unpushable, wipes fresh paint in a wide circle
     }
 
     /// <summary>
@@ -89,6 +90,19 @@ namespace DrawRush.Enemy
                  "character, so it reads by shape and needs no tier tint. Empty = keep tinting.")]
         [SerializeField] private GameObject[] variantVisuals;
         private bool _skinned;
+        private float _variantScale = 1f;
+        private float _voiceIn;
+        [Tooltip("Enemies closer than this (m) to the player make their noise.")]
+        [SerializeField] private float voiceRange = 8f;
+        [SerializeField] private Vector2 voiceInterval = new(1.5f, 3.5f);
+
+        /// <summary>True if this enemy carries the Giant Eraser visual.</summary>
+        public Vector3 VariantScale => _authoredScale == Vector3.zero ? transform.localScale : _authoredScale * _variantScale;
+
+        /// <summary>Raised when a nearby enemy makes its noise (stapler chomp, scissors snip...).</summary>
+        public static event System.Action<EnemyVariant> Voiced;
+
+        public bool CanBeBoss => variantVisuals != null && variantVisuals.Length > (int)EnemyVariant.Boss && variantVisuals[(int)EnemyVariant.Boss] != null;
 
         [Header("Dasher")]
         [Tooltip("Seconds between lunges.")]
@@ -121,6 +135,7 @@ namespace DrawRush.Enemy
             _dash = DashPhase.Idle;
             _dashTimer = dashInterval;
             speedMultiplier = speed;
+            _variantScale = scale;
             transform.localScale = _authoredScale * scale;
             Unpushable = unpushable;
             _tierColor = tint;
@@ -136,6 +151,7 @@ namespace DrawRush.Enemy
             Variant = EnemyVariant.Normal;
             _dash = DashPhase.Idle;
             speedMultiplier = _authoredSpeedMultiplier;
+            _variantScale = 1f;
             transform.localScale = _authoredScale;
             Unpushable = false;
             _tierColor = null;
@@ -240,8 +256,11 @@ namespace DrawRush.Enemy
         private void EatPaint(Transform player)
         {
             var painter = player.GetComponent<DrawRush.Drawing.FreeDrawPainter>();
-            if (painter != null) painter.ErasePendingNear(transform.position, eatRadius);
+            if (painter != null) painter.ErasePendingNear(transform.position, Variant == EnemyVariant.Boss ? eatRadius * bossEatScale : eatRadius);
         }
+
+        [Tooltip("Boss paint-wipe radius as a multiple of the Eater's.")]
+        [SerializeField] private float bossEatScale = 3f;
 
         [Header("Eater")]
         [Tooltip("Pending paint within this distance (m) of an Eater is wiped.")]
@@ -376,7 +395,13 @@ namespace DrawRush.Enemy
                 ApplyTint();
             }
 
-            if (Variant == EnemyVariant.Eater) EatPaint(player);
+            _voiceIn -= Time.deltaTime;
+            if (_voiceIn <= 0f)
+            {
+                _voiceIn = Random.Range(voiceInterval.x, voiceInterval.y);
+                if ((player.position - transform.position).sqrMagnitude < voiceRange * voiceRange) Voiced?.Invoke(Variant);
+            }
+            if (Variant == EnemyVariant.Eater || Variant == EnemyVariant.Boss) EatPaint(player);
             if (Variant == EnemyVariant.Dasher && UpdateDash(player)) { SetAnimSpeed(_agent.velocity.magnitude); return; }
 
             // Throttled re-target — SetDestination throws off-mesh (handled above) and is wasteful

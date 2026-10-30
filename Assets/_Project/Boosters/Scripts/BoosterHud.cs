@@ -50,11 +50,14 @@ namespace DrawRush.Boosters
         private void OnDisable() { if (boosts != null) boosts.Granted -= Announce; }
 
         private void Announce(BoosterType type)
+            => Toast(boosts.Config.TitleOf(type), boosts.Config.HintOf(type), boosts.Config.ColorOf(type));
+
+        /// <summary>Big mid-screen announcement (boosters, hazards, the boss).</summary>
+        public void Toast(string title, string hint, Color color)
         {
-            Color c = boosts.Config.ColorOf(type);
-            _toastTitle.text = boosts.Config.TitleOf(type);
-            _toastTitle.color = c;
-            _toastHint.text = boosts.Config.HintOf(type);
+            _toastTitle.text = title;
+            _toastTitle.color = color;
+            _toastHint.text = hint;
             _toastUntil = Time.unscaledTime + toastSeconds;
         }
 

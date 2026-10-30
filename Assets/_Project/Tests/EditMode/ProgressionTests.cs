@@ -117,6 +117,21 @@ namespace DrawRush.Tests.EditMode
         }
 
         [Test]
+        public void BossLevels_ComeEveryTenthLevel()
+        {
+            var go = new GameObject("Director");
+            try
+            {
+                var d = go.AddComponent<DrawRush.Enemy.EnemyTierDirector>();
+                Assert.IsFalse(d.IsBossLevel(0));
+                Assert.IsFalse(d.IsBossLevel(9));
+                Assert.IsTrue(d.IsBossLevel(10));
+                Assert.IsTrue(d.IsBossLevel(20));
+            }
+            finally { Object.DestroyImmediate(go); }
+        }
+
+        [Test]
         public void PencilHeight_ShrinksWithHealth()
         {
             Assert.AreEqual(1f, DrawRush.Player.PencilHeight.HeightFor(3, 3, 0.5f), 1e-4f);

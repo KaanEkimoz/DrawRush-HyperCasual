@@ -27,7 +27,13 @@ namespace DrawRush.Audio
         [Tooltip("Free-draw painter (lost-paint sound). Optional.")]
         [SerializeField] private FreeDrawPainter painter;
 
-        private AudioSource _source;
+        [Tooltip("Seconds the drawing sound takes to fade in and out.")]
+        [SerializeField] private float drawFade = 0.08f;
+        [Tooltip("At most one enemy noise this often (seconds): a crowd must not turn into a racket.")]
+        [SerializeField] private float voiceGap = 0.4f;
+
+        private AudioSource _source, _drawSource;
+        private float _lastVoice = -1f;
         private GameState _boundState;
         private PlayerHealth _boundHealth;
         private int _lastHealth = -1;
@@ -37,6 +43,12 @@ namespace DrawRush.Audio
             _source = GetComponent<AudioSource>();
             _source.playOnAwake = false;
             _source.spatialBlend = 0f;   // feedback audio: always 2D, never positional
+            _drawSource = gameObject.AddComponent<AudioSource>();
+            _drawSource.playOnAwake = false;
+            _drawSource.loop = true;
+            _drawSource.spatialBlend = 0f;
+            _drawSource.volume = 0f;
+            _drawSource.outputAudioMixerGroup = _source.outputAudioMixerGroup;
         }
 
         private void OnEnable()
@@ -57,6 +69,7 @@ namespace DrawRush.Audio
             DrawRush.UI.ButtonJuice.Clicked += OnUiClick;
             DrawRush.Enemy.EnemyDeath.EnemyDied += OnEnemyDied;
             DrawRush.Enemy.EnemyFollow.DashWindUpStarted += OnDashWindUp;
+            DrawRush.Enemy.EnemyFollow.Voiced += OnEnemyVoiced;
             if (boosts != null) boosts.Granted += OnBooster;
             if (combat != null) combat.ShieldBroken += OnShieldBroken;
             if (painter != null) painter.PaintLost += OnPaintLost;
@@ -75,9 +88,29 @@ namespace DrawRush.Audio
             DrawRush.UI.ButtonJuice.Clicked -= OnUiClick;
             DrawRush.Enemy.EnemyDeath.EnemyDied -= OnEnemyDied;
             DrawRush.Enemy.EnemyFollow.DashWindUpStarted -= OnDashWindUp;
+            DrawRush.Enemy.EnemyFollow.Voiced -= OnEnemyVoiced;
             if (boosts != null) boosts.Granted -= OnBooster;
             if (combat != null) combat.ShieldBroken -= OnShieldBroken;
             if (painter != null) painter.PaintLost -= OnPaintLost;
+        }
+
+        // The pencil scratch follows the brush: it runs only while paint is actually going down.
+        private void Update()
+        {
+            if (library == null || library.drawLoop == null || library.drawLoop.clip == null) return;
+            if (_drawSource.clip == null) { _drawSource.clip = library.drawLoop.clip; _drawSource.Play(); }
+            bool on = painter != null && painter.IsPainting && Time.timeScale > 0f;
+            float target = on ? library.drawLoop.volume : 0f;
+            _drawSource.mute = _source.mute;
+            _drawSource.volume = Mathf.MoveTowards(_drawSource.volume, target, Time.unscaledDeltaTime / Mathf.Max(0.01f, drawFade));
+        }
+
+        private void OnEnemyVoiced(DrawRush.Enemy.EnemyVariant variant)
+        {
+            if (library == null || library.enemyVoices == null || (int)variant >= library.enemyVoices.Length) return;
+            if (Time.unscaledTime - _lastVoice < voiceGap) return;
+            _lastVoice = Time.unscaledTime;
+            Play(library.enemyVoices[(int)variant]);
         }
 
         private void OnBooster(BoosterType _) { Play(library != null ? library.boosterPickup : null); Haptics.Light(); }
