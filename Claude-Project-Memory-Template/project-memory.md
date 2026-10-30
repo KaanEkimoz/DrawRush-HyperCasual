@@ -9,6 +9,7 @@
 - Kaan seçti: tasarım dili Defter Doodle; düşmanlar zımba (normal), makas (hızlı), delgeç (tank), kalemtıraş (çizgi yiyen), raptiye (atılan). Kalem kahraman.
 - Eklenecek: can = kalemin boyu, mürekkep hokkası pickup, Sakar Devler (kahve fincanı, masa sallanması), Dev Silgi boss, kahraman sınıfları (Kurşun/Tükenmez/Fırça).
 - Aşama 1 başladı: kağıt zemin (`M_paper`), pastel çizgi (`M_crayon`), eski dekorların render'ı kapalı (35 level). Level 5'te test zımbası. Karar: kutu gövdeli düşmanlarda humanoid rig gövdeyi yırtıyor, kemik yok; `HopAnimator` ile kodla zıplama/yaylanma.
+- Aşama 2 bitti: kalem kahraman + 5 düşman (zımba/makas/delgeç/kalemtıraş/raptiye) Meshy image-to-3d, `Art/Doodle/`. Her düşmanda 5 görsel child, `EnemyFollow.variantVisuals` role göre açıyor. Makas ve kalem düz çıktı: `HopAnimator.faceCamera` ile kağıt bebek. Eski kahraman render'ları kapalı; dükkan skinleri şu an etkisiz.
 - Eklenmeyecek önerisi: çizimin mürekkep harcaması, köprü/merdiven çizme (çekirdek döngüyle çelişiyor). Plan ve referanslar worktree `reports/` altında (`Defter Doodle planı.md`, `tasarim-dili/`).
 
 ## 🚀 1.2.3 (versionCode 9) REVIEW'DA — 27 Eki 2026, API ile gönderildi, master `53a6bc60`

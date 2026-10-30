@@ -84,10 +84,10 @@ namespace DrawRush.Enemy
         /// <summary>The variant this enemy plays as in the current level.</summary>
         public EnemyVariant Variant { get; private set; }
 
-        [Tooltip("Skin per variant, indexed by EnemyVariant (Normal, Sprinter, Tank, Eater, Dasher). " +
-                 "A variant with a skin wears it instead of a tint; empty slots fall back to tinting.")]
-        [SerializeField] private Material[] variantSkins;
-        private Material _authoredSkin;
+        [Tooltip("Visual per variant, indexed by EnemyVariant (Normal, Sprinter, Tank, Eater, Dasher): " +
+                 "children of this enemy, only the worn one active. Each role is its own stationery " +
+                 "character, so it reads by shape and needs no tier tint. Empty = keep tinting.")]
+        [SerializeField] private GameObject[] variantVisuals;
         private bool _skinned;
 
         [Header("Dasher")]
@@ -144,19 +144,14 @@ namespace DrawRush.Enemy
             ApplyTint();
         }
 
-        // The eraser comes in coloured skins (Meshy retextures on the same UVs); a skinned variant
-        // reads by its own colours, so its tier tint is dropped.
+        // Show this role's stationery character; an unset slot falls back to the Normal one.
         private void ApplySkin(EnemyVariant variant)
         {
-            _renderers ??= GetComponentsInChildren<Renderer>(true);
-            if (_authoredSkin == null)
-                foreach (var r in _renderers) if (r != null && r.sharedMaterial != null) { _authoredSkin = r.sharedMaterial; break; }
-            int i = (int)variant;
-            Material skin = variantSkins != null && i < variantSkins.Length ? variantSkins[i] : null;
-            _skinned = skin != null;
-            Material use = skin != null ? skin : _authoredSkin;
-            if (use == null) return;
-            foreach (var r in _renderers) if (r != null) r.sharedMaterial = use;
+            _skinned = variantVisuals != null && variantVisuals.Length > 0;
+            if (!_skinned) return;
+            int shown = (int)variant < variantVisuals.Length && variantVisuals[(int)variant] != null ? (int)variant : 0;
+            for (int k = 0; k < variantVisuals.Length; k++)
+                if (variantVisuals[k] != null) variantVisuals[k].SetActive(k == shown);
         }
 
         /// <summary>Stop in place for <paramref name="seconds"/>, tinted icy, then resume.</summary>
