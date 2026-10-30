@@ -27,6 +27,8 @@ namespace DrawRush.Boosters
             public string title;
             [Tooltip("One line telling what it does, shown when it is collected.")]
             public string hint;
+            [Tooltip("Doodle icon for the pickup and the HUD.")]
+            public Sprite icon;
         }
 
         [SerializeField] private Entry[] _entries =
@@ -67,6 +69,8 @@ namespace DrawRush.Boosters
         [SerializeField] private float _minEnemyDistance = 2.5f;
         [Tooltip("...or closer than this (m) to the player.")]
         [SerializeField] private float _minPlayerDistance = 2f;
+        [Tooltip("Chance that a pickup is an ink pot while the player is missing health.")]
+        [SerializeField, Range(0f, 1f)] private float _inkChance = 0.4f;
         [Tooltip("At most this many different boosters run at once; a new one replaces the one closest to ending.")]
         [SerializeField] private int _maxActiveTypes = 2;
         [Tooltip("After a hit in the last N seconds, defensive boosters (shield, freeze) are this many times likelier.")]
@@ -81,6 +85,7 @@ namespace DrawRush.Boosters
         public Vector2 PreferredPlayerDistance => _preferredPlayerDistance;
         public float SideOffset => _sideOffset;
         public float DangerRadius => _dangerRadius;
+        public float InkChance => _inkChance;
         public Vector2 SpawnInterval => _spawnInterval;
         public float PickupLifetime => _pickupLifetime;
         public float BlinkSeconds => _blinkSeconds;
@@ -105,6 +110,8 @@ namespace DrawRush.Boosters
 
         public Color ColorOf(BoosterType type) => Get(type).color;
 
+        public Sprite IconOf(BoosterType type) => Get(type).icon;
+
         public string TitleOf(BoosterType type)
         {
             string t = Get(type).title;
@@ -120,12 +127,13 @@ namespace DrawRush.Boosters
                 BoosterType.Shield => "Blocks the next hit",
                 BoosterType.Freeze => "Enemies freeze in place",
                 BoosterType.Speed => "You run faster",
+                BoosterType.Ink => "Your pencil grows back",
                 _ => "Blasts nearby enemies away",
             };
         }
 
         /// <summary>True for boosters that only do something when enemies are on the field.</summary>
-        public static bool NeedsEnemies(BoosterType type) => type != BoosterType.Speed;
+        public static bool NeedsEnemies(BoosterType type) => type != BoosterType.Speed && type != BoosterType.Ink;
 
         /// <summary>Weighted pick; defensive types weigh more when <paramref name="pity"/> is on. With
         /// no enemies on the field only boosters that still help (speed) can come up.</summary>
@@ -149,6 +157,7 @@ namespace DrawRush.Boosters
 
         private float WeightOf(Entry e, bool pity, bool enemiesPresent)
         {
+            if (e.type == BoosterType.Ink) return 0f;   // never random: the spawner offers it when hurt
             if (!enemiesPresent && NeedsEnemies(e.type)) return 0f;
             return Mathf.Max(0f, e.weight) * (pity && (e.type == BoosterType.Shield || e.type == BoosterType.Freeze) ? _pityWeight : 1f);
         }

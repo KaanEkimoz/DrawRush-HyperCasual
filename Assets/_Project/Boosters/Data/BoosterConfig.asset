@@ -18,21 +18,41 @@ MonoBehaviour:
     upgradeStep: 3
     color: {r: 0.25, g: 0.6, b: 1, a: 1}
     weight: 1
+    title: 
+    hint: 
+    icon: {fileID: 21300000, guid: 973e72ce3e4d543a29331b938f6da535, type: 3}
   - type: 1
     duration: 3
     upgradeStep: 0.5
     color: {r: 0.55, g: 0.95, b: 1, a: 1}
     weight: 1
+    title: 
+    hint: 
+    icon: {fileID: 21300000, guid: 65c880cfd12894f75bff30a965f0f77e, type: 3}
   - type: 2
     duration: 5
     upgradeStep: 1
     color: {r: 1, g: 0.85, b: 0.15, a: 1}
     weight: 1
+    title: 
+    hint: 
+    icon: {fileID: 21300000, guid: dd1a233a6f5c841ad972c10c2e89bc28, type: 3}
   - type: 3
     duration: 1.5
     upgradeStep: 0.4
     color: {r: 1, g: 0.45, b: 0.2, a: 1}
     weight: 1
+    title: 
+    hint: 
+    icon: {fileID: 21300000, guid: cfd6a3a20c978401ab6e7711f0a7b182, type: 3}
+  - type: 4
+    duration: 0
+    upgradeStep: 0
+    color: {r: 0.1, g: 0.6, b: 0.7, a: 1}
+    weight: 0
+    title: INK
+    hint: 
+    icon: {fileID: 21300000, guid: 2b09f29189222458e9b9a1a22b617730, type: 3}
   _speedMultiplier: 1.35
   _shockwaveRadius: 6
   _shockwavePush: 3.5
@@ -46,6 +66,7 @@ MonoBehaviour:
   _blinkSeconds: 2
   _minEnemyDistance: 2.5
   _minPlayerDistance: 2
+  _inkChance: 0.4
   _maxActiveTypes: 2
   _pityWindow: 10
   _pityWeight: 3

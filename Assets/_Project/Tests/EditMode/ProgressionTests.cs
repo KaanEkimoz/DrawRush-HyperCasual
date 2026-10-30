@@ -117,6 +117,14 @@ namespace DrawRush.Tests.EditMode
         }
 
         [Test]
+        public void PencilHeight_ShrinksWithHealth()
+        {
+            Assert.AreEqual(1f, DrawRush.Player.PencilHeight.HeightFor(3, 3, 0.5f), 1e-4f);
+            Assert.AreEqual(0.75f, DrawRush.Player.PencilHeight.HeightFor(2, 3, 0.5f), 1e-4f);
+            Assert.AreEqual(0.5f, DrawRush.Player.PencilHeight.HeightFor(1, 3, 0.5f), 1e-4f);
+        }
+
+        [Test]
         public void NoEnemies_OnlySpeedComesUp()
         {
             var config = ScriptableObject.CreateInstance<BoosterConfig>();

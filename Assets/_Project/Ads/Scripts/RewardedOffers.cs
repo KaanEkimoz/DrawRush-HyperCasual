@@ -41,6 +41,7 @@ namespace DrawRush.Ads
         [Tooltip("Fails on the same level before the pre-level shield is offered.")]
         [SerializeField] private int failsBeforeStartOffer = 1;
         [SerializeField] private Color buttonColor = new(1f, 0.75f, 0.1f, 1f);
+        [SerializeField] private Color textColor = new(0.12f, 0.16f, 0.42f, 1f);
 
         [SerializeField] private LevelStartCountdown countdown;
         [SerializeField] private LevelManager levels;
@@ -194,9 +195,12 @@ namespace DrawRush.Ads
             var label = labelGo.GetComponent<TextMeshProUGUI>();
             if (font != null) label.font = font;
             label.text = text;
-            label.fontSize = buttonSize.y * 0.42f;
+            label.enableAutoSizing = true;      // the handwriting font runs wide
+            label.fontSizeMin = 20f;
+            label.fontSizeMax = buttonSize.y * 0.42f;
+            label.margin = new Vector4(24f, 8f, 24f, 8f);
             label.alignment = TextAlignmentOptions.Center;
-            label.color = Color.white;
+            label.color = textColor;
             label.raycastTarget = false;
             go.SetActive(false);
             return button;

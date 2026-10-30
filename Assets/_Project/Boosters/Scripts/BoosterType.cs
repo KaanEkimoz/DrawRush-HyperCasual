@@ -7,5 +7,6 @@ namespace DrawRush.Boosters
         Freeze = 1,   // stops every enemy for a few seconds
         Speed = 2,    // faster run for a few seconds
         Shockwave = 3,   // instant: knocks nearby enemies back and stuns them (was Magnet)
+        Ink = 4,         // instant: an ink pot gives back one health (the pencil grows)
     }
 }

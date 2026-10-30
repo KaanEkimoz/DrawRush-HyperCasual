@@ -26,7 +26,10 @@ namespace DrawRush.Boosters
         [SerializeField] private float toastY = 520f;
         [SerializeField] private float toastSeconds = 2.2f;
 
-        private sealed class Ring { public GameObject Root; public Image Fill; public TextMeshProUGUI Label, Title; }
+        [Tooltip("Text colour: ballpoint ink, readable on the paper ground.")]
+        [SerializeField] private Color inkColor = new(0.12f, 0.16f, 0.42f, 1f);
+
+        private sealed class Ring { public GameObject Root; public Image Fill; public TextMeshProUGUI Label, Title; public Image Icon; }
         private readonly List<Ring> _rings = new();
         private Sprite _circle;
         private TextMeshProUGUI _toastTitle, _toastHint;
@@ -74,7 +77,7 @@ namespace DrawRush.Boosters
             rt.anchoredPosition = pos;
             var t = go.GetComponent<TextMeshProUGUI>();
             if (font != null) t.font = font;
-            t.fontSize = size; t.alignment = TextAlignmentOptions.Center; t.color = Color.white; t.raycastTarget = false;
+            t.fontSize = size; t.alignment = TextAlignmentOptions.Center; t.color = inkColor; t.raycastTarget = false;
             return t;
         }
 
@@ -99,7 +102,10 @@ namespace DrawRush.Boosters
                 Color c = boosts.Config.ColorOf(a.Type);
                 ring.Fill.color = c;
                 ring.Fill.fillAmount = a.Length > 0f ? Mathf.Clamp01((a.Ends - Time.time) / a.Length) : 0f;
-                ring.Label.text = Initial(a.Type);
+                Sprite icon = boosts.Config.IconOf(a.Type);
+                ring.Icon.sprite = icon;
+                ring.Icon.enabled = icon != null;
+                ring.Label.text = icon != null ? "" : Initial(a.Type);
                 ring.Title.text = boosts.Config.TitleOf(a.Type);
                 ((RectTransform)ring.Root.transform).anchoredPosition = new Vector2(-width * 0.5f + ringSize * 0.5f + i * (ringSize + spacing), -ringSize * 0.5f);
             }
@@ -118,7 +124,7 @@ namespace DrawRush.Boosters
             rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 1f);
             rt.sizeDelta = Vector2.one * ringSize;
             var back = root.GetComponent<Image>();
-            back.sprite = _circle; back.color = new Color(0f, 0f, 0f, 0.45f); back.raycastTarget = false;
+            back.sprite = _circle; back.color = new Color(inkColor.r, inkColor.g, inkColor.b, 0.2f); back.raycastTarget = false;
 
             var fillGo = new GameObject("Fill", typeof(RectTransform), typeof(Image));
             fillGo.transform.SetParent(root.transform, false);
@@ -133,6 +139,10 @@ namespace DrawRush.Boosters
             var label = labelGo.GetComponent<TextMeshProUGUI>();
             if (font != null) label.font = font;
             label.alignment = TextAlignmentOptions.Center; label.fontSize = ringSize * 0.5f; label.color = Color.white; label.raycastTarget = false;
+            var iconGo = new GameObject("Icon", typeof(RectTransform), typeof(Image));
+            iconGo.transform.SetParent(root.transform, false);
+            var irt = (RectTransform)iconGo.transform; irt.anchorMin = Vector2.zero; irt.anchorMax = Vector2.one; irt.offsetMin = irt.offsetMax = Vector2.one * (ringSize * 0.1f); irt.offsetMax = -irt.offsetMin;
+            var icon = iconGo.GetComponent<Image>(); icon.preserveAspect = true; icon.raycastTarget = false;
             var titleGo = new GameObject("Title", typeof(RectTransform), typeof(TextMeshProUGUI));
             titleGo.transform.SetParent(root.transform, false);
             var trt = (RectTransform)titleGo.transform;
@@ -140,8 +150,8 @@ namespace DrawRush.Boosters
             trt.sizeDelta = new Vector2(ringSize * 2f, ringSize * 0.4f); trt.anchoredPosition = new Vector2(0f, -4f);
             var title = titleGo.GetComponent<TextMeshProUGUI>();
             if (font != null) title.font = font;
-            title.alignment = TextAlignmentOptions.Center; title.fontSize = ringSize * 0.26f; title.color = Color.white; title.raycastTarget = false;
-            return new Ring { Root = root, Fill = fill, Label = label, Title = title };
+            title.alignment = TextAlignmentOptions.Center; title.fontSize = ringSize * 0.26f; title.color = inkColor; title.raycastTarget = false;
+            return new Ring { Root = root, Fill = fill, Label = label, Title = title, Icon = icon };
         }
 
         private static Sprite MakeCircle(int n)

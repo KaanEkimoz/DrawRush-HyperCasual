@@ -28,6 +28,9 @@ namespace DrawRush.Enemy
                  "the side it is moving, instead of turning with the character.")]
         [SerializeField] private bool faceCamera;
 
+        /// <summary>Extra height multiple (the pencil hero shortens as it takes hits).</summary>
+        public float HeightFactor { get; set; } = 1f;
+
         private NavMeshAgent _agent;
         private Vector3 _basePos, _baseScale, _lastParentPos, _step;
         private Quaternion _baseRot;
@@ -65,7 +68,7 @@ namespace DrawRush.Enemy
             float side = Mathf.Sin(_phase * Mathf.PI) * waddle * _move;
 
             transform.localPosition = _basePos + Vector3.up * y;
-            var scale = new Vector3(_baseScale.x * (1f - s * 0.5f), _baseScale.y * (1f + s), _baseScale.z * (1f - s * 0.5f));
+            var scale = new Vector3(_baseScale.x * (1f - s * 0.5f), _baseScale.y * (1f + s) * HeightFactor, _baseScale.z * (1f - s * 0.5f));
             if (faceCamera && Camera.main != null)
             {
                 Transform cam = Camera.main.transform;

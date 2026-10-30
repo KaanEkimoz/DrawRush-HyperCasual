@@ -27,6 +27,7 @@ namespace DrawRush.Boosters
         [Tooltip("Material for the soft glowing disc under each pickup (tinted per type).")]
         [SerializeField] private Material glowMaterial;
         [SerializeField] private float pickupHeight = 0.6f;
+        [SerializeField] private Color labelColor = new(0.12f, 0.16f, 0.42f, 1f);
 
         private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
         private static readonly int ColorId = Shader.PropertyToID("_Color");
@@ -108,7 +109,9 @@ namespace DrawRush.Boosters
 
             // Type first, then a spot that suits it. With no enemies only speed can come up:
             // a shield or a freeze in an empty level is a pickup that does nothing.
-            BoosterType type = Config.Pick(boosts.RecentlyHit, () => Random.value, _enemies.Count > 0);
+            BoosterType type = boosts.IsHurt && Random.value < Config.InkChance
+                ? BoosterType.Ink
+                : Config.Pick(boosts.RecentlyHit, () => Random.value, _enemies.Count > 0);
             bool defensive = BoosterConfig.NeedsEnemies(type);
             Vector3 player = transform.position;
             Vector2 pref = Config.PreferredPlayerDistance;
@@ -179,6 +182,7 @@ namespace DrawRush.Boosters
             var body = root.AddComponent<Rigidbody>();   // kinematic so the player's trigger sees it
             body.isKinematic = true;
 
+            Sprite icon = Config.IconOf(type);
             PrimitiveType shape = type switch
             {
                 BoosterType.Shield => PrimitiveType.Sphere,
@@ -186,20 +190,33 @@ namespace DrawRush.Boosters
                 BoosterType.Speed => PrimitiveType.Capsule,
                 _ => PrimitiveType.Cylinder,
             };
-            var visual = GameObject.CreatePrimitive(shape);
-            Destroy(visual.GetComponent<Collider>());
-            visual.transform.SetParent(root.transform, false);
-            visual.transform.localScale = type == BoosterType.Speed ? new Vector3(0.5f, 0.45f, 0.5f) * pickupSize * 1.4f
-                : type == BoosterType.Shockwave ? new Vector3(1f, 0.25f, 1f) * pickupSize
-                : Vector3.one * pickupSize;
-            if (type == BoosterType.Freeze) visual.transform.localRotation = Quaternion.Euler(45f, 0f, 45f);
-            var r = visual.GetComponent<Renderer>();
-            if (pickupMaterial != null) r.sharedMaterial = pickupMaterial;
-            var mpb = new MaterialPropertyBlock();
             Color c = Config.ColorOf(type);
-            mpb.SetColor(BaseColorId, c);
-            mpb.SetColor(ColorId, c);
-            r.SetPropertyBlock(mpb);
+            GameObject visual;
+            if (icon != null)
+            {
+                visual = new GameObject("Icon");
+                visual.transform.SetParent(root.transform, false);
+                var sprite = visual.AddComponent<SpriteRenderer>();
+                sprite.sprite = icon;
+                float size = Mathf.Max(icon.bounds.size.x, icon.bounds.size.y);
+                visual.transform.localScale = Vector3.one * (pickupSize * 2f / Mathf.Max(0.01f, size));
+            }
+            else
+            {
+                visual = GameObject.CreatePrimitive(shape);
+                Destroy(visual.GetComponent<Collider>());
+                visual.transform.SetParent(root.transform, false);
+                visual.transform.localScale = type == BoosterType.Speed ? new Vector3(0.5f, 0.45f, 0.5f) * pickupSize * 1.4f
+                    : type == BoosterType.Shockwave ? new Vector3(1f, 0.25f, 1f) * pickupSize
+                    : Vector3.one * pickupSize;
+                if (type == BoosterType.Freeze) visual.transform.localRotation = Quaternion.Euler(45f, 0f, 45f);
+                var r = visual.GetComponent<Renderer>();
+                if (pickupMaterial != null) r.sharedMaterial = pickupMaterial;
+                var mpb = new MaterialPropertyBlock();
+                mpb.SetColor(BaseColorId, c);
+                mpb.SetColor(ColorId, c);
+                r.SetPropertyBlock(mpb);
+            }
 
             // A glowing disc on the ground and the booster's name floating above it, so it reads
             // as "SHIELD" from across the field rather than as an anonymous shape.
@@ -224,9 +241,9 @@ namespace DrawRush.Boosters
             var label = labelGo.GetComponent<TextMeshPro>();
             if (labelFont != null) label.font = labelFont;
             label.text = Config.TitleOf(type);
-            label.fontSize = 4.5f;
+            label.fontSize = 3.2f;
             label.alignment = TextAlignmentOptions.Center;
-            label.color = Color.white;
+            label.color = labelColor;
             label.fontStyle = FontStyles.Bold;   // no outlineWidth: it instances the material at runtime
             label.rectTransform.sizeDelta = new Vector2(6f, 1.5f);
 

@@ -19,6 +19,7 @@ namespace DrawRush.UI
         [SerializeField] private Color barColor = new(0.2f, 0.95f, 0.6f, 1f);
         [SerializeField] private Color backColor = new(0f, 0f, 0f, 0.35f);
         [SerializeField] private Color lossColor = new(1f, 0.3f, 0.3f, 1f);
+        [SerializeField] private Color inkColor = new(0.12f, 0.16f, 0.42f, 1f);
         [Tooltip("Bar size in canvas units.")]
         [SerializeField] private Vector2 size = new(560f, 40f);
         [Tooltip("Gap below the safe-area top, in canvas units.")]
@@ -76,7 +77,7 @@ namespace DrawRush.UI
             if (font != null) _label.font = font;
             _label.alignment = TextAlignmentOptions.Center;
             _label.fontSize = size.y * 0.8f;
-            _label.color = Color.white;
+            _label.color = inkColor;
             _label.raycastTarget = false;
         }
 

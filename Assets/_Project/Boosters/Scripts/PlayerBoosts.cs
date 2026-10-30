@@ -21,6 +21,7 @@ namespace DrawRush.Boosters
         [SerializeField] private PlayerCombat combat;
         [SerializeField] private FreeDrawPainter painter;
         [SerializeField] private BrushTrail trail;
+        [SerializeField] private PlayerHealth health;
         [Tooltip("Transparent material for the shield bubble around the player.")]
         [SerializeField] private Material shieldMaterial;
 
@@ -35,6 +36,9 @@ namespace DrawRush.Boosters
         public IReadOnlyList<Active> Running => _active;
 
         public BoosterConfig Config => config;
+
+        /// <summary>True when an ink pot would do something.</summary>
+        public bool IsHurt => health != null && health.IsAlive && health.Current < health.StartingValue;
 
         /// <summary>Raised whenever the running set changes.</summary>
         public event Action Changed;
@@ -69,6 +73,12 @@ namespace DrawRush.Boosters
         public void Grant(BoosterType type)
         {
             if (config == null) return;
+            if (type == BoosterType.Ink)
+            {
+                if (health != null) health.Heal(1);
+                Granted?.Invoke(type);
+                return;
+            }
             float length = config.Duration(type, BoosterUpgrades.Level(type));
 
             if (type == BoosterType.Freeze)
