@@ -330,6 +330,7 @@ namespace DrawRush.Drawing
                 if (shader != null) lineMaterial = new Material(shader) { name = "Auto_EdgeFillMat" };
             }
             lr.material = lineMaterial;
+            lr.textureMode = LineTextureMode.Tile;   // the crayon grain repeats by world length
             lr.startColor = color;
             lr.endColor = color;
             lr.enabled = false;

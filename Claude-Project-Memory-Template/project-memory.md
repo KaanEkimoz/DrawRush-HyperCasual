@@ -5,6 +5,12 @@
 
 ---
 
+## 🧭 Yeni yön — 31 Eki 2026: Defter Doodle + Kırtasiye Çetesi (henüz kod yok)
+- Kaan seçti: tasarım dili Defter Doodle; düşmanlar zımba (normal), makas (hızlı), delgeç (tank), kalemtıraş (çizgi yiyen), raptiye (atılan). Kalem kahraman.
+- Eklenecek: can = kalemin boyu, mürekkep hokkası pickup, Sakar Devler (kahve fincanı, masa sallanması), Dev Silgi boss, kahraman sınıfları (Kurşun/Tükenmez/Fırça).
+- Aşama 1 başladı: kağıt zemin (`M_paper`), pastel çizgi (`M_crayon`), eski dekorların render'ı kapalı (35 level). Level 5'te test zımbası. Karar: kutu gövdeli düşmanlarda humanoid rig gövdeyi yırtıyor, kemik yok; `HopAnimator` ile kodla zıplama/yaylanma.
+- Eklenmeyecek önerisi: çizimin mürekkep harcaması, köprü/merdiven çizme (çekirdek döngüyle çelişiyor). Plan ve referanslar worktree `reports/` altında (`Defter Doodle planı.md`, `tasarim-dili/`).
+
 ## 🚀 1.2.3 (versionCode 9) REVIEW'DA — 27 Eki 2026, API ile gönderildi, master `53a6bc60`
 - İçerik: sorun raporu düzeltmeleri + Meshy sanat paketi + Input System only (EventSystem'ler InputSystemUIInputModule) + ASTC dokular (AAB 102→66 MB) + AAB boyut kontrolü kapalı.
 
