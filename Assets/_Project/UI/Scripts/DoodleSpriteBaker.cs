@@ -1,0 +1,365 @@
+#if UNITY_EDITOR
+using System.Collections.Generic;
+using System.IO;
+using DrawRush.Collection;
+using DrawRush.Core;
+using DrawRush.Drawing;
+using UnityEditor;
+using UnityEngine;
+
+namespace DrawRush.UI
+{
+    /// <summary>
+    /// Bakes the hand-drawn art that has to match the game exactly, so it is drawn here instead of
+    /// generated: the corner drop, the buttons, the hero's eyes and one sticker per level, traced
+    /// from that level's real edges so the collection shows the shape the player actually drew.
+    /// Everything is crayon hatching under a wobbly navy pen line, like the concept art.
+    /// </summary>
+    public static class DoodleSpriteBaker
+    {
+        private const string UiFolder = "Assets/_Project/Art/Doodle/ui/";
+        private static readonly Color Navy = new(0.11f, 0.13f, 0.38f);
+        private static readonly Color[] Crayons =
+        {
+            Hex(0xF9C52E), Hex(0xF58A3C), Hex(0xEF5B5B), Hex(0xF27FB2),
+            Hex(0x8E6BE0), Hex(0x4C9DFF), Hex(0x34C7B5), Hex(0x6FCF5F),
+        };
+
+        // Shapes that have an obvious colour; the rest walk the crayon box.
+        private static readonly Dictionary<string, int> Natural = new()
+        {
+            { "Heart", 2 }, { "Apple", 2 }, { "Cherries", 2 }, { "Watermelon", 7 }, { "Pear", 7 },
+            { "Clover", 7 }, { "Lemon", 0 }, { "Banana", 0 }, { "Star", 0 }, { "Moon", 0 },
+            { "Lightning", 0 }, { "Smiley", 0 }, { "Grin", 0 }, { "Sad Face", 5 }, { "Wow Face", 3 },
+            { "Drop", 5 }, { "Flower", 3 }, { "Gem", 6 }, { "Diamond", 6 },
+        };
+
+        private static Color Hex(int v) => new(((v >> 16) & 255) / 255f, ((v >> 8) & 255) / 255f, (v & 255) / 255f);
+
+        private sealed class Sheet
+        {
+            public readonly int W, H;
+            public readonly Color[] Px;
+            public Sheet(int w, int h) { W = w; H = h; Px = new Color[w * h]; }
+
+            public void Blend(int x, int y, Color c, float a)
+            {
+                if (x < 0 || y < 0 || x >= W || y >= H || a <= 0f) return;
+                ref Color d = ref Px[y * W + x];
+                float o = a + d.a * (1f - a);
+                if (o <= 0f) return;
+                d = new Color((c.r * a + d.r * d.a * (1f - a)) / o, (c.g * a + d.g * d.a * (1f - a)) / o,
+                              (c.b * a + d.b * d.a * (1f - a)) / o, o);
+            }
+
+            /// <summary>One round dab. <paramref name="grain"/> > 0 breaks it up like wax on paper.</summary>
+            public void Dab(float x, float y, float r, Color c, float alpha, float grain, bool[] clip = null)
+            {
+                int x0 = Mathf.FloorToInt(x - r - 1), x1 = Mathf.CeilToInt(x + r + 1);
+                int y0 = Mathf.FloorToInt(y - r - 1), y1 = Mathf.CeilToInt(y + r + 1);
+                for (int py = y0; py <= y1; py++)
+                for (int px = x0; px <= x1; px++)
+                {
+                    if (px < 0 || py < 0 || px >= W || py >= H) continue;
+                    if (clip != null && !clip[py * W + px]) continue;
+                    float a = Mathf.Clamp01(r + 0.5f - Mathf.Sqrt((px - x) * (px - x) + (py - y) * (py - y)));
+                    if (grain > 0f) a *= Mathf.SmoothStep(0.3f - grain * 0.3f, 0.3f + grain * 0.3f, Mathf.PerlinNoise(px * 0.31f, py * 0.31f));
+                    Blend(px, py, c, a * alpha);
+                }
+            }
+
+            /// <summary>A hand-drawn line: resampled, wobbled off its path, pressure varying.</summary>
+            public void Stroke(IList<Vector2> pts, float r, Color c, float wobble, float seed, float alpha = 1f, float grain = 0f, bool[] clip = null)
+            {
+                float s = 0f;
+                for (int i = 0; i + 1 < pts.Count; i++)
+                {
+                    float len = Vector2.Distance(pts[i], pts[i + 1]);
+                    int n = Mathf.Max(1, Mathf.CeilToInt(len));
+                    for (int k = 0; k < n; k++, s += len / n)
+                    {
+                        Vector2 p = Vector2.Lerp(pts[i], pts[i + 1], k / (float)n);
+                        p.x += (Mathf.PerlinNoise(s * 0.025f, seed) - 0.5f) * 2f * wobble;
+                        p.y += (Mathf.PerlinNoise(seed, s * 0.025f) - 0.5f) * 2f * wobble;
+                        Dab(p.x, p.y, r * Mathf.Lerp(0.8f, 1.15f, Mathf.PerlinNoise(s * 0.05f, seed + 9f)), c, alpha, grain, clip);
+                    }
+                }
+            }
+
+            public void Save(string path)
+            {
+                var t = new Texture2D(W, H, TextureFormat.RGBA32, false);
+                t.SetPixels(Px);
+                t.Apply();
+                File.WriteAllBytes(path, t.EncodeToPNG());
+                Object.DestroyImmediate(t);
+            }
+        }
+
+        private static List<Vector2> Circle(Vector2 c, float r, float turns = 1f, float start = 0f)
+        {
+            var pts = new List<Vector2>();
+            int n = Mathf.CeilToInt(64 * turns);
+            for (int i = 0; i <= n; i++)
+            {
+                float a = start + i / (float)n * turns * Mathf.PI * 2f;
+                pts.Add(c + new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * r);
+            }
+            return pts;
+        }
+
+        /// <summary>Crayon scribbled back and forth across the clipped area.</summary>
+        private static void Hatch(Sheet s, bool[] clip, Color c, float angleDeg, float spacing, float r, float seed, float alpha = 1f)
+        {
+            Vector2 dir = new(Mathf.Cos(angleDeg * Mathf.Deg2Rad), Mathf.Sin(angleDeg * Mathf.Deg2Rad));
+            Vector2 n = new(-dir.y, dir.x), mid = new(s.W * 0.5f, s.H * 0.5f);
+            float reach = s.W + s.H;
+            for (float o = -reach; o < reach; o += spacing)
+                s.Stroke(new[] { mid + n * o - dir * reach, mid + n * (o + spacing * 0.5f) + dir * reach }, r, c, spacing * 0.3f, seed + o, alpha, 0.8f, clip);
+        }
+
+        private static float BoxSd(Vector2 p, Vector2 half, float round)
+        {
+            Vector2 q = new Vector2(Mathf.Abs(p.x), Mathf.Abs(p.y)) - half + Vector2.one * round;
+            return new Vector2(Mathf.Max(q.x, 0f), Mathf.Max(q.y, 0f)).magnitude + Mathf.Min(Mathf.Max(q.x, q.y), 0f) - round;
+        }
+
+        private static List<Vector2> BoxPath(Vector2 c, Vector2 half, float round)
+        {
+            var pts = new List<Vector2>();
+            Vector2[] corners = { new(half.x, half.y), new(-half.x, half.y), new(-half.x, -half.y), new(half.x, -half.y) };
+            for (int q = 0; q < 4; q++)
+            {
+                Vector2 k = new(Mathf.Sign(corners[q].x) * (half.x - round), Mathf.Sign(corners[q].y) * (half.y - round));
+                for (int i = 0; i <= 8; i++)
+                {
+                    float a = (q + i / 8f) * Mathf.PI * 0.5f;
+                    pts.Add(c + k + new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * round);
+                }
+            }
+            pts.Add(pts[0]);
+            return pts;
+        }
+
+        [MenuItem("DrawRush/Bake Doodle Sprites")]
+        public static void BakeAll()
+        {
+            BakeDrop();
+            BakeButton();
+            BakeEyes();
+            BakeCollection();
+            AssetDatabase.Refresh();
+        }
+
+        private static void BakeDrop()
+        {
+            var s = new Sheet(256, 256);
+            Vector2 c = new(128f, 128f);
+            var inside = new bool[256 * 256];
+            for (int y = 0; y < 256; y++)
+            for (int x = 0; x < 256; x++)
+                inside[y * 256 + x] = (new Vector2(x, y) - c).magnitude < 80f + 7f * Mathf.PerlinNoise(x * 0.03f, y * 0.03f);
+            for (int i = 0; i < inside.Length; i++) if (inside[i]) s.Blend(i % 256, i / 256, Color.white, 0.55f);
+            Hatch(s, inside, Color.white, 35f, 9f, 6f, 1f);
+            s.Stroke(Circle(c, 84f, 1.12f, 0.6f), 5f, Navy, 3.5f, 2f);
+            s.Stroke(Circle(c, 87f, 1.05f, 2.4f), 2.2f, Navy, 4f, 3f, 0.8f);
+            for (int i = 0; i < 9; i++)
+            {
+                float a = i / 9f * Mathf.PI * 2f + 0.2f;
+                Vector2 d = new(Mathf.Cos(a), Mathf.Sin(a));
+                s.Stroke(new[] { c + d * 100f, c + d * (i % 2 == 0 ? 118f : 110f) }, 3.4f, Navy, 1f, i);
+            }
+            s.Save(UiFolder + "drop_doodle.png");
+        }
+
+        private static void BakeButton()
+        {
+            const int w = 800, h = 280;
+            var s = new Sheet(w, h);
+            Vector2 c = new(w * 0.5f - 6f, h * 0.5f + 8f), half = new(w * 0.5f - 34f, h * 0.5f - 40f);
+            var inside = new bool[w * h];
+            for (int y = 0; y < h; y++)
+            for (int x = 0; x < w; x++)
+            {
+                float n = (Mathf.PerlinNoise(x * 0.012f, y * 0.012f) - 0.5f) * 10f;
+                if (BoxSd(new Vector2(x, y) - c, half, 46f) + n < 0f) inside[y * w + x] = true;
+                if (BoxSd(new Vector2(x, y) - (c + new Vector2(11f, -14f)), half, 46f) + n < 0f) s.Blend(x, y, Navy, 1f);
+            }
+            for (int i = 0; i < inside.Length; i++) if (inside[i]) s.Blend(i % w, i / w, Color.white, 1f);
+            Hatch(s, inside, new Color(0.8f, 0.8f, 0.8f), 62f, 15f, 3.2f, 4f, 0.8f);
+            s.Stroke(BoxPath(c, half, 46f), 7f, Navy, 4f, 5f);
+            s.Stroke(BoxPath(c + new Vector2(2f, -2f), half, 46f), 2.5f, Navy, 6f, 6f, 0.75f);
+            s.Save(UiFolder + "button_doodle.png");
+        }
+
+        private static void BakeEyes()
+        {
+            var s = new Sheet(256, 128);
+            foreach (float cx in new[] { 72f, 184f })
+            {
+                Vector2 c = new(cx, 64f);
+                for (float r = 46f; r > 0f; r -= 2f) s.Dab(c.x, c.y, 2f, Color.white, 1f, 0f);
+                foreach (var p in Circle(c, 44f)) for (float r = 0f; r < 44f; r += 3f) s.Dab(Vector2.Lerp(c, p, r / 44f).x, Vector2.Lerp(c, p, r / 44f).y, 3f, Color.white, 1f, 0f);
+                Vector2 pupil = c + new Vector2(cx < 128f ? 8f : -8f, -4f);
+                foreach (var p in Circle(pupil, 20f)) for (float r = 0f; r < 20f; r += 2f) s.Dab(Vector2.Lerp(pupil, p, r / 20f).x, Vector2.Lerp(pupil, p, r / 20f).y, 2.5f, Navy, 1f, 0f);
+                s.Dab(pupil.x + 7f, pupil.y + 8f, 6f, Color.white, 1f, 0f);
+                s.Stroke(Circle(c, 46f, 1.08f, 1f), 4.5f, Navy, 2f, cx);
+            }
+            s.Save(UiFolder + "hero_eyes.png");
+        }
+
+        private static List<List<Vector2>> LevelLines(Transform level)
+        {
+            var lines = new List<List<Vector2>>();
+            foreach (DrawEdgeAuthor a in level.GetComponentsInChildren<DrawEdgeAuthor>(true))
+            {
+                if (!a.IsValid) continue;
+                Vector2 A = Flat(a.AnchorA.transform.position), B = Flat(a.AnchorB.transform.position);
+                lines.Add(a.Waypoint != null ? Arc(A, Flat(a.Waypoint.position), B) : new List<Vector2> { A, B });
+            }
+            return lines;
+        }
+
+        private static Vector2 Flat(Vector3 p) => new(p.x, p.z);
+
+        private static List<Vector2> Arc(Vector2 a, Vector2 m, Vector2 b)
+        {
+            float d = 2f * (a.x * (m.y - b.y) + m.x * (b.y - a.y) + b.x * (a.y - m.y));
+            if (Mathf.Abs(d) < 1e-5f) return new List<Vector2> { a, b };
+            float sa = a.sqrMagnitude, sm = m.sqrMagnitude, sb = b.sqrMagnitude;
+            Vector2 c = new((sa * (m.y - b.y) + sm * (b.y - a.y) + sb * (a.y - m.y)) / d,
+                            (sa * (b.x - m.x) + sm * (a.x - b.x) + sb * (m.x - a.x)) / d);
+            float r = (a - c).magnitude, a0 = Mathf.Atan2(a.y - c.y, a.x - c.x);
+            float sweep = Mathf.DeltaAngle(a0 * Mathf.Rad2Deg, Mathf.Atan2(b.y - c.y, b.x - c.x) * Mathf.Rad2Deg) * Mathf.Deg2Rad;
+            float toMid = Mathf.DeltaAngle(a0 * Mathf.Rad2Deg, Mathf.Atan2(m.y - c.y, m.x - c.x) * Mathf.Rad2Deg) * Mathf.Deg2Rad;
+            // Take the way round that passes through the waypoint.
+            if (Mathf.Sign(toMid) != Mathf.Sign(sweep) || Mathf.Abs(toMid) > Mathf.Abs(sweep)) sweep -= Mathf.Sign(sweep) * Mathf.PI * 2f;
+            var pts = new List<Vector2>();
+            for (int i = 0; i <= 24; i++)
+            {
+                float t = a0 + sweep * i / 24f;
+                pts.Add(c + new Vector2(Mathf.Cos(t), Mathf.Sin(t)) * r);
+            }
+            return pts;
+        }
+
+        private static void BakeCollection()
+        {
+            var lm = Object.FindFirstObjectByType<LevelManager>(FindObjectsInactive.Include);
+            var root = (Transform)new SerializedObject(lm).FindProperty("levelsRoot").objectReferenceValue;
+            var collection = AssetDatabase.LoadAssetAtPath<ShapeCollection>("Assets/_Project/Collection/ShapeCollection.asset");
+            for (int i = 0; i < collection.Count; i++)
+            {
+                ShapeCollection.Entry e = collection.Get(i);
+                if (e.Illustration == null || e.LevelIndex >= root.childCount) continue;
+                var sheet = Sticker(LevelLines(root.GetChild(e.LevelIndex)), e.DisplayName, e.LevelIndex);
+                if (sheet != null) sheet.Save(AssetDatabase.GetAssetPath(e.Illustration));
+            }
+        }
+
+        /// <summary>Authored edge ends stop short of each other (the game snaps them at runtime):
+        /// each end meets its nearest neighbour on another line, so the outline closes.</summary>
+        private static void Weld(List<List<Vector2>> lines)
+        {
+            const float Reach = 70f;
+            var ends = new List<(int line, int point)>();
+            for (int i = 0; i < lines.Count; i++) { ends.Add((i, 0)); ends.Add((i, lines[i].Count - 1)); }
+            var welded = new bool[ends.Count];
+            Vector2 At((int line, int point) e) => lines[e.line][e.point];
+            int Nearest(int e)
+            {
+                int best = -1;
+                float bestDist = Reach;
+                for (int o = 0; o < ends.Count; o++)
+                {
+                    if (ends[o].line == ends[e].line || welded[o]) continue;
+                    float d = Vector2.Distance(At(ends[e]), At(ends[o]));
+                    if (d < bestDist) { bestDist = d; best = o; }
+                }
+                return best;
+            }
+            for (int pass = 0; pass < 3; pass++)
+            for (int e = 0; e < ends.Count; e++)
+            {
+                int o = Nearest(e);
+                if (welded[e] || o < 0 || Nearest(o) != e) continue;
+                Vector2 mid = (At(ends[e]) + At(ends[o])) * 0.5f;
+                lines[ends[e].line][ends[e].point] = mid;
+                lines[ends[o].line][ends[o].point] = mid;
+                welded[e] = welded[o] = true;
+            }
+        }
+
+        private static Sheet Sticker(List<List<Vector2>> lines, string name, int seed)
+        {
+            const int S = 512, Art = 400;
+            if (lines.Count == 0) return null;
+            Vector2 min = Vector2.positiveInfinity, max = Vector2.negativeInfinity;
+            foreach (var l in lines) foreach (Vector2 p in l) { min = Vector2.Min(min, p); max = Vector2.Max(max, p); }
+            float scale = Art / Mathf.Max(max.x - min.x, max.y - min.y, 0.01f);
+            Vector2 centre = (min + max) * 0.5f;
+            foreach (var l in lines) for (int i = 0; i < l.Count; i++) l[i] = (l[i] - centre) * scale + Vector2.one * (S * 0.5f);
+
+            Weld(lines);
+
+            // The pen line is the wall of a paint bucket: what the outside cannot reach is a region.
+            var wall = new Sheet(S, S);
+            foreach (var l in lines) wall.Stroke(l, 4f, Color.white, 0f, 0f);
+            var label = new int[S * S];       // 0 unvisited, -1 outside, >0 region
+            var queue = new Queue<int>();
+            void Flood(int start, int id, List<int> members)
+            {
+                label[start] = id; queue.Enqueue(start);
+                while (queue.Count > 0)
+                {
+                    int p = queue.Dequeue();
+                    members?.Add(p);
+                    int x = p % S, y = p / S;
+                    if (x > 0) Visit(p - 1); if (x < S - 1) Visit(p + 1);
+                    if (y > 0) Visit(p - S); if (y < S - 1) Visit(p + S);
+                }
+                void Visit(int q) { if (label[q] == 0 && wall.Px[q].a < 0.5f) { label[q] = id; queue.Enqueue(q); } }
+            }
+            Flood(0, -1, null);
+            var regions = new List<List<int>>();
+            for (int p = 0; p < label.Length; p++)
+            {
+                if (label[p] != 0 || wall.Px[p].a >= 0.5f) continue;
+                var members = new List<int>();
+                Flood(p, regions.Count + 1, members);
+                if (members.Count > 80) regions.Add(members);
+            }
+            regions.Sort((a, b) => b.Count.CompareTo(a.Count));
+
+            var s = new Sheet(S, S);
+            var body = new bool[S * S];
+            for (int p = 0; p < body.Length; p++) body[p] = label[p] != -1;
+            // White paper cut-out with a hard little shadow.
+            var rim = new List<Vector2>();
+            for (int p = 0; p < body.Length; p++)
+            {
+                if (!body[p]) continue;
+                int x = p % S, y = p / S;
+                if (x % 3 == 0 && y % 3 == 0 && (!body[p - 3] || !body[p + 3] || !body[p - 3 * S] || !body[p + 3 * S])) rim.Add(new Vector2(x, y));
+            }
+            foreach (Vector2 p in rim) s.Dab(p.x + 5f, p.y - 7f, 19f, Navy, 1f, 0f);
+            foreach (Vector2 p in rim) s.Dab(p.x, p.y, 19f, Color.white, 1f, 0f);
+            for (int p = 0; p < body.Length; p++) if (body[p]) s.Blend(p % S, p / S, Color.white, 1f);
+
+            int crayon = Natural.TryGetValue(name, out int natural) ? natural : seed % Crayons.Length;
+            for (int r = 0; r < regions.Count; r++)
+            {
+                // Tiny regions are details (eyes): solid ink. Others share a natural shape's colour.
+                bool detail = regions[r].Count < regions[0].Count * 0.08f;
+                Color colour = detail ? Navy : Crayons[(crayon + (Natural.ContainsKey(name) ? 0 : r * 3)) % Crayons.Length];
+                var clip = new bool[S * S];
+                foreach (int p in regions[r]) { clip[p] = true; s.Blend(p % S, p / S, colour, detail ? 1f : 0.5f); }
+                if (!detail) Hatch(s, clip, colour, 35f + r * 40f, 10f, 5f, seed + r);
+            }
+            for (int i = 0; i < lines.Count; i++) s.Stroke(lines[i], 5.5f, Navy, 2.5f, seed + i * 7f);
+            for (int i = 0; i < lines.Count; i++) s.Stroke(lines[i], 2f, Navy, 4f, seed + i * 11f + 3f, 0.7f);
+            return s;
+        }
+    }
+}
+#endif

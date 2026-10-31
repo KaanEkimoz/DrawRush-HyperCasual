@@ -702,3 +702,10 @@ Kaan ile interaktif polish oturumu. Hepsi master'a `--no-ff` merge + push (her c
 - `[Obsolete] DrawPart.isPlayerEntered` getter sahneler/prefab'lar için bırakıldı; yeni kod `OnPlayerEntered/OnPlayerExited` kullansın.
 - Architecture review raporu: `Claude-Project-Memory-Template/reviews/2026-05-16-architecture-review.md` (senior software eng) — uygulanan kararların kaynağı.
 - "DrawArea içinde enemy damage yok" safe zone kuralı `EnemyCombat.OnTriggerEnter`'da `PlayerInteract.IsInDrawArea` check ile.
+
+
+## 2026-10-31 Doodle düzeltmeleri (push edilmedi)
+- Kalem yeniden üretildi: uç aşağıda, `Art/Doodle3D/pencilhero/P_pencilhero.prefab`, sadece kol-bacak animasyonu (`limbs_run/idle`, HopAnimator.limbs), gövde/uç sabit (`pencilhero_rigid.asset`), gözler ayrı quad. Skinler `Art/Doodle3D/skinshero/`.
+- Damla, buton, göz ve 34 koleksiyon ikonu `UI/Scripts/DoodleSpriteBaker.cs` ile üretiliyor (menü: DrawRush/Bake Doodle Sprites); ikonlar levelin gerçek kenarlarından çiziliyor.
+- Font Gochi Hand (OFL), `Assets/Fonts/GochiHand SDF.asset`.
+- Düşmanlara iskelet takılmadı, kod animasyonu sürüyor. Kalan: kahraman sınıfları, Shop/Settings doodle, build ve telefon testi.

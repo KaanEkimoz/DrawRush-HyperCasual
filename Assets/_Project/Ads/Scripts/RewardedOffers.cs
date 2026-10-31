@@ -29,6 +29,7 @@ namespace DrawRush.Ads
         [SerializeField] private PlayerBoosts boosts;
         [SerializeField] private FreeDrawPainter painter;
         [SerializeField] private TMP_FontAsset font;
+        [SerializeField] private Sprite buttonSprite;
 
         [Header("Layout (canvas units from each panel's centre, like the panel's own buttons)")]
         [SerializeField] private Vector2 buttonSize = new(620f, 130f);
@@ -184,7 +185,9 @@ namespace DrawRush.Ads
             rt.pivot = new Vector2(0.5f, 0.5f);
             rt.sizeDelta = buttonSize;
             rt.anchoredPosition = new Vector2(0f, y);
-            go.GetComponent<Image>().color = buttonColor;
+            var image = go.GetComponent<Image>();
+            image.sprite = buttonSprite;
+            image.color = buttonColor;
             var button = go.GetComponent<Button>();
             button.onClick.AddListener(onClick);
 

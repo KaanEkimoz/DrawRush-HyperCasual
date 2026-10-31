@@ -17,35 +17,35 @@ MonoBehaviour:
     displayName: Classic
     price: 0
     color: {r: 0, g: 0.286, b: 1, a: 1}
-    preview: {fileID: 21300000, guid: 7c42b8022b687469bb0b479eb087bdc2, type: 3}
-    pencilTexture: {fileID: 2800000, guid: dda17de9a92474137ac750173226ffeb, type: 3}
+    preview: {fileID: 21300000, guid: 7f2a9f2e7c87f466285908e1c8323f5e, type: 3}
+    pencilTexture: {fileID: 2800000, guid: 2f7280a57fca949788350f0ca2dc0339, type: 3}
   - id: crimson
     displayName: Crimson
     price: 40
     color: {r: 0.9, g: 0.15, b: 0.15, a: 1}
-    preview: {fileID: 21300000, guid: 5fab683042d7c498281b6c687ca057b7, type: 3}
-    pencilTexture: {fileID: 2800000, guid: 487db4862e2514ef895561439e3e2714, type: 3}
+    preview: {fileID: 21300000, guid: f4e75a9d6b85b488a9c3489fe392ecb2, type: 3}
+    pencilTexture: {fileID: 2800000, guid: 236f0aa6a4ddc455c9bb704a95d9b6af, type: 3}
   - id: lime
     displayName: Lime
     price: 60
     color: {r: 0.45, g: 0.85, b: 0.2, a: 1}
-    preview: {fileID: 21300000, guid: d237b13e1798c4d69b1c3bfc61b07685, type: 3}
-    pencilTexture: {fileID: 2800000, guid: 8ed1791ab30574fab8f17423d606b12d, type: 3}
+    preview: {fileID: 21300000, guid: 2c5bfa37b33854141aae3aae53a7b9b1, type: 3}
+    pencilTexture: {fileID: 2800000, guid: 6b07e3d8891e74bcc8e12ed8ebb83b69, type: 3}
   - id: grape
     displayName: Grape
     price: 90
     color: {r: 0.58, g: 0.3, b: 0.9, a: 1}
-    preview: {fileID: 21300000, guid: 51346ee5eaecb471e81f98d21492b6ff, type: 3}
-    pencilTexture: {fileID: 2800000, guid: f833f29b580f146b4bbed9fdf3d52136, type: 3}
+    preview: {fileID: 21300000, guid: d5f2daaaa56a24e4cb53815df39fd693, type: 3}
+    pencilTexture: {fileID: 2800000, guid: abe44d9317ce94cf09161ecc82c2be8a, type: 3}
   - id: sunset
     displayName: Sunset
     price: 130
     color: {r: 1, g: 0.55, b: 0.1, a: 1}
-    preview: {fileID: 21300000, guid: 3962bc988dcca496fb936646c7705e39, type: 3}
-    pencilTexture: {fileID: 2800000, guid: 4119fba7c7cd34a2f9eceeadf33f85e4, type: 3}
+    preview: {fileID: 21300000, guid: 9b009b0ae2edb4744af34d5e31f73b6e, type: 3}
+    pencilTexture: {fileID: 2800000, guid: 13a2898d205d84b519fb60a7aa322bd7, type: 3}
   - id: gold
     displayName: Gold
     price: 200
     color: {r: 1, g: 0.82, b: 0.15, a: 1}
-    preview: {fileID: 21300000, guid: 95aa320291f4e48e3a169389cb415114, type: 3}
-    pencilTexture: {fileID: 2800000, guid: ed23bdf79900c451ca0cda522793f872, type: 3}
+    preview: {fileID: 21300000, guid: b2819226b5c1a437cbdd3b659b2e645f, type: 3}
+    pencilTexture: {fileID: 2800000, guid: 7d325bdbcbb8f4c13b37eb8f5d6eb2a7, type: 3}

@@ -14,7 +14,6 @@ GameObject:
   - component: {fileID: 6281296526979497774}
   - component: {fileID: 8878605407648098162}
   - component: {fileID: 4004556214058580686}
-  - component: {fileID: -1020376443384119644}
   m_Layer: 0
   m_Name: AnchorA
   m_TagString: Untagged
@@ -44,7 +43,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2876068110417507245}
-  m_Mesh: {fileID: 5461320835613783329, guid: a35d90f772de54cf09f930d46ccf9de8, type: 3}
+  m_Mesh: {fileID: 4300000, guid: b8f294661bf4c407fa0c75caad365cbc, type: 2}
 --- !u!23 &1506064898454500642
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -53,8 +52,8 @@ MeshRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2876068110417507245}
   m_Enabled: 1
-  m_CastShadows: 1
-  m_ReceiveShadows: 1
+  m_CastShadows: 0
+  m_ReceiveShadows: 0
   m_DynamicOccludee: 1
   m_StaticShadowCaster: 0
   m_MotionVectors: 1
@@ -70,7 +69,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 47d3cf8217b4343eb95a39e8a6342917, type: 2}
+  - {fileID: 2100000, guid: 335f4a44a4f6c430096624995389db3d, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -140,22 +139,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 14badc4006864410c8725c8b4705abc5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Studios208.DrawRush::Studios208.DrawRush.Drawing.BillboardToCamera
-  offsetEuler: {x: -90, y: 0, z: 0}
---- !u!114 &-1020376443384119644
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2876068110417507245}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 343e6f28be24e4479a17036ec66f3a74, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: DrawRush::DrawRush.Drawing.DropOutline
-  scale: 1.16
-  backOffset: 0.1
-  outlineMaterial: {fileID: 2100000, guid: 40711f8077c99456cb18665b93565ca8, type: 2}
+  offsetEuler: {x: 0, y: 0, z: 0}
 --- !u!1 &6659403366547357948
 GameObject:
   m_ObjectHideFlags: 0
@@ -170,7 +154,6 @@ GameObject:
   - component: {fileID: 790697452660945098}
   - component: {fileID: 5639379791754960929}
   - component: {fileID: 6325459264259864703}
-  - component: {fileID: 1497244656545285915}
   m_Layer: 0
   m_Name: AnchorB
   m_TagString: Untagged
@@ -200,7 +183,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6659403366547357948}
-  m_Mesh: {fileID: 5461320835613783329, guid: a35d90f772de54cf09f930d46ccf9de8, type: 3}
+  m_Mesh: {fileID: 4300000, guid: b8f294661bf4c407fa0c75caad365cbc, type: 2}
 --- !u!23 &982552279327253878
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -209,8 +192,8 @@ MeshRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6659403366547357948}
   m_Enabled: 1
-  m_CastShadows: 1
-  m_ReceiveShadows: 1
+  m_CastShadows: 0
+  m_ReceiveShadows: 0
   m_DynamicOccludee: 1
   m_StaticShadowCaster: 0
   m_MotionVectors: 1
@@ -226,7 +209,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 47d3cf8217b4343eb95a39e8a6342917, type: 2}
+  - {fileID: 2100000, guid: 335f4a44a4f6c430096624995389db3d, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -296,22 +279,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 14badc4006864410c8725c8b4705abc5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Studios208.DrawRush::Studios208.DrawRush.Drawing.BillboardToCamera
-  offsetEuler: {x: -90, y: 0, z: 0}
---- !u!114 &1497244656545285915
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6659403366547357948}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 343e6f28be24e4479a17036ec66f3a74, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: DrawRush::DrawRush.Drawing.DropOutline
-  scale: 1.16
-  backOffset: 0.1
-  outlineMaterial: {fileID: 2100000, guid: 40711f8077c99456cb18665b93565ca8, type: 2}
+  offsetEuler: {x: 0, y: 0, z: 0}
 --- !u!1 &6770665978776919814
 GameObject:
   m_ObjectHideFlags: 0
@@ -369,6 +337,16 @@ MonoBehaviour:
   ghostWidthScale: 0.55
   ghostAlpha: 0.4
   ghostY: 0.012
+  ghostScroll: 0.6
+  ghostShadowAlpha: 0.28
+  ghostShadowWidthScale: 2
+  finishedWidthScale: 1.35
+  finishFlashWidthScale: 2
+  finishFlashSeconds: 0.6
+  finishedBrighten: 0.25
+  highlightAlpha: 0.95
+  highlightWidthScale: 1.6
+  highlightPulse: 2.5
 --- !u!114 &7712792700407167178
 MonoBehaviour:
   m_ObjectHideFlags: 0

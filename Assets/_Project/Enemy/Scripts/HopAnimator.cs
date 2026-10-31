@@ -27,9 +27,15 @@ namespace DrawRush.Enemy
         [Tooltip("For flat cut-out models: always face the camera like a paper doll and mirror to " +
                  "the side it is moving, instead of turning with the character.")]
         [SerializeField] private bool faceCamera;
+        [Tooltip("Optional limb rig: arms and legs swing on this Animator while the body stays rigid.")]
+        [SerializeField] private Animator limbs;
+        [Tooltip("Limb playback speed at the reference speed.")]
+        [SerializeField] private float limbSpeed = 1.2f;
 
         /// <summary>Extra height multiple (the pencil hero shortens as it takes hits).</summary>
         public float HeightFactor { get; set; } = 1f;
+
+        private static readonly int MovingId = Animator.StringToHash("Moving");
 
         private NavMeshAgent _agent;
         private Vector3 _basePos, _baseScale, _lastParentPos, _step;
@@ -59,6 +65,12 @@ namespace DrawRush.Enemy
             float target = Mathf.Clamp01(speed / Mathf.Max(0.01f, referenceSpeed));
             _move = Mathf.MoveTowards(_move, target, dt * 6f);
             _phase += dt * hopRate * Mathf.Lerp(0.25f, 1f, _move);
+
+            if (limbs != null)
+            {
+                limbs.SetBool(MovingId, _move > 0.08f);
+                limbs.speed = Mathf.Lerp(0.5f, 1f, _move) * limbSpeed;
+            }
 
             float cycle = Mathf.Repeat(_phase, 1f);
             float air = Mathf.Sin(cycle * Mathf.PI);          // 0 on the ground, 1 at the top
