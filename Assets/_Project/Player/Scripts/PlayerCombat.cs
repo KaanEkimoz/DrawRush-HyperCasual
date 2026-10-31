@@ -61,12 +61,16 @@ namespace DrawRush.Player
             health.Changed -= OnHealthChanged;
         }
 
+        // The one gate every hit passes: nothing can hurt the hero once the level is decided.
+        private bool LevelIsOver => (health != null && !health.IsAlive)
+                                    || (GameServices.State != null && GameServices.State.IsGameWon);
+
         /// <summary>Applies positive damage to the bound PlayerHealth asset, plays the
         /// hit-reaction animation/juice, and opens an invulnerability window. Hits during
-        /// that window are ignored.</summary>
+        /// that window, or after the level was won or lost, are ignored.</summary>
         public void TakeDamage(int amount)
         {
-            if (amount <= 0 || IsInvulnerable) return;
+            if (amount <= 0 || IsInvulnerable || LevelIsOver) return;
 
             if (ShieldCharges > 0)
             {

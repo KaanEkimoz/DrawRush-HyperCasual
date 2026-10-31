@@ -131,5 +131,54 @@ namespace DrawRush.Tests.EditMode
             _health.Heal(-5);
             Assert.AreEqual(2, _health.Current);
         }
+
+        [Test]
+        public void Combat_IgnoresHits_AfterTheLevelIsWon()
+        {
+            var go = new GameObject("CombatStub");
+            var combat = go.AddComponent<PlayerCombat>();
+            var so = new UnityEditor.SerializedObject(combat);
+            so.FindProperty("health").objectReferenceValue = _health;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            var state = ScriptableObject.CreateInstance<DrawRush.Core.GameState>();
+            int damaged = 0;
+            combat.Damaged += () => damaged++;
+            try
+            {
+                DrawRush.Core.GameServices.Register(go.transform, go.transform, go.transform, null, state);
+                state.IsGameWon = true;
+                combat.TakeDamage(1);
+                Assert.AreEqual(3, _health.Current);
+                Assert.AreEqual(0, damaged);
+            }
+            finally
+            {
+                DrawRush.Core.GameServices.Clear();
+                Object.DestroyImmediate(state);
+                Object.DestroyImmediate(go);
+            }
+        }
+
+        [Test]
+        public void Combat_IgnoresHits_AfterDeath()
+        {
+            var go = new GameObject("CombatStub");
+            var combat = go.AddComponent<PlayerCombat>();
+            var so = new UnityEditor.SerializedObject(combat);
+            so.FindProperty("health").objectReferenceValue = _health;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            int damaged = 0;
+            combat.Damaged += () => damaged++;
+            try
+            {
+                _health.TakeDamage(3);
+                combat.TakeDamage(1);
+                Assert.AreEqual(0, damaged);
+            }
+            finally
+            {
+                Object.DestroyImmediate(go);
+            }
+        }
     }
 }

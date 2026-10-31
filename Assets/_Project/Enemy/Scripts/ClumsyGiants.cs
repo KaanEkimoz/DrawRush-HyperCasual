@@ -11,7 +11,8 @@ namespace DrawRush.Enemy
     /// The notebook's owners, who never notice the game on their desk. Now and then they cause a
     /// hazard: a coffee cup lands (its shadow warns first; the hit hurts and the spill slows you)
     /// or the table gets bumped (every enemy is thrown a little, the page rattles). Never during
-    /// the opening seconds of a level, and only from a set level on.
+    /// the opening seconds of a level, and only from a set level on. Nothing outlives the level:
+    /// a win or the hero's death calls off whatever is still in the air, and a revive starts over.
     /// </summary>
     public sealed class ClumsyGiants : MonoBehaviour
     {
@@ -49,6 +50,12 @@ namespace DrawRush.Enemy
         private GameObject _stain;
         private Vector3 _stainAt;
         private float _stainUntil;
+        private GameObject _shadow, _cup;
+        private Transform _decor;
+        private Vector3 _decorHome;
+        private GameState _state;
+        private PlayerHealth _health;
+        private bool _called;   // hazards were running when the level ended
 
         private void Awake()
         {
@@ -58,13 +65,65 @@ namespace DrawRush.Enemy
         }
 
         private void OnEnable() { if (painter != null) painter.LevelBound += OnLevelBound; }
-        private void OnDisable() { if (painter != null) painter.LevelBound -= OnLevelBound; }
+
+        private void OnDisable()
+        {
+            if (painter != null) painter.LevelBound -= OnLevelBound;
+            Unwatch();
+            CallOff();
+        }
 
         private void OnLevelBound(EdgeNetwork _)
         {
-            if (_loop != null) StopCoroutine(_loop);
-            ClearStain();
+            Watch();
+            CallOff();
+            _called = false;
             _loop = PlayerProgress.LevelsPlayed + 1 >= fromLevel ? StartCoroutine(Loop()) : null;
+        }
+
+        // The services are registered after this component wakes, so they are picked up per level.
+        private void Watch()
+        {
+            Unwatch();
+            _state = GameServices.State;
+            _health = GameServices.Health;
+            if (_state != null) _state.GameWonChanged += OnWonChanged;
+            if (_health != null) { _health.Died += OnLevelOver; _health.Changed += OnHealthChanged; }
+        }
+
+        private void Unwatch()
+        {
+            if (_state != null) _state.GameWonChanged -= OnWonChanged;
+            if (_health != null) { _health.Died -= OnLevelOver; _health.Changed -= OnHealthChanged; }
+            _state = null;
+            _health = null;
+        }
+
+        private void OnWonChanged(bool won) { if (won) OnLevelOver(); }
+
+        private void OnLevelOver()
+        {
+            _called = _loop != null;
+            CallOff();
+        }
+
+        // A revive refills the hero in the same level, without binding it again.
+        private void OnHealthChanged(int value)
+        {
+            if (value <= 0 || !_called) return;
+            _called = false;
+            _loop = StartCoroutine(Loop());
+        }
+
+        private void CallOff()
+        {
+            StopAllCoroutines();
+            _loop = null;
+            if (_shadow != null) Destroy(_shadow);
+            if (_cup != null) Destroy(_cup);
+            if (_decor != null) _decor.localPosition = _decorHome;
+            _decor = null;
+            ClearStain();
         }
 
         private void ClearStain()
@@ -92,8 +151,6 @@ namespace DrawRush.Enemy
             yield return new WaitForSeconds(firstDelay);
             while (true)
             {
-                var state = GameServices.State;
-                if (state != null && state.IsGameWon) yield break;
                 var enemies = FindObjectsByType<EnemyFollow>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
                 if (enemies.Length > 0 && Random.value < bumpChance) yield return Bump(enemies);
                 else yield return Cup();
@@ -109,8 +166,10 @@ namespace DrawRush.Enemy
             shadow.sprite = Disc();
             shadow.color = new Color(0.12f, 0.16f, 0.42f, 0.35f);
             shadow.transform.SetPositionAndRotation(at, Quaternion.Euler(90f, 0f, 0f));
+            _shadow = shadow.gameObject;
             var cup = new GameObject("CoffeeCup").AddComponent<SpriteRenderer>();
             cup.sprite = cupSprite;
+            _cup = cup.gameObject;
             float cupSize = cupSprite != null ? Mathf.Max(cupSprite.bounds.size.x, cupSprite.bounds.size.y) : 1f;
             cup.transform.localScale = Vector3.one * (radius * 2f / Mathf.Max(0.01f, cupSize));
             Camera cam = Camera.main;
@@ -132,6 +191,7 @@ namespace DrawRush.Enemy
             Vector3 d = transform.position - at; d.y = 0f;
             if (d.magnitude < radius && combat != null) combat.TakeDamage(1);
             Haptics.Medium();
+            if (_loop == null) yield break;   // that hit ended the level
 
             ClearStain();
             var stain = new GameObject("CoffeeStain").AddComponent<SpriteRenderer>();
@@ -153,14 +213,15 @@ namespace DrawRush.Enemy
                     e.Push(Random.insideUnitSphere, bumpPush, evenHeavy: true);
 
             // The page rattles: the decor shakes for a moment.
-            var decor = painter != null && painter.Network != null ? FindDecor() : null;
-            Vector3 home = decor != null ? decor.localPosition : Vector3.zero;
+            _decor = painter != null && painter.Network != null ? FindDecor() : null;
+            _decorHome = _decor != null ? _decor.localPosition : Vector3.zero;
             for (float t = 0f; t < 0.5f; t += Time.deltaTime)
             {
-                if (decor != null) decor.localPosition = home + (Vector3)(Random.insideUnitCircle * 0.25f * (1f - t / 0.5f));
+                if (_decor != null) _decor.localPosition = _decorHome + (Vector3)(Random.insideUnitCircle * 0.25f * (1f - t / 0.5f));
                 yield return null;
             }
-            if (decor != null) decor.localPosition = home;
+            if (_decor != null) _decor.localPosition = _decorHome;
+            _decor = null;
         }
 
         private Transform FindDecor()
