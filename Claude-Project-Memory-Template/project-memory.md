@@ -725,3 +725,5 @@ Kaan ile interaktif polish oturumu. Hepsi master'a `--no-ff` merge + push (her c
 - Boss levellerinde sadece Giant Eraser var (EnemyTierDirector).
 
 - Kısa kalem hızlı: 2 canda +%5, 1 canda +%10 (PencilHeight.speedPerHit).
+
+- Bölüm başına en fazla 3 düşman (LevelDifficulty.MaxEnemies). Level_02/03 düşmanları Enemies grubuna alındı. Giant Eraser: hız 0.675, menzil x0.8, dönüş 120°/sn. Menzil gerçek değeri sahnede 1.4 (daha önce sahnede 2 kalmıştı: serialize alanların default'unu değiştirmek sahnedeki değeri değiştirmez).

@@ -27,6 +27,8 @@ namespace DrawRush.Enemy
         [Header("Attack cone")]
         [Tooltip("Cone length (m) per unit of enemy scale, so big enemies reach further.")]
         [SerializeField] private float reachPerScale = 1.4f;
+        [Tooltip("Reach multiple for the Giant Eraser, on top of its size.")]
+        [SerializeField] private float bossReachScale = 0.8f;
         [Tooltip("Full width of the cone (degrees).")]
         [SerializeField, Range(30f, 360f)] private float coneAngle = 100f;
         [SerializeField] private Color coneColor = new(0.92f, 0.16f, 0.16f, 0.3f);
@@ -48,7 +50,8 @@ namespace DrawRush.Enemy
         private bool CanHit => _follow != null && _follow.CanAttack
                                && (GameServices.Health == null || GameServices.Health.Current > 0);
 
-        private float Reach => reachPerScale * transform.lossyScale.x;
+        private float Reach => reachPerScale * transform.lossyScale.x
+                               * (_follow != null && _follow.Variant == EnemyVariant.Boss ? bossReachScale : 1f);
 
         /// <summary>True when <paramref name="target"/> is within <paramref name="reach"/> m of
         /// <paramref name="origin"/> and no more than <paramref name="halfAngle"/> degrees off

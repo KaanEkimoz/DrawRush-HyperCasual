@@ -56,7 +56,7 @@ namespace DrawRush.Enemy
         [Header("Boss: Giant Eraser")]
         [Tooltip("Every Nth campaign level is a boss level.")]
         [SerializeField] private int bossEvery = 10;
-        [SerializeField] private float bossSpeed = 0.75f;
+        [SerializeField] private float bossSpeed = 0.675f;
         [SerializeField] private float bossScale = 1.8f;
 
         [Header("Silent help")]

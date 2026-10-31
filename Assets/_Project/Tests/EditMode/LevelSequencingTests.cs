@@ -216,8 +216,12 @@ namespace DrawRush.Tests.EditMode
 
                 // Must be able to go back up as well as down — the same level is re-served with a
                 // different budget on a later cycle.
-                LevelDifficulty.ApplyEnemyBudget(level.transform, 4);
-                Assert.AreEqual(4, ActiveEnemies(enemies.transform));
+                LevelDifficulty.ApplyEnemyBudget(level.transform, 3);
+                Assert.AreEqual(3, ActiveEnemies(enemies.transform));
+
+                // However many are asked for, a level never fields more than the cap.
+                LevelDifficulty.ApplyEnemyBudget(level.transform, 5);
+                Assert.AreEqual(LevelDifficulty.MaxEnemies, ActiveEnemies(enemies.transform));
 
                 LevelDifficulty.ApplyEnemyBudget(level.transform, 0);
                 Assert.AreEqual(0, ActiveEnemies(enemies.transform));

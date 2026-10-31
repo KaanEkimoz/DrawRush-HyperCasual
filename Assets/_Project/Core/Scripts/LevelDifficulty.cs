@@ -41,13 +41,17 @@ namespace DrawRush.Core
             return score;
         }
 
+        /// <summary>Most enemies any level may field, whatever the curve or the level's authoring
+        /// offers. Kaan: more than three turns the page into a crowd.</summary>
+        public const int MaxEnemies = 3;
+
         /// <summary>Enemies this level should field to land on <paramref name="target"/>, capped by
         /// how many were actually authored. A shape already past the target fields none — that is
         /// the "take the enemies away" lever that keeps low points reachable late in the bag.</summary>
         public static int EnemyBudget(float target, float shapeScore, int available)
         {
             int want = Mathf.RoundToInt((target - shapeScore) / EnemyWeight);
-            return Mathf.Clamp(want, 0, Mathf.Max(0, available));
+            return Mathf.Clamp(want, 0, Mathf.Min(MaxEnemies, Mathf.Max(0, available)));
         }
 
         /// <summary>The opening levels are for learning to draw: no enemies at all, whatever the
@@ -91,7 +95,7 @@ namespace DrawRush.Core
             Transform enemies = level != null ? level.Find("Enemies") : null;
             if (enemies == null) return;
             for (int i = 0; i < enemies.childCount; i++)
-                enemies.GetChild(i).gameObject.SetActive(i < count);
+                enemies.GetChild(i).gameObject.SetActive(i < Mathf.Min(count, MaxEnemies));
         }
 
         /// <summary>How many enemies the level has to offer.</summary>

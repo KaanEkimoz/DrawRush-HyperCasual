@@ -91,6 +91,9 @@ namespace DrawRush.Enemy
                  "children of this enemy, only the worn one active. Each role is its own stationery " +
                  "character, so it reads by shape and needs no tier tint. Empty = keep tinting.")]
         [SerializeField] private GameObject[] variantVisuals;
+        [Tooltip("Turn rate multiple for the Giant Eraser: slower to swing round, easier to get behind.")]
+        [SerializeField] private float bossTurnScale = 0.8f;
+        private float _authoredTurn;
         private bool _skinned;
         private float _variantScale = 1f;
         private float _voiceIn;
@@ -144,6 +147,7 @@ namespace DrawRush.Enemy
             transform.localScale = _authoredScale * scale;
             Unpushable = unpushable;
             _tierColor = tint;
+            _agent.angularSpeed = _authoredTurn * (variant == EnemyVariant.Boss ? bossTurnScale : 1f);
             ApplySkin(variant);
             ApplySpeed();
             ApplyTint();
@@ -160,6 +164,7 @@ namespace DrawRush.Enemy
             transform.localScale = _authoredScale;
             Unpushable = false;
             _tierColor = null;
+            _agent.angularSpeed = _authoredTurn;
             ApplySkin(EnemyVariant.Normal);
             ApplySpeed();
             ApplyTint();
@@ -210,6 +215,7 @@ namespace DrawRush.Enemy
             _authoredScale = transform.localScale;
             _authoredSpeedMultiplier = speedMultiplier;
             if (_agent == null) { _agent = GetComponent<NavMeshAgent>(); _baseSpeed = _agent.speed; }
+            _authoredTurn = _agent.angularSpeed;
         }
 
         private void ApplySpeed()
@@ -283,6 +289,7 @@ namespace DrawRush.Enemy
             _agent = GetComponent<NavMeshAgent>();
             _anim = GetComponentInChildren<Animator>(true);
             _baseSpeed = _agent.speed;
+            _authoredTurn = _agent.angularSpeed;
             // Authored position is the spawn point — capture before NavMeshAgent
             // can drift the transform.
             _spawnPos = transform.position;
