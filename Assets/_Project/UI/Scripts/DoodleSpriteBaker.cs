@@ -181,7 +181,12 @@ namespace DrawRush.UI
 
         private static void BakeButton()
         {
-            const int w = 800, h = 280;
+            BakeButton("button_doodle", 800, 280);
+            BakeButton("button_wide", 1200, 240);
+        }
+
+        private static void BakeButton(string name, int w, int h)
+        {
             var s = new Sheet(w, h);
             Vector2 c = new(w * 0.5f - 6f, h * 0.5f + 8f), half = new(w * 0.5f - 34f, h * 0.5f - 40f);
             var inside = new bool[w * h];
@@ -196,7 +201,7 @@ namespace DrawRush.UI
             Hatch(s, inside, new Color(0.8f, 0.8f, 0.8f), 62f, 15f, 3.2f, 4f, 0.8f);
             s.Stroke(BoxPath(c, half, 46f), 7f, Navy, 4f, 5f);
             s.Stroke(BoxPath(c + new Vector2(2f, -2f), half, 46f), 2.5f, Navy, 6f, 6f, 0.75f);
-            s.Save(UiFolder + "button_doodle.png");
+            s.Save(UiFolder + name + ".png");
         }
 
         private static void BakeEyes()
