@@ -137,6 +137,9 @@ namespace DrawRush.Tests.EditMode
             Assert.AreEqual(1f, DrawRush.Player.PencilHeight.HeightFor(3, 3, 0.5f), 1e-4f);
             Assert.AreEqual(0.75f, DrawRush.Player.PencilHeight.HeightFor(2, 3, 0.5f), 1e-4f);
             Assert.AreEqual(0.5f, DrawRush.Player.PencilHeight.HeightFor(1, 3, 0.5f), 1e-4f);
+            Assert.AreEqual(1f, DrawRush.Player.PencilHeight.SpeedFor(3, 3, 0.05f), 1e-4f);
+            Assert.AreEqual(1.05f, DrawRush.Player.PencilHeight.SpeedFor(2, 3, 0.05f), 1e-4f);
+            Assert.AreEqual(1.1f, DrawRush.Player.PencilHeight.SpeedFor(1, 3, 0.05f), 1e-4f);
         }
 
         [Test]

@@ -723,3 +723,5 @@ Kaan ile interaktif polish oturumu. Hepsi master'a `--no-ff` merge + push (her c
 - Bitiş menüsü: NEXT LEVEL büyük ana buton (button_wide), altında RESTART/SHOP/COLLECTION; Lose'da RESTART geniş.
 
 - Boss levellerinde sadece Giant Eraser var (EnemyTierDirector).
+
+- Kısa kalem hızlı: 2 canda +%5, 1 canda +%10 (PencilHeight.speedPerHit).
