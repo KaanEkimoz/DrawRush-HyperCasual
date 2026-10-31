@@ -4,7 +4,8 @@ using UnityEngine;
 namespace DrawRush.Drawing
 {
     /// <summary>
-    /// A thin paint trail behind the player that fades in a couple of seconds, wherever they walk.
+    /// A grainy pencil stroke the player leaves on the page wherever they walk. It stays for most
+    /// of the level and only slowly wears away.
     /// It is only feedback ("I am the brush"): coverage still comes from the snapped paint on the
     /// template, so the shape stays clean while every step still leaves a mark. From the redesign
     /// research: off-template paint is cosmetic and fades. While the brush is actually laying
@@ -20,7 +21,9 @@ namespace DrawRush.Drawing
         [SerializeField, Range(0f, 1f)] private float opacity = 0.75f;
         [Tooltip("Trail width (m) at the brush; it tapers to nothing at the tail.")]
         [SerializeField] private float width = 0.3f;
-        [Tooltip("Seconds a stretch of trail takes to fade out.")]
+        [Tooltip("Grainy strip repeated along the stroke, so it reads as pencil and not as a line.")]
+        [SerializeField] private Texture2D pencilStroke;
+        [Tooltip("Seconds a stretch of trail stays on the page.")]
         [SerializeField] private float fadeSeconds = 2.5f;
         [Tooltip("World height of the trail: on the page, just under the painted line, wherever the " +
                  "player's pivot is.")]
@@ -58,11 +61,12 @@ namespace DrawRush.Drawing
             _trail.time = fadeSeconds;
             _trail.minVertexDistance = 0.1f;
             _trail.numCapVertices = 2;
-            _trail.widthCurve = AnimationCurve.Linear(0f, 1f, 1f, 0f);
+            _trail.widthCurve = AnimationCurve.Constant(0f, 1f, 1f);
+            _trail.textureMode = LineTextureMode.Tile;
             _trail.widthMultiplier = width;
             _trail.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             _trail.receiveShadows = false;
-            _trail.material = new Material(Shader.Find("Sprites/Default")) { name = "Auto_BrushTrail" };
+            _trail.material = new Material(Shader.Find("Sprites/Default")) { name = "Auto_BrushTrail", mainTexture = pencilStroke };
             _paintColor = color;
             ApplyLook();
             _trail.emitting = false;

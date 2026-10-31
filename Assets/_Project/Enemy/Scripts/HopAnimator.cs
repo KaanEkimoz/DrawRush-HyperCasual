@@ -31,9 +31,28 @@ namespace DrawRush.Enemy
         [SerializeField] private Animator limbs;
         [Tooltip("Limb playback speed at the reference speed.")]
         [SerializeField] private float limbSpeed = 1.2f;
+        [Tooltip("Baked limbs (LimbRigBaker): each swings on its own joint around the stiff body.")]
+        [SerializeField] private Limb[] swingLimbs = System.Array.Empty<Limb>();
+        [Tooltip("Limb swing either way at full speed (degrees).")]
+        [SerializeField] private float swingAngle = 34f;
 
         /// <summary>Extra height multiple (the pencil hero shortens as it takes hits).</summary>
         public float HeightFactor { get; set; } = 1f;
+
+        [System.Serializable]
+        public struct Limb
+        {
+            public Transform bone;
+            public Vector3 axis;
+            public float direction;   // +1 or -1: opposite limbs swing in opposite directions
+
+            public Limb(Transform bone, Vector3 axis, float direction)
+            {
+                this.bone = bone;
+                this.axis = axis;
+                this.direction = direction;
+            }
+        }
 
         private static readonly int MovingId = Animator.StringToHash("Moving");
 
@@ -41,6 +60,10 @@ namespace DrawRush.Enemy
         private Vector3 _basePos, _baseScale, _lastParentPos, _step;
         private Quaternion _baseRot;
         private float _phase, _move, _flip = 1f;
+
+#if UNITY_EDITOR
+        public void SetLimbs(Limb[] value) => swingLimbs = value;
+#endif
 
         private void Awake()
         {
@@ -71,6 +94,10 @@ namespace DrawRush.Enemy
                 limbs.SetBool(MovingId, _move > 0.08f);
                 limbs.speed = Mathf.Lerp(0.5f, 1f, _move) * limbSpeed;
             }
+
+            float swing = Mathf.Sin(_phase * Mathf.PI) * Mathf.Lerp(6f, swingAngle, _move);
+            foreach (Limb limb in swingLimbs)
+                if (limb.bone != null) limb.bone.localRotation = Quaternion.AngleAxis(swing * limb.direction, limb.axis);
 
             float cycle = Mathf.Repeat(_phase, 1f);
             float air = Mathf.Sin(cycle * Mathf.PI);          // 0 on the ground, 1 at the top

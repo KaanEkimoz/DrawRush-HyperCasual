@@ -708,4 +708,8 @@ Kaan ile interaktif polish oturumu. Hepsi master'a `--no-ff` merge + push (her c
 - Kalem yeniden üretildi: uç aşağıda, `Art/Doodle3D/pencilhero/P_pencilhero.prefab`, sadece kol-bacak animasyonu (`limbs_run/idle`, HopAnimator.limbs), gövde/uç sabit (`pencilhero_rigid.asset`), gözler ayrı quad. Skinler `Art/Doodle3D/skinshero/`.
 - Damla, buton, göz ve 34 koleksiyon ikonu `UI/Scripts/DoodleSpriteBaker.cs` ile üretiliyor (menü: DrawRush/Bake Doodle Sprites); ikonlar levelin gerçek kenarlarından çiziliyor.
 - Font Gochi Hand (OFL), `Assets/Fonts/GochiHand SDF.asset`.
-- Düşmanlara iskelet takılmadı, kod animasyonu sürüyor. Kalan: kahraman sınıfları, Shop/Settings doodle, build ve telefon testi.
+- Düşman uzuvları: Meshy iskeleti yok, `Enemy/Scripts/LimbRigBaker.cs` elle işaretli bölgelerden uzuv kemiği kuruyor (HopAnimator.swingLimbs). Baker prefabları bir kez çalıştırılır; tekrar için prefabı git'ten geri al.
+- İlk 5 level düşmansız (`LevelFlow.enemyFreeLevels`). Tutorial şekli arena içine taşındı, Spawn eklendi.
+- Müzik ve efekt ayrı mute (solda, `SoundChannels`), müzik `Audio/Music/doodle_loop.wav` (sentez, duyulmadı).
+- Kalem izi 120 sn yerde kalıyor (`BrushTrail.pencilStroke`), oyun alanı çizgisi `ArenaOutline`, dekorlar 3D (`Art/Doodle3D/decor`).
+- Kalan: kahraman sınıfları, Shop/Settings doodle, build ve telefon testi.

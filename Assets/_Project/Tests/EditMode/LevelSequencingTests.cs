@@ -107,6 +107,13 @@ namespace DrawRush.Tests.EditMode
         }
 
         [Test]
+        public void TheOpeningLevels_NeverFieldEnemies()
+        {
+            Assert.AreEqual(0, LevelDifficulty.OpeningBudget(played: 4, enemyFreeLevels: 5, budget: 3));
+            Assert.AreEqual(3, LevelDifficulty.OpeningBudget(played: 5, enemyFreeLevels: 5, budget: 3));
+        }
+
+        [Test]
         public void EveryToothStartsBackAtTheFloor_NoMatterHowDeepThePlayerIs()
         {
             // The regression that matters: an earlier version raised the floor with experience, so

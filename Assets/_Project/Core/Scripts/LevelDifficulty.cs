@@ -50,6 +50,11 @@ namespace DrawRush.Core
             return Mathf.Clamp(want, 0, Mathf.Max(0, available));
         }
 
+        /// <summary>The opening levels are for learning to draw: no enemies at all, whatever the
+        /// curve asks for. Kaan: the first five levels stay enemy-free.</summary>
+        public static int OpeningBudget(int played, int enemyFreeLevels, int budget) =>
+            played < enemyFreeLevels ? 0 : budget;
+
         /// <summary>Where a beginner's first tooth tops out, as a fraction of the min..max range.
         /// The teeth get taller from here; they never get shorter.</summary>
         public const float FirstPeakFraction = 0.45f;

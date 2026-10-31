@@ -34,6 +34,8 @@ namespace DrawRush.UI
             { "Drop", 5 }, { "Flower", 3 }, { "Gem", 6 }, { "Diamond", 6 },
         };
 
+        private static readonly HashSet<string> HasOwnFace = new() { "Smiley", "Grin", "Sad Face", "Wow Face" };
+
         private static Color Hex(int v) => new(((v >> 16) & 255) / 255f, ((v >> 8) & 255) / 255f, (v & 255) / 255f);
 
         private sealed class Sheet
@@ -147,6 +149,10 @@ namespace DrawRush.UI
             BakeDrop();
             BakeButton();
             BakeEyes();
+            BakePaper();
+            BakePencilStroke();
+            BakeSoundIcons();
+            BakeCoffeeStain();
             BakeCollection();
             AssetDatabase.Refresh();
         }
@@ -206,6 +212,99 @@ namespace DrawRush.UI
                 s.Stroke(Circle(c, 46f, 1.08f, 1f), 4.5f, Navy, 2f, cx);
             }
             s.Save(UiFolder + "hero_eyes.png");
+        }
+
+        /// <summary>Ruled paper that repeats without a seam: every pattern here wraps at the edge.</summary>
+        private static void BakePaper()
+        {
+            const int S = 1024, Rules = 6;
+            var s = new Sheet(S, S);
+            Color page = new(0.975f, 0.96f, 0.915f), rule = new(0.66f, 0.8f, 0.93f);
+            for (int y = 0; y < S; y++)
+            for (int x = 0; x < S; x++)
+            {
+                float u = x * Mathf.PI * 2f / S, v = y * Mathf.PI * 2f / S;
+                float fibre = Mathf.Sin(u * 7f + Mathf.Sin(v * 5f) * 2f) * Mathf.Sin(v * 11f + Mathf.Sin(u * 3f) * 2f)
+                            + Mathf.Sin(u * 23f + v * 17f) * 0.5f;
+                Color c = page * (1f + fibre * 0.006f);
+                float toRule = Mathf.Abs(Mathf.Repeat(y, S / (float)Rules) - S / (float)Rules * 0.5f);
+                c = Color.Lerp(c, rule, Mathf.Clamp01(2.2f - toRule) * 0.75f);
+                c.a = 1f;
+                s.Px[y * S + x] = c;
+            }
+            s.Save("Assets/_Project/Art/Doodle/paper_lined.png");
+        }
+
+        /// <summary>A short strip of graphite: dense in the middle, broken at the edges, wrapping
+        /// along its length so it can run down a stroke of any length.</summary>
+        private static void BakePencilStroke()
+        {
+            const int W = 256, H = 64;
+            var s = new Sheet(W, H);
+            for (int y = 0; y < H; y++)
+            for (int x = 0; x < W; x++)
+            {
+                float u = x * Mathf.PI * 2f / W;
+                float across = 1f - Mathf.Abs(y - H * 0.5f + Mathf.Sin(u * 2f) * 3f) / (H * 0.5f);
+                float grain = Mathf.PerlinNoise(Mathf.Cos(u) * 9f + 20f + y * 0.09f, Mathf.Sin(u) * 9f + 20f + y * 0.35f);
+                float a = Mathf.SmoothStep(0f, 1f, across * 2.4f) * Mathf.SmoothStep(0.32f, 0.62f, grain + across * 0.2f);
+                s.Px[y * W + x] = new Color(1f, 1f, 1f, a);
+            }
+            s.Save(UiFolder + "pencil_stroke.png");
+        }
+
+        /// <summary>A coffee ring with nothing around it, so it never covers the page's lines.</summary>
+        private static void BakeCoffeeStain()
+        {
+            const int S = 512;
+            var s = new Sheet(S, S);
+            Color coffee = new(0.55f, 0.35f, 0.17f);
+            Vector2 c = new(256f, 256f);
+            for (int y = 0; y < S; y++)
+            for (int x = 0; x < S; x++)
+            {
+                Vector2 d = new Vector2(x, y) - c;
+                float r = d.magnitude + (Mathf.PerlinNoise(x * 0.012f, y * 0.012f) - 0.5f) * 26f;
+                float ring = Mathf.Clamp01(1f - Mathf.Abs(r - 190f) / 16f);
+                float wash = r < 190f ? 0.07f : 0f;
+                float wear = Mathf.SmoothStep(0.25f, 0.6f, Mathf.PerlinNoise(x * 0.02f + 9f, y * 0.02f + 3f));
+                s.Px[y * S + x] = new Color(coffee.r, coffee.g, coffee.b, Mathf.Clamp01(ring * ring * 0.5f * wear + wash));
+            }
+            s.Save(UiFolder + "decor_coffee.png");
+        }
+
+        private static void BakeSoundIcons()
+        {
+            var speaker = new List<List<Vector2>>
+            {
+                new() { new(62, 104), new(90, 104), new(128, 70), new(128, 186), new(90, 152), new(62, 152), new(62, 104) },
+                Circle(new Vector2(128, 128), 38, 0.22f, -0.7f),
+                Circle(new Vector2(128, 128), 62, 0.22f, -0.7f),
+            };
+            var note = new List<List<Vector2>>
+            {
+                Circle(new Vector2(88, 84), 19), Circle(new Vector2(170, 100), 19),
+                new() { new(106, 86), new(106, 180), new(188, 196), new(188, 102) },
+                new() { new(106, 156), new(188, 172) },
+            };
+            foreach (var (name, lines) in new[] { ("sound", speaker), ("music", note) })
+            foreach (bool on in new[] { true, false })
+            {
+                var s = new Sheet(256, 256);
+                Vector2 c = new(124f, 132f);
+                var disc = new bool[256 * 256];
+                for (int i = 0; i < disc.Length; i++) disc[i] = (new Vector2(i % 256, i / 256) - c).magnitude < 104f;
+                for (int i = 0; i < disc.Length; i++)
+                {
+                    if ((new Vector2(i % 256, i / 256) - c - new Vector2(6f, -8f)).magnitude < 110f) s.Blend(i % 256, i / 256, Navy, 1f);
+                }
+                for (int i = 0; i < disc.Length; i++) if (disc[i]) s.Blend(i % 256, i / 256, Color.white, 1f);
+                Hatch(s, disc, on ? Crayons[0] : new Color(0.8f, 0.8f, 0.82f), 35f, 11f, 5f, 2f);
+                s.Stroke(Circle(c, 106f, 1.04f, 1f), 5f, Navy, 3f, 8f);
+                foreach (var l in lines) s.Stroke(l, 5.5f, Navy, 1.5f, 3f);
+                if (!on) s.Stroke(new[] { new Vector2(58, 198), new Vector2(192, 62) }, 8f, Crayons[2], 2f, 5f);
+                s.Save(UiFolder + name + (on ? "_on.png" : "_off.png"));
+            }
         }
 
         private static List<List<Vector2>> LevelLines(Transform level)
@@ -293,6 +392,7 @@ namespace DrawRush.UI
         private static Sheet Sticker(List<List<Vector2>> lines, string name, int seed)
         {
             const int S = 512, Art = 400;
+            const float Seal = 10f;           // wide enough to close any gap the weld left
             if (lines.Count == 0) return null;
             Vector2 min = Vector2.positiveInfinity, max = Vector2.negativeInfinity;
             foreach (var l in lines) foreach (Vector2 p in l) { min = Vector2.Min(min, p); max = Vector2.Max(max, p); }
@@ -304,7 +404,7 @@ namespace DrawRush.UI
 
             // The pen line is the wall of a paint bucket: what the outside cannot reach is a region.
             var wall = new Sheet(S, S);
-            foreach (var l in lines) wall.Stroke(l, 4f, Color.white, 0f, 0f);
+            foreach (var l in lines) wall.Stroke(l, Seal, Color.white, 0f, 0f);
             var label = new int[S * S];       // 0 unvisited, -1 outside, >0 region
             var queue = new Queue<int>();
             void Flood(int start, int id, List<int> members)
@@ -353,12 +453,76 @@ namespace DrawRush.UI
                 bool detail = regions[r].Count < regions[0].Count * 0.08f;
                 Color colour = detail ? Navy : Crayons[(crayon + (Natural.ContainsKey(name) ? 0 : r * 3)) % Crayons.Length];
                 var clip = new bool[S * S];
-                foreach (int p in regions[r]) { clip[p] = true; s.Blend(p % S, p / S, colour, detail ? 1f : 0.5f); }
+                foreach (int p in regions[r])
+                {
+                    // Grown back under the pen line: the seal above ate this much of the region.
+                    int x0 = p % S, y0 = p / S;
+                    for (int dy = -8; dy <= 8; dy += 4)
+                    for (int dx = -8; dx <= 8; dx += 4)
+                    {
+                        int q = (y0 + dy) * S + x0 + dx;
+                        if (q >= 0 && q < clip.Length && !clip[q]) { clip[q] = true; s.Blend(q % S, q / S, colour, detail ? 1f : 0.5f); }
+                    }
+                }
                 if (!detail) Hatch(s, clip, colour, 35f + r * 40f, 10f, 5f, seed + r);
             }
             for (int i = 0; i < lines.Count; i++) s.Stroke(lines[i], 5.5f, Navy, 2.5f, seed + i * 7f);
             for (int i = 0; i < lines.Count; i++) s.Stroke(lines[i], 2f, Navy, 4f, seed + i * 11f + 3f, 0.7f);
+            if (regions.Count > 0 && !HasOwnFace.Contains(name)) Face(s, regions[0], seed);
             return s;
+        }
+
+        /// <summary>Googly eyes and a smile in the roomiest part of the shape.</summary>
+        private static void Face(Sheet s, List<int> region, int seed)
+        {
+            const int S = 512;
+            var inside = new bool[S * S];
+            foreach (int p in region) inside[p] = true;
+            // Peel the region from its edge: the last pixel left is the point furthest inside.
+            var depth = new int[S * S];
+            var queue = new Queue<int>();
+            foreach (int p in region)
+            {
+                int x = p % S, y = p / S;
+                if (x == 0 || y == 0 || x == S - 1 || y == S - 1 || !inside[p - 1] || !inside[p + 1] || !inside[p - S] || !inside[p + S])
+                {
+                    depth[p] = 1;
+                    queue.Enqueue(p);
+                }
+            }
+            int deepest = region[0];
+            while (queue.Count > 0)
+            {
+                int p = queue.Dequeue();
+                if (depth[p] > depth[deepest]) deepest = p;
+                foreach (int q in new[] { p - 1, p + 1, p - S, p + S })
+                    if (q >= 0 && q < inside.Length && inside[q] && depth[q] == 0) { depth[q] = depth[p] + 1; queue.Enqueue(q); }
+            }
+            Vector2 c = new(deepest % S, deepest / S);
+            float size = Mathf.Clamp(depth[deepest] * 0.42f, 14f, 58f);
+            foreach (float side in new[] { -1f, 1f })
+            {
+                Vector2 eye = c + new Vector2(side * size * 1.05f, size * 0.35f);
+                Disc(s, eye, size * 0.8f, Color.white);
+                s.Stroke(Circle(eye, size * 0.8f, 1.06f, 1f), Mathf.Max(2.5f, size * 0.09f), Navy, 1f, seed + side);
+                Vector2 pupil = eye + new Vector2(-side * size * 0.14f, -size * 0.08f);
+                Disc(s, pupil, size * 0.38f, Navy);
+                Disc(s, pupil + Vector2.one * size * 0.13f, size * 0.11f, Color.white);
+            }
+            var mouth = new List<Vector2>();
+            for (int i = 0; i <= 12; i++)
+            {
+                float a = Mathf.Lerp(Mathf.PI * 1.15f, Mathf.PI * 1.85f, i / 12f);
+                mouth.Add(c + new Vector2(0f, -size * 0.15f) + new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * size * 0.75f);
+            }
+            s.Stroke(mouth, Mathf.Max(2.5f, size * 0.09f), Navy, 1f, seed + 2f);
+        }
+
+        private static void Disc(Sheet s, Vector2 c, float r, Color colour)
+        {
+            for (float d = r; d > 0f; d -= 1.5f)
+                foreach (Vector2 p in Circle(c, d)) s.Dab(p.x, p.y, 1.8f, colour, 1f, 0f);
+            s.Dab(c.x, c.y, 2f, colour, 1f, 0f);
         }
     }
 }

@@ -29,6 +29,8 @@ namespace DrawRush.Core
         [SerializeField] private AdManager ads;
 
         [Header("Difficulty Curve")]
+        [Tooltip("Levels after the tutorial that field no enemies.")]
+        [SerializeField] private int enemyFreeLevels = 5;
         [Tooltip("Difficulty target for the very first level after the tutorial. Low enough that " +
                  "the bag picks the simplest shape and the enemy budget works out to zero.")]
         [SerializeField] private float minTarget = 3f;
@@ -99,8 +101,8 @@ namespace DrawRush.Core
             // count (and so no enemy gets an Awake it shouldn't have had). Same budget the draw
             // ranked on, so the level delivers the difficulty it was chosen for.
             Transform level = levelManager.GetLevel(next);
-            int enemies = LevelDifficulty.EnemyBudget(
-                target, LevelDifficulty.ShapeScore(level), LevelDifficulty.AvailableEnemies(level));
+            int enemies = LevelDifficulty.OpeningBudget(played, enemyFreeLevels, LevelDifficulty.EnemyBudget(
+                target, LevelDifficulty.ShapeScore(level), LevelDifficulty.AvailableEnemies(level)));
             LevelDifficulty.ApplyEnemyBudget(level, enemies);
 
             PlayerProgress.LevelsPlayed = played + 1;
@@ -125,8 +127,8 @@ namespace DrawRush.Core
             if (level == null) return;
             int played = PlayerProgress.LevelsPlayed;
             float target = LevelDifficulty.SawtoothTarget(played, sawPeriod, minTarget, maxTarget, rampLevels);
-            int enemies = LevelDifficulty.EnemyBudget(
-                target, LevelDifficulty.ShapeScore(level), LevelDifficulty.AvailableEnemies(level));
+            int enemies = LevelDifficulty.OpeningBudget(played, enemyFreeLevels, LevelDifficulty.EnemyBudget(
+                target, LevelDifficulty.ShapeScore(level), LevelDifficulty.AvailableEnemies(level)));
             LevelDifficulty.ApplyEnemyBudget(level, enemies);
             PlayerProgress.LastLevelEnemies = enemies;   // persist so a relaunch restores this count
         }
@@ -146,7 +148,8 @@ namespace DrawRush.Core
         {
             Transform level = levelManager.GetLevel(index);
             float shape = LevelDifficulty.ShapeScore(level);
-            int enemies = LevelDifficulty.EnemyBudget(target, shape, LevelDifficulty.AvailableEnemies(level));
+            int enemies = LevelDifficulty.OpeningBudget(PlayerProgress.LevelsPlayed, enemyFreeLevels,
+                LevelDifficulty.EnemyBudget(target, shape, LevelDifficulty.AvailableEnemies(level)));
             return shape + enemies * LevelDifficulty.EnemyWeight;
         }
 

@@ -101,6 +101,7 @@ namespace DrawRush.Audio
             if (_drawSource.clip == null) { _drawSource.clip = library.drawLoop.clip; _drawSource.Play(); }
             bool on = painter != null && painter.IsPainting && Time.timeScale > 0f;
             float target = on ? library.drawLoop.volume : 0f;
+            _source.mute = SoundChannels.SfxMuted;
             _drawSource.mute = _source.mute;
             _drawSource.volume = Mathf.MoveTowards(_drawSource.volume, target, Time.unscaledDeltaTime / Mathf.Max(0.01f, drawFade));
         }
