@@ -68,6 +68,7 @@ namespace DrawRush.Audio
             DrawRush.Drawing.DrawEdgeAuthor.EdgeFinished += OnEdgeFinished;
             DrawRush.UI.ButtonJuice.Clicked += OnUiClick;
             DrawRush.Enemy.EnemyDeath.EnemyDied += OnEnemyDied;
+            DrawRush.Enemy.ClumsyGiants.TableBumped += OnTableBumped;
             DrawRush.Enemy.EnemyFollow.DashWindUpStarted += OnDashWindUp;
             DrawRush.Enemy.EnemyFollow.Voiced += OnEnemyVoiced;
             if (boosts != null) boosts.Granted += OnBooster;
@@ -87,6 +88,7 @@ namespace DrawRush.Audio
             DrawRush.Drawing.DrawEdgeAuthor.EdgeFinished -= OnEdgeFinished;
             DrawRush.UI.ButtonJuice.Clicked -= OnUiClick;
             DrawRush.Enemy.EnemyDeath.EnemyDied -= OnEnemyDied;
+            DrawRush.Enemy.ClumsyGiants.TableBumped -= OnTableBumped;
             DrawRush.Enemy.EnemyFollow.DashWindUpStarted -= OnDashWindUp;
             DrawRush.Enemy.EnemyFollow.Voiced -= OnEnemyVoiced;
             if (boosts != null) boosts.Granted -= OnBooster;
@@ -135,6 +137,13 @@ namespace DrawRush.Audio
             if (Time.unscaledTime - _lastEnemyDie < 0.06f) return;
             _lastEnemyDie = Time.unscaledTime;
             Play(library != null ? library.enemyDie : null);
+        }
+
+        // The same heavy thud as the Giant Eraser's stomp.
+        private void OnTableBumped(Vector3 _)
+        {
+            int thud = (int)DrawRush.Enemy.EnemyVariant.Boss;
+            if (library != null && library.enemyVoices != null && thud < library.enemyVoices.Length) Play(library.enemyVoices[thud]);
         }
 
         private void OnGameWonChanged(bool won) { if (won) Play(library != null ? library.win : null); }

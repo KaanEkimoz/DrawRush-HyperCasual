@@ -69,6 +69,8 @@ namespace DrawRush.Enemy
         private Quaternion _spawnRot;
         private float _pressure = 1f;
         private float _frozenUntil;
+        private float _slideLeft, _slideSeconds, _slideSpeed;
+        private Vector3 _slideDirection;
         private bool _frozen;
         private Vector3 _authoredScale;
         private float _authoredSpeedMultiplier;
@@ -129,7 +131,13 @@ namespace DrawRush.Enemy
         private float _dashTimer;
 
         /// <summary>True while this enemy can land a hit: chasing, not frozen, asleep or done.</summary>
-        public bool CanAttack => isActiveAndEnabled && _awake && !_frozen && !_halted;
+        public bool CanAttack => isActiveAndEnabled && _awake && !_frozen && !_halted && _slideLeft <= 0f;
+
+        /// <summary>How much of a <see cref="Slide"/> is left, 1 at its start and 0 at rest.</summary>
+        public float SlideAmount => _slideLeft > 0f ? _slideLeft / _slideSeconds : 0f;
+
+        /// <summary>Ground direction of the current <see cref="Slide"/>.</summary>
+        public Vector3 SlideDirection => _slideDirection;
 
         /// <summary>True while a Freeze booster holds this enemy.</summary>
         public bool IsFrozen => _frozen;
@@ -206,6 +214,33 @@ namespace DrawRush.Enemy
             _agent.velocity = Vector3.zero;
             _retargetTimer = 0.25f;   // a beat of stagger before it re-plans
             if (_anim != null && !_frozen) _anim.SetTrigger(AnimatorIds.Hit);
+        }
+
+        /// <summary>Skid <paramref name="distance"/> m along <paramref name="direction"/> over
+        /// <paramref name="seconds"/>, slowing to a stop, helpless until it ends. Unlike
+        /// <see cref="Push"/> the whole way is seen, and it moves every enemy.</summary>
+        public void Slide(Vector3 direction, float distance, float seconds)
+        {
+            direction.y = 0f;
+            if (_halted || seconds <= 0f || direction.sqrMagnitude < 1e-6f) return;
+            if (_agent == null || !_agent.isOnNavMesh) return;
+            _slideDirection = direction.normalized;
+            _slideSeconds = seconds;
+            _slideLeft = seconds;
+            _slideSpeed = 2f * distance / seconds;   // falls to 0, so the area under it is the distance
+            _agent.isStopped = true;
+            _agent.velocity = Vector3.zero;
+            if (_anim != null && !_frozen) _anim.SetTrigger(AnimatorIds.Hit);
+        }
+
+        private void UpdateSlide()
+        {
+            _agent.Move(_slideDirection * (_slideSpeed * SlideAmount * Time.deltaTime));   // stays on the NavMesh
+            _slideLeft -= Time.deltaTime;
+            if (_slideLeft > 0f) return;
+            _slideLeft = 0f;
+            _retargetTimer = 0.25f;   // a beat of stagger before it re-plans
+            if (!_frozen) _agent.isStopped = false;
         }
 
         // Variants can be applied to an enemy that has never been active (no Awake yet).
@@ -313,6 +348,7 @@ namespace DrawRush.Enemy
             _pressure = 1f;
             _frozen = false;
             _frozenUntil = 0f;
+            _slideLeft = 0f;
             if (_anim != null) _anim.speed = 1f;
             _dash = DashPhase.Idle;
             _dashTimer = dashInterval;
@@ -385,6 +421,8 @@ namespace DrawRush.Enemy
             if (player == null) return;
             if (_agent == null || !_agent.isActiveAndEnabled || !_agent.isOnNavMesh) return;
 
+            if (_slideLeft > 0f) { UpdateSlide(); SetAnimSpeed(0f); return; }
+
             if (_frozen)
             {
                 SetAnimSpeed(0f);
@@ -440,6 +478,7 @@ namespace DrawRush.Enemy
         {
             if (!won) return;
             _halted = true;
+            _slideLeft = 0f;
             if (_agent != null && _agent.isOnNavMesh)
             {
                 _agent.isStopped = true;

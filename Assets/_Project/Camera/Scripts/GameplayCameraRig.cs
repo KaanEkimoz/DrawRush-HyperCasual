@@ -19,11 +19,17 @@ namespace DrawRush.Cameras
         [SerializeField] private CameraConfig config;
         [Tooltip("Live enemy list used for the threat pull-back.")]
         [SerializeField] private EnemyProximity enemies;
+        [Tooltip("How far (m) a table bump jolts the camera.")]
+        [SerializeField] private float bumpShake = 0.35f;
+        [Tooltip("Seconds the camera takes to settle after a table bump.")]
+        [SerializeField] private float bumpShakeSeconds = 0.5f;
 
         private CinemachineCamera _camera;
         private CinemachineFollow _follow;
         private float _zoom = 1f, _zoomVelocity, _holdUntil;
         private readonly Transform[] _threats = new Transform[8];
+        private Vector3 _shakeDirection;
+        private float _shakeLeft;
 
         /// <summary>Current pull-back multiple (1 = base framing).</summary>
         public float Zoom => _zoom;
@@ -32,6 +38,24 @@ namespace DrawRush.Cameras
         {
             _camera = GetComponent<CinemachineCamera>();
             _follow = GetComponent<CinemachineFollow>();
+        }
+
+        private void OnEnable() => ClumsyGiants.TableBumped += OnTableBumped;
+        private void OnDisable() => ClumsyGiants.TableBumped -= OnTableBumped;
+
+        private void OnTableBumped(Vector3 direction)
+        {
+            _shakeDirection = direction;
+            _shakeLeft = 1f;
+        }
+
+        // Thrown along the bump first, then ringing out.
+        private Vector3 ShakeOffset()
+        {
+            if (_shakeLeft <= 0f) return Vector3.zero;
+            _shakeLeft -= Time.deltaTime / Mathf.Max(0.01f, bumpShakeSeconds);
+            float left = Mathf.Max(0f, _shakeLeft);
+            return _shakeDirection * (bumpShake * left * Mathf.Sin((1f - left) * Mathf.PI * 4f));
         }
 
         private void Update()
@@ -54,7 +78,7 @@ namespace DrawRush.Cameras
             lens.FieldOfView = fov;
             _camera.Lens = lens;
             transform.rotation = Quaternion.Euler(config.pitch, 0f, 0f);   // never rotates with the player
-            _follow.FollowOffset = CameraMath.FollowOffset(config.pitch, fov, distance, config.playerScreenY);
+            _follow.FollowOffset = CameraMath.FollowOffset(config.pitch, fov, distance, config.playerScreenY) + ShakeOffset();
             var tracker = _follow.TrackerSettings;
             tracker.BindingMode = BindingMode.WorldSpace;
             tracker.PositionDamping = Vector3.one * config.followDamping;

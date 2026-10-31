@@ -35,6 +35,8 @@ namespace DrawRush.Enemy
         [SerializeField] private Limb[] swingLimbs = System.Array.Empty<Limb>();
         [Tooltip("Limb swing either way at full speed (degrees).")]
         [SerializeField] private float swingAngle = 34f;
+        [Tooltip("How far (degrees) the body tips back, against the skid, while its enemy slides.")]
+        [SerializeField] private float slideLean = 26f;
 
         /// <summary>Extra height multiple (the pencil hero shortens as it takes hits).</summary>
         public float HeightFactor { get; set; } = 1f;
@@ -57,6 +59,7 @@ namespace DrawRush.Enemy
         public static readonly int MovingId = Animator.StringToHash("Moving");
 
         private NavMeshAgent _agent;
+        private EnemyFollow _enemy;
         private Vector3 _basePos, _baseScale, _lastParentPos, _step;
         private Quaternion _baseRot;
         private float _phase, _move, _flip = 1f;
@@ -68,6 +71,7 @@ namespace DrawRush.Enemy
         private void Awake()
         {
             _agent = GetComponentInParent<NavMeshAgent>();
+            _enemy = GetComponentInParent<EnemyFollow>();
             _basePos = transform.localPosition;
             _baseScale = transform.localScale;
             _baseRot = transform.localRotation;
@@ -95,7 +99,9 @@ namespace DrawRush.Enemy
                 limbs.speed = Mathf.Lerp(0.5f, 1f, _move) * limbSpeed;
             }
 
-            float swing = Mathf.Sin(_phase * Mathf.PI) * Mathf.Lerp(6f, swingAngle, _move);
+            // A sliding enemy flails: full limb swing, though it isn't walking.
+            float slide = _enemy != null ? _enemy.SlideAmount : 0f;
+            float swing = Mathf.Sin(_phase * Mathf.PI) * Mathf.Lerp(6f, swingAngle, Mathf.Max(_move, slide));
             foreach (Limb limb in swingLimbs)
                 if (limb.bone != null) limb.bone.localRotation = Quaternion.AngleAxis(swing * limb.direction, limb.axis);
 
@@ -117,6 +123,11 @@ namespace DrawRush.Enemy
                 transform.rotation = Quaternion.LookRotation(-cam.forward, Vector3.up) * Quaternion.Euler(0f, 0f, side);
             }
             else transform.localRotation = _baseRot * Quaternion.Euler(lean * _move, 0f, side);
+            if (slide > 0f)
+            {
+                float wobble = 0.75f + 0.25f * Mathf.Sin(Time.time * 30f);
+                transform.rotation = Quaternion.AngleAxis(slideLean * slide * wobble, Vector3.Cross(_enemy.SlideDirection, Vector3.up)) * transform.rotation;
+            }
             transform.localScale = scale;
         }
     }

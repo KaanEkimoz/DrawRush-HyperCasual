@@ -1,21 +1,27 @@
+using System;
 using System.Collections;
+using System.Collections.Generic;
 using DrawRush.Boosters;
 using DrawRush.Core;
 using DrawRush.Drawing;
 using DrawRush.Player;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace DrawRush.Enemy
 {
     /// <summary>
     /// The notebook's owners, who never notice the game on their desk. Now and then they cause a
     /// hazard: a coffee cup lands (its shadow warns first; the hit hurts and the spill slows you)
-    /// or the table gets bumped (every enemy is thrown a little, the page rattles). Never during
+    /// or the table gets bumped (every enemy skids the same way, the desk jolts). Never during
     /// the opening seconds of a level, and only from a set level on. Nothing outlives the level:
     /// a win or the hero's death calls off whatever is still in the air, and a revive starts over.
     /// </summary>
     public sealed class ClumsyGiants : MonoBehaviour
     {
+        /// <summary>The table was bumped; carries the ground direction everything slides.</summary>
+        public static event Action<Vector3> TableBumped;
+
         [SerializeField] private FreeDrawPainter painter;
         [SerializeField] private PlayerCombat combat;
         [SerializeField] private ThirdPersonMovement movement;
@@ -44,6 +50,11 @@ namespace DrawRush.Enemy
 
         [Header("Table bump")]
         [SerializeField] private float bumpPush = 2.5f;
+        [Tooltip("Seconds the skid lasts.")]
+        [SerializeField] private float slideSeconds = 0.7f;
+        [Tooltip("How far (m) the desk decor jolts along the bump.")]
+        [SerializeField] private float decorJolt = 0.45f;
+        [SerializeField] private Color skidColor = new(0.12f, 0.16f, 0.42f, 0.45f);
 
         private Coroutine _loop;
         private Vector3 _lastPos, _heading;
@@ -53,6 +64,8 @@ namespace DrawRush.Enemy
         private GameObject _shadow, _cup;
         private Transform _decor;
         private Vector3 _decorHome;
+        private readonly List<TrailRenderer> _skids = new();
+        private static Material _skidMaterial;
         private GameState _state;
         private PlayerHealth _health;
         private bool _called;   // hazards were running when the level ended
@@ -123,6 +136,9 @@ namespace DrawRush.Enemy
             if (_cup != null) Destroy(_cup);
             if (_decor != null) _decor.localPosition = _decorHome;
             _decor = null;
+            foreach (TrailRenderer skid in _skids)
+                if (skid != null) Destroy(skid.gameObject);
+            _skids.Clear();
             ClearStain();
         }
 
@@ -206,22 +222,63 @@ namespace DrawRush.Enemy
 
         private IEnumerator Bump(EnemyFollow[] enemies)
         {
+            Vector2 flat = Random.insideUnitCircle.normalized;
+            Vector3 direction = flat != Vector2.zero ? new Vector3(flat.x, 0f, flat.y) : Vector3.forward;
+
             if (hud != null) hud.Toast("TABLE BUMP!", "Everything slides", new Color(0.95f, 0.4f, 0.15f));
             Haptics.Medium();
-            foreach (EnemyFollow e in enemies)
-                if (e != null && e.isActiveAndEnabled)
-                    e.Push(Random.insideUnitSphere, bumpPush, evenHeavy: true);
+            TableBumped?.Invoke(direction);
 
-            // The page rattles: the decor shakes for a moment.
+            // One shove, one direction: all of them skid together, each leaving a mark on the page.
+            var sliding = new List<EnemyFollow>();
+            foreach (EnemyFollow e in enemies)
+            {
+                if (e == null || !e.isActiveAndEnabled) continue;
+                e.Slide(direction, bumpPush, slideSeconds);
+                sliding.Add(e);
+                _skids.Add(NewSkid(e.transform));
+            }
+
+            // The desk jolts along the bump and settles back.
             _decor = painter != null && painter.Network != null ? FindDecor() : null;
             _decorHome = _decor != null ? _decor.localPosition : Vector3.zero;
-            for (float t = 0f; t < 0.5f; t += Time.deltaTime)
+            for (float t = 0f; t < slideSeconds; t += Time.deltaTime)
             {
-                if (_decor != null) _decor.localPosition = _decorHome + (Vector3)(Random.insideUnitCircle * 0.25f * (1f - t / 0.5f));
+                float k = t / slideSeconds;
+                if (_decor != null) _decor.localPosition = _decorHome + direction * (decorJolt * Mathf.Sin(k * Mathf.PI * 3f) * (1f - k));
+                for (int i = 0; i < sliding.Count; i++)
+                    if (sliding[i] != null) _skids[i].transform.position = OnPage(sliding[i].transform.position);
                 yield return null;
             }
             if (_decor != null) _decor.localPosition = _decorHome;
             _decor = null;
+
+            foreach (TrailRenderer skid in _skids)
+                if (skid != null) Destroy(skid.gameObject, skid.time);
+            _skids.Clear();
+        }
+
+        private static Vector3 OnPage(Vector3 position) { position.y = 0.04f; return position; }
+
+        private TrailRenderer NewSkid(Transform enemy)
+        {
+            if (_skidMaterial == null)
+                _skidMaterial = new Material(Shader.Find("Sprites/Default")) { name = "Auto_BumpSkid", renderQueue = 3050 };
+            var go = new GameObject("BumpSkid");
+            go.transform.SetPositionAndRotation(OnPage(enemy.position), Quaternion.Euler(90f, 0f, 0f));
+            var skid = go.AddComponent<TrailRenderer>();
+            skid.sharedMaterial = _skidMaterial;
+            skid.alignment = LineAlignment.TransformZ;
+            skid.time = 0.9f;
+            skid.minVertexDistance = 0.05f;
+            skid.numCapVertices = 3;
+            skid.widthMultiplier = 0.32f * enemy.lossyScale.x;
+            skid.widthCurve = AnimationCurve.Linear(0f, 0.25f, 1f, 1f);
+            skid.startColor = new Color(skidColor.r, skidColor.g, skidColor.b, 0f);
+            skid.endColor = skidColor;
+            skid.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            skid.receiveShadows = false;
+            return skid;
         }
 
         private Transform FindDecor()
