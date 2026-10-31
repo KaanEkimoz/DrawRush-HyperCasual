@@ -54,7 +54,7 @@ namespace DrawRush.Enemy
             }
         }
 
-        private static readonly int MovingId = Animator.StringToHash("Moving");
+        public static readonly int MovingId = Animator.StringToHash("Moving");
 
         private NavMeshAgent _agent;
         private Vector3 _basePos, _baseScale, _lastParentPos, _step;

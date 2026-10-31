@@ -26,7 +26,7 @@ namespace DrawRush.Enemy
 
         [Header("Attack cone")]
         [Tooltip("Cone length (m) per unit of enemy scale, so big enemies reach further.")]
-        [SerializeField] private float reachPerScale = 2f;
+        [SerializeField] private float reachPerScale = 1.4f;
         [Tooltip("Full width of the cone (degrees).")]
         [SerializeField, Range(30f, 360f)] private float coneAngle = 100f;
         [SerializeField] private Color coneColor = new(0.92f, 0.16f, 0.16f, 0.3f);
@@ -43,6 +43,10 @@ namespace DrawRush.Enemy
         private MeshRenderer _coneRenderer;
         private Mesh _coneMesh;
         private Material _coneMaterial;
+
+        // A dead hero is left alone: the enemies just stand there while the pencil falls.
+        private bool CanHit => _follow != null && _follow.CanAttack
+                               && (GameServices.Health == null || GameServices.Health.Current > 0);
 
         private float Reach => reachPerScale * transform.lossyScale.x;
 
@@ -133,13 +137,13 @@ namespace DrawRush.Enemy
         private void Update()
         {
             Transform player = GameServices.Player;
-            if (player == null || _follow == null || !_follow.CanAttack) return;
+            if (player == null || !CanHit) return;
             if (InCone(transform.position, transform.forward, player.position, Reach, coneAngle * 0.5f)) Hit(player);
         }
 
         private void LateUpdate()
         {
-            bool show = _follow != null && _follow.CanAttack;
+            bool show = CanHit;
             if (_cone.gameObject.activeSelf != show) _cone.gameObject.SetActive(show);
             if (!show) return;
             Vector3 p = transform.position;

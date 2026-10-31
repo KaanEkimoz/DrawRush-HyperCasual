@@ -31,6 +31,8 @@ namespace DrawRush.Core
         // Legacy serialized fields preserved so existing prefab/scene bindings keep
         // resolving — values are forwarded into the new sub-components on Awake.
         [FormerlySerializedAs("winPanel")] [SerializeField] private GameObject legacyWinPanel;
+        [Tooltip("Plays the hero's death; the lose panel opens partway through it.")]
+        [SerializeField] private DrawRush.Player.PencilDeath pencilDeath;
         [FormerlySerializedAs("losePanel")] [SerializeField] private GameObject legacyLosePanel;
         [FormerlySerializedAs("gameUI")] [SerializeField] private GameObject legacyGameUi;
         [FormerlySerializedAs("_levelText")] [SerializeField] private TMPro.TextMeshProUGUI legacyLevelText;
@@ -55,8 +57,14 @@ namespace DrawRush.Core
 
         private void OnPlayerDied()
         {
-            if (hudPanels != null) hudPanels.ShowLosePanel();
             MenuPause.SetGameTimeScale(0f);
+            if (pencilDeath != null) pencilDeath.Play(ShowLosePanel);
+            else ShowLosePanel();
+        }
+
+        private void ShowLosePanel()
+        {
+            if (hudPanels != null) hudPanels.ShowLosePanel();
         }
 
         #region Legacy facade (UI button bindings)

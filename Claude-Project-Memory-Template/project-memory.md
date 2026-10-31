@@ -717,3 +717,5 @@ Kaan ile interaktif polish oturumu. Hepsi master'a `--no-ff` merge + push (her c
 - Çizme eşiği %20 arttı: FreeDrawPainter.band 0.5 -> 0.6 m.
 
 - Düşman saldırı konisi: EnemyCombat koni içindeyse vurur (100°, 2×scale m), arkadan vurmaz, yerde kırmızı dilim görünür; düşmanlar kovalamaya devam eder.
+
+- Düşman menzili %30 kısa (reachPerScale 1.4), hız %10 düşük (EnemyFollow.globalSpeed 0.9). Ölüm: PencilDeath (zıplar, X göz, yatar), lose paneli 0.45 sn'de yarı saydam açılır, düşmanlar artık ölünce patlamaz.

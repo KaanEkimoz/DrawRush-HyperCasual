@@ -32,7 +32,6 @@ namespace DrawRush.Enemy
         private NavMeshAgent _agent;
         private EnemyFollow _follow;
         private GameState _state;
-        private PlayerHealth _health;
         private ParticleSystem _poof;
         private ParticleSystemRenderer _poofRenderer;
 
@@ -73,18 +72,14 @@ namespace DrawRush.Enemy
 
             _state = GameServices.State;
             if (_state != null) _state.GameWonChanged += OnWonChanged;
-            _health = GameServices.Health;
-            if (_health != null) _health.Died += OnPlayerDied;
         }
 
         private void OnDisable()
         {
             if (_state != null) _state.GameWonChanged -= OnWonChanged;
-            if (_health != null) _health.Died -= OnPlayerDied;
         }
 
         private void OnWonChanged(bool won) { if (won) Die(); }
-        private void OnPlayerDied() => Die();
 
         private void Die()
         {

@@ -36,6 +36,8 @@ namespace DrawRush.Enemy
         [Header("Behaviour")]
         [Tooltip("Multiplies the agent's authored speed. >1 = a fast, pressing enemy; <1 = a slow one.")]
         [SerializeField] private float speedMultiplier = 1f;
+        [Tooltip("Pace of every enemy in the game, whatever its role: the one dial for the chase.")]
+        [SerializeField] private float globalSpeed = 0.9f;
         [Tooltip("0 = always chasing (the default). >0 = stays asleep at its spawn until the player " +
                  "comes within this many world units, then wakes and chases for the rest of the level.")]
         [SerializeField] private float wakeRadius = 0f;
@@ -213,7 +215,7 @@ namespace DrawRush.Enemy
         private void ApplySpeed()
         {
             float lunge = _dash == DashPhase.Lunge ? dashSpeedMultiplier : 1f;
-            if (_agent != null) _agent.speed = _baseSpeed * Mathf.Max(0.05f, speedMultiplier) * _pressure * lunge;
+            if (_agent != null) _agent.speed = _baseSpeed * globalSpeed * Mathf.Max(0.05f, speedMultiplier) * _pressure * lunge;
         }
 
         // Dasher: every few seconds near the player it stops and flashes (the telegraph the

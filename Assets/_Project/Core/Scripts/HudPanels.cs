@@ -43,6 +43,9 @@ namespace DrawRush.Core
         }
 
         public GameObject WinPanel => winPanel;
+        [Tooltip("Seconds the lose panel takes to fade in over the hero's death.")]
+        [SerializeField] private float panelFade = 0.35f;
+
         public GameObject LosePanel => losePanel;
 
         public void SetLevelLabel(int level)
@@ -66,8 +69,24 @@ namespace DrawRush.Core
 
         public void ShowLosePanel()
         {
-            if (losePanel != null) losePanel.SetActive(true);
+            if (losePanel != null)
+            {
+                losePanel.SetActive(true);
+                StartCoroutine(FadeIn(losePanel));
+            }
             if (gameUI != null) gameUI.SetActive(false);
+        }
+
+        // Unscaled: the game is frozen by now.
+        private System.Collections.IEnumerator FadeIn(GameObject panel)
+        {
+            if (!panel.TryGetComponent(out CanvasGroup group)) group = panel.AddComponent<CanvasGroup>();
+            for (float t = 0f; t < panelFade; t += Time.unscaledDeltaTime)
+            {
+                group.alpha = t / panelFade;
+                yield return null;
+            }
+            group.alpha = 1f;
         }
 
         public void HideAllPanels()

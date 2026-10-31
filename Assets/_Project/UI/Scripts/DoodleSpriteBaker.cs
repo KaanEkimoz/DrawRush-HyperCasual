@@ -149,6 +149,7 @@ namespace DrawRush.UI
             BakeDrop();
             BakeButton();
             BakeEyes();
+            BakeDeadEyes();
             BakePaper();
             BakePencilStroke();
             BakeSoundIcons();
@@ -305,6 +306,21 @@ namespace DrawRush.UI
                 if (!on) s.Stroke(new[] { new Vector2(58, 198), new Vector2(192, 62) }, 8f, Crayons[2], 2f, 5f);
                 s.Save(UiFolder + name + (on ? "_on.png" : "_off.png"));
             }
+        }
+
+        /// <summary>The hero's eyes once it is gone: two crossed-out circles.</summary>
+        private static void BakeDeadEyes()
+        {
+            var s = new Sheet(256, 128);
+            foreach (float cx in new[] { 72f, 184f })
+            {
+                Vector2 c = new(cx, 64f);
+                Disc(s, c, 46f, Color.white);
+                s.Stroke(Circle(c, 46f, 1.08f, 1f), 4.5f, Navy, 2f, cx);
+                s.Stroke(new[] { c + new Vector2(-24f, -24f), c + new Vector2(24f, 24f) }, 7f, Navy, 1.5f, cx + 1f);
+                s.Stroke(new[] { c + new Vector2(-24f, 24f), c + new Vector2(24f, -24f) }, 7f, Navy, 1.5f, cx + 2f);
+            }
+            s.Save(UiFolder + "hero_eyes_dead.png");
         }
 
         private static List<List<Vector2>> LevelLines(Transform level)
