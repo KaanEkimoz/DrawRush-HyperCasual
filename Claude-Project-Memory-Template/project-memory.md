@@ -713,3 +713,5 @@ Kaan ile interaktif polish oturumu. Hepsi master'a `--no-ff` merge + push (her c
 - Müzik ve efekt ayrı mute (solda, `SoundChannels`), müzik `Audio/Music/doodle_loop.wav` (sentez, duyulmadı).
 - Kalem izi 120 sn yerde kalıyor (`BrushTrail.pencilStroke`), oyun alanı çizgisi `ArenaOutline`, dekorlar 3D (`Art/Doodle3D/decor`).
 - Kalan: kahraman sınıfları, Shop/Settings doodle, build ve telefon testi.
+
+- Çizme eşiği %20 arttı: FreeDrawPainter.band 0.5 -> 0.6 m.
