@@ -69,6 +69,8 @@ namespace DrawRush.Enemy
         private Quaternion _spawnRot;
         private float _pressure = 1f;
         private float _frozenUntil;
+        [Tooltip("Seconds a shove (Shockwave, Bump Pet) takes to play out.")]
+        [SerializeField] private float pushSeconds = 0.4f;
         private float _slideLeft, _slideSeconds, _slideSpeed;
         private Vector3 _slideDirection;
         private bool _frozen;
@@ -206,19 +208,12 @@ namespace DrawRush.Enemy
         public void Push(Vector3 direction, float distance, bool evenHeavy = false)
         {
             if ((Unpushable && !evenHeavy) || _agent == null || !_agent.isOnNavMesh) return;
-            direction.y = 0f;
-            if (direction.sqrMagnitude < 1e-6f) return;
-            Vector3 target = transform.position + direction.normalized * distance;
-            if (NavMesh.Raycast(transform.position, target, out NavMeshHit hit, NavMesh.AllAreas)) target = hit.position;
-            _agent.Warp(target);
-            _agent.velocity = Vector3.zero;
-            _retargetTimer = 0.25f;   // a beat of stagger before it re-plans
-            if (_anim != null && !_frozen) _anim.SetTrigger(AnimatorIds.Hit);
+            Slide(direction, distance, pushSeconds);
         }
 
         /// <summary>Skid <paramref name="distance"/> m along <paramref name="direction"/> over
         /// <paramref name="seconds"/>, slowing to a stop, helpless until it ends. Unlike
-        /// <see cref="Push"/> the whole way is seen, and it moves every enemy.</summary>
+        /// <see cref="Push"/> it moves every enemy.</summary>
         public void Slide(Vector3 direction, float distance, float seconds)
         {
             direction.y = 0f;

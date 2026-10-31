@@ -207,9 +207,81 @@ namespace DrawRush.Boosters
         {
             int i = _active.FindIndex(a => a.Type == BoosterType.Shield);
             if (i < 0) return;
+            if (_bubble != null) StartCoroutine(ShieldBurst());
             End(BoosterType.Shield);
             _active.RemoveAt(i);
             Changed?.Invoke();
+        }
+
+        // The bubble bursts: it swells and fades while shards of it fly off, over a quick ring.
+        private IEnumerator ShieldBurst()
+        {
+            const int count = 12;
+            const float seconds = 0.5f;
+            Color color = config.ColorOf(BoosterType.Shield);
+            Vector3 centre = _bubble.transform.position;
+
+            GameObject pop = Instantiate(_bubble, centre, Quaternion.identity);
+            pop.SetActive(true);
+            Material popMaterial = pop.GetComponent<Renderer>().material;
+            int tint = popMaterial.HasProperty("_BaseColor") ? Shader.PropertyToID("_BaseColor") : Shader.PropertyToID("_Color");
+            Color popColor = popMaterial.GetColor(tint);
+
+            var shardMaterial = new Material(Shader.Find("Sprites/Default")) { color = color };
+            var shards = new Transform[count];
+            var velocities = new Vector3[count];
+            var spins = new Vector3[count];
+            for (int i = 0; i < count; i++)
+            {
+                var go = new GameObject("ShieldShard", typeof(MeshFilter), typeof(MeshRenderer));
+                go.GetComponent<MeshFilter>().sharedMesh = ShardMesh();
+                var r = go.GetComponent<MeshRenderer>();
+                r.sharedMaterial = shardMaterial;
+                r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                float a = (i + UnityEngine.Random.value * 0.6f) * Mathf.PI * 2f / count;
+                Vector3 outward = new(Mathf.Cos(a), 0f, Mathf.Sin(a));
+                shards[i] = go.transform;
+                shards[i].SetPositionAndRotation(centre + outward * 1.1f, UnityEngine.Random.rotation);
+                shards[i].localScale = Vector3.one * UnityEngine.Random.Range(0.35f, 0.6f);
+                velocities[i] = outward * UnityEngine.Random.Range(3.5f, 6f) + Vector3.up * UnityEngine.Random.Range(1f, 4f);
+                spins[i] = UnityEngine.Random.onUnitSphere * 720f;
+            }
+            StartCoroutine(Ring(2.4f, color));
+
+            for (float t = 0f; t < seconds; t += Time.deltaTime)
+            {
+                float k = t / seconds;
+                pop.transform.localScale = Vector3.one * Mathf.Lerp(2.2f, 3.4f, 1f - (1f - k) * (1f - k));
+                popMaterial.SetColor(tint, new Color(popColor.r, popColor.g, popColor.b, popColor.a * (1f - k) * (1f - k)));
+                for (int i = 0; i < count; i++)
+                {
+                    velocities[i] += Vector3.down * (14f * Time.deltaTime);
+                    shards[i].position += velocities[i] * Time.deltaTime;
+                    shards[i].Rotate(spins[i] * Time.deltaTime);
+                }
+                shardMaterial.color = new Color(color.r, color.g, color.b, 1f - k * k);
+                yield return null;
+            }
+
+            foreach (Transform shard in shards) Destroy(shard.gameObject);
+            Destroy(shardMaterial);
+            Destroy(popMaterial);
+            Destroy(pop);
+        }
+
+        private static Mesh _shardMesh;
+        private static Mesh ShardMesh()
+        {
+            if (_shardMesh != null) return _shardMesh;
+            _shardMesh = new Mesh
+            {
+                name = "ShieldShard",
+                vertices = new[] { new Vector3(-0.5f, -0.4f, 0f), new Vector3(0.5f, -0.3f, 0f), new Vector3(0.1f, 0.6f, 0f) },
+                colors = new[] { Color.white, Color.white, Color.white },
+                triangles = new[] { 0, 2, 1 },
+            };
+            _shardMesh.RecalculateBounds();
+            return _shardMesh;
         }
 
         private void OnDamaged() => _lastHitTime = Time.time;

@@ -24,6 +24,14 @@ namespace DrawRush.Enemy
                  "PlayerKnockback.knockbackDuration. 0 disables knockback.")]
         [SerializeField] private float knockbackForce = 9f;
 
+        [Header("Being shoved")]
+        [Tooltip("Metres a shield throws back the enemy that hit it.")]
+        [SerializeField] private float shieldRepel = 3f;
+        [Tooltip("Metres the hero shoves a frozen enemy by walking into it.")]
+        [SerializeField] private float frozenShove = 2f;
+        [Tooltip("Touching distance (m) per unit of enemy scale.")]
+        [SerializeField] private float touchPerScale = 1f;
+
         [Header("Attack cone")]
         [Tooltip("Cone length (m) per unit of enemy scale, so big enemies reach further.")]
         [SerializeField] private float reachPerScale = 1.4f;
@@ -140,8 +148,23 @@ namespace DrawRush.Enemy
         private void Update()
         {
             Transform player = GameServices.Player;
-            if (player == null || !CanHit) return;
+            if (player == null) return;
+            if (_follow != null && _follow.IsFrozen) { ShoveWhenTouched(player); return; }
+            if (!CanHit) return;
             if (InCone(transform.position, transform.forward, player.position, Reach, coneAngle * 0.5f)) Hit(player);
+        }
+
+        // A frozen enemy is just a block on the page: the hero barges it along.
+        private void ShoveWhenTouched(Transform player)
+        {
+            if (_follow.SlideAmount > 0f || (_state != null && _state.IsGameWon)) return;
+            if (GameServices.Health != null && !GameServices.Health.IsAlive) return;
+            Vector3 away = transform.position - player.position;
+            away.y = 0f;
+            float touch = touchPerScale * transform.lossyScale.x;
+            if (away.sqrMagnitude > touch * touch) return;
+            _follow.Push(away, frozenShove, evenHeavy: true);
+            Haptics.Light();
         }
 
         private void LateUpdate()
@@ -162,6 +185,14 @@ namespace DrawRush.Enemy
             // no damage, no knockback — contact does nothing at all.
             if (_playerCombat == null) _playerCombat = other.GetComponent<PlayerCombat>();
             if (_playerCombat != null && _playerCombat.IsInvulnerable) return;
+
+            // A shield takes the hit and bounces the attacker off; the hero isn't moved.
+            if (_playerCombat != null && _playerCombat.ShieldCharges > 0)
+            {
+                _playerCombat.TakeDamage(1);
+                if (_follow != null) _follow.Push(transform.position - other.position, shieldRepel, evenHeavy: true);
+                return;
+            }
 
             // Knock the player away from the enemy along the horizontal contact direction.
             if (knockbackForce > 0f)
