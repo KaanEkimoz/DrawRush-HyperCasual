@@ -715,3 +715,5 @@ Kaan ile interaktif polish oturumu. Hepsi master'a `--no-ff` merge + push (her c
 - Kalan: kahraman sınıfları, Shop/Settings doodle, build ve telefon testi.
 
 - Çizme eşiği %20 arttı: FreeDrawPainter.band 0.5 -> 0.6 m.
+
+- Düşman saldırı konisi: EnemyCombat koni içindeyse vurur (100°, 2×scale m), arkadan vurmaz, yerde kırmızı dilim görünür; düşmanlar kovalamaya devam eder.

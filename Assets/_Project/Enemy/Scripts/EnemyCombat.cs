@@ -6,14 +6,14 @@ using DrawRush.Player;
 namespace DrawRush.Enemy
 {
     /// <summary>
-    /// Damages the player on contact, plays death anim when the game is won.
-    /// Self-subscribes to <see cref="GameState.GameWonChanged"/> instead of being
+    /// Hits the player who stands inside the red cone on the ground in front of it, so the danger
+    /// you see is exactly the danger there is: from behind an enemy cannot touch you. Plays death
+    /// anim when the game is won. Self-subscribes to <see cref="GameState.GameWonChanged"/> instead of being
     /// poked by GameManager — inverts the legacy Core → Enemy dependency.
     /// </summary>
     public sealed class EnemyCombat : MonoBehaviour
     {
         [SerializeField] private Animator enemyAnim;
-        [SerializeField] private string playerTag = "Player";
 
         [Tooltip("Damage applied on touch (positive magnitude). If 0, uses GameConfig.enemyTouchDamage.")]
         [FormerlySerializedAs("damage")]
@@ -24,8 +24,39 @@ namespace DrawRush.Enemy
                  "PlayerKnockback.knockbackDuration. 0 disables knockback.")]
         [SerializeField] private float knockbackForce = 9f;
 
+        [Header("Attack cone")]
+        [Tooltip("Cone length (m) per unit of enemy scale, so big enemies reach further.")]
+        [SerializeField] private float reachPerScale = 2f;
+        [Tooltip("Full width of the cone (degrees).")]
+        [SerializeField, Range(30f, 360f)] private float coneAngle = 100f;
+        [SerializeField] private Color coneColor = new(0.92f, 0.16f, 0.16f, 0.3f);
+        [Tooltip("World height of the cone: on the page, over the drawn lines.")]
+        [SerializeField] private float coneY = 0.03f;
+
+        private const int ConeSegments = 24;
+        private const float RimStart = 0.93f;
+
         private PlayerCombat _playerCombat;
         private GameState _state;
+        private EnemyFollow _follow;
+        private Transform _cone;
+        private MeshRenderer _coneRenderer;
+        private Mesh _coneMesh;
+        private Material _coneMaterial;
+
+        private float Reach => reachPerScale * transform.lossyScale.x;
+
+        /// <summary>True when <paramref name="target"/> is within <paramref name="reach"/> m of
+        /// <paramref name="origin"/> and no more than <paramref name="halfAngle"/> degrees off
+        /// <paramref name="forward"/>, measured on the ground.</summary>
+        public static bool InCone(Vector3 origin, Vector3 forward, Vector3 target, float reach, float halfAngle)
+        {
+            Vector3 to = target - origin;
+            to.y = 0f;
+            forward.y = 0f;
+            if (to.sqrMagnitude > reach * reach) return false;
+            return to.sqrMagnitude < 1e-6f || Vector3.Angle(forward, to) <= halfAngle;
+        }
 
         private void Awake()
         {
@@ -33,6 +64,51 @@ namespace DrawRush.Enemy
             {
                 enemyAnim = GetComponentInChildren<Animator>();
             }
+            _follow = GetComponent<EnemyFollow>();
+            BuildCone();
+        }
+
+        // Not a child: the enemy tints and blinks all its renderers, and the cone must not join in.
+        private void BuildCone()
+        {
+            var go = new GameObject(name + "_Cone", typeof(MeshFilter), typeof(MeshRenderer));
+            _cone = go.transform;
+            _coneMesh = ConeMesh(coneAngle, coneColor);
+            go.GetComponent<MeshFilter>().sharedMesh = _coneMesh;
+            _coneMaterial = new Material(Shader.Find("Sprites/Default")) { name = "Auto_EnemyCone", renderQueue = 3050 };
+            _coneRenderer = go.GetComponent<MeshRenderer>();
+            _coneRenderer.sharedMaterial = _coneMaterial;
+            _coneRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            _coneRenderer.receiveShadows = false;
+            go.SetActive(false);
+        }
+
+        // A unit fan pointing along +Z, soft inside with a stronger rim. A full circle has no
+        // sides to close, every other width just ends at its two edges.
+        private static Mesh ConeMesh(float angle, Color color)
+        {
+            var vertices = new Vector3[1 + (ConeSegments + 1) * 2];
+            var colors = new Color[vertices.Length];
+            var triangles = new int[ConeSegments * 9];
+            Color soft = color, rim = new(color.r, color.g, color.b, Mathf.Min(1f, color.a * 2.2f));
+            colors[0] = soft;
+            for (int i = 0; i <= ConeSegments; i++)
+            {
+                float a = (i / (float)ConeSegments - 0.5f) * angle * Mathf.Deg2Rad;
+                Vector3 dir = new(Mathf.Sin(a), 0f, Mathf.Cos(a));
+                vertices[1 + i * 2] = dir * RimStart;
+                vertices[2 + i * 2] = dir;
+                colors[1 + i * 2] = soft;
+                colors[2 + i * 2] = rim;
+                if (i == ConeSegments) break;
+                int t = i * 9, inner = 1 + i * 2;
+                triangles[t] = 0; triangles[t + 1] = inner; triangles[t + 2] = inner + 2;
+                triangles[t + 3] = inner; triangles[t + 4] = inner + 1; triangles[t + 5] = inner + 3;
+                triangles[t + 6] = inner; triangles[t + 7] = inner + 3; triangles[t + 8] = inner + 2;
+            }
+            var mesh = new Mesh { name = "EnemyCone", vertices = vertices, colors = colors, triangles = triangles };
+            mesh.RecalculateBounds();
+            return mesh;
         }
 
         private void OnEnable()
@@ -42,9 +118,37 @@ namespace DrawRush.Enemy
             _state = GameServices.State;
         }
 
-        private void OnTriggerEnter(Collider other)
+        private void OnDisable()
         {
-            if (!other.CompareTag(playerTag)) return;
+            if (_cone != null) _cone.gameObject.SetActive(false);
+        }
+
+        private void OnDestroy()
+        {
+            if (_cone != null) Destroy(_cone.gameObject);
+            Destroy(_coneMesh);
+            Destroy(_coneMaterial);
+        }
+
+        private void Update()
+        {
+            Transform player = GameServices.Player;
+            if (player == null || _follow == null || !_follow.CanAttack) return;
+            if (InCone(transform.position, transform.forward, player.position, Reach, coneAngle * 0.5f)) Hit(player);
+        }
+
+        private void LateUpdate()
+        {
+            bool show = _follow != null && _follow.CanAttack;
+            if (_cone.gameObject.activeSelf != show) _cone.gameObject.SetActive(show);
+            if (!show) return;
+            Vector3 p = transform.position;
+            _cone.SetPositionAndRotation(new Vector3(p.x, coneY, p.z), Quaternion.Euler(0f, transform.eulerAngles.y, 0f));
+            _cone.localScale = Vector3.one * Reach;
+        }
+
+        private void Hit(Transform other)
+        {
             if (_state != null && _state.IsGameWon) return;
 
             // During the post-hit invulnerability window the player is intangible to enemies:

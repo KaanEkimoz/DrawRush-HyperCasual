@@ -123,6 +123,9 @@ namespace DrawRush.Enemy
         private DashPhase _dash;
         private float _dashTimer;
 
+        /// <summary>True while this enemy can land a hit: chasing, not frozen, asleep or done.</summary>
+        public bool CanAttack => isActiveAndEnabled && _awake && !_frozen && !_halted;
+
         /// <summary>True while a Freeze booster holds this enemy.</summary>
         public bool IsFrozen => _frozen;
 

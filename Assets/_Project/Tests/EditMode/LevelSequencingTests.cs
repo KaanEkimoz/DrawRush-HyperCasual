@@ -107,6 +107,17 @@ namespace DrawRush.Tests.EditMode
         }
 
         [Test]
+        public void EnemyCone_HitsInFrontOnly()
+        {
+            Vector3 at = new(2f, 1f, 3f);
+            Assert.IsTrue(DrawRush.Enemy.EnemyCombat.InCone(at, Vector3.forward, at + Vector3.forward, 2f, 50f));
+            Assert.IsTrue(DrawRush.Enemy.EnemyCombat.InCone(at, Vector3.forward, at + new Vector3(1f, 5f, 1f), 2f, 50f));
+            Assert.IsFalse(DrawRush.Enemy.EnemyCombat.InCone(at, Vector3.forward, at + Vector3.back, 2f, 50f));
+            Assert.IsFalse(DrawRush.Enemy.EnemyCombat.InCone(at, Vector3.forward, at + Vector3.right, 2f, 50f));
+            Assert.IsFalse(DrawRush.Enemy.EnemyCombat.InCone(at, Vector3.forward, at + Vector3.forward * 3f, 2f, 50f));
+        }
+
+        [Test]
         public void TheOpeningLevels_NeverFieldEnemies()
         {
             Assert.AreEqual(0, LevelDifficulty.OpeningBudget(played: 4, enemyFreeLevels: 5, budget: 3));
