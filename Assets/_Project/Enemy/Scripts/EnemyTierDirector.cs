@@ -98,18 +98,22 @@ namespace DrawRush.Enemy
             int number = PlayerProgress.LevelsPlayed;
             EnemyFollow boss = IsBossLevel(number) ? FieldBoss(network, enemies) : null;
             if (enemies.Count == 0) return;
+            float speed = (_fails >= failsBeforeHelp ? helpSpeed : 1f) * TierSpeed(number);
+            if (boss != null)
+            {
+                // A boss fight is a duel: the Giant Eraser is the only enemy in its level.
+                foreach (EnemyFollow e in enemies)
+                    if (e != boss) e.gameObject.SetActive(false);
+                boss.ApplyVariant(EnemyVariant.Boss, bossSpeed * speed, bossScale, true, null);
+                var hud = FindFirstObjectByType<DrawRush.Boosters.BoosterHud>();
+                if (hud != null) hud.Toast("GIANT ERASER!", "Keep moving, it wipes fresh paint", new Color(0.9f, 0.25f, 0.4f));
+                return;
+            }
+
             Plan(number, out int sprinters, out int tanks, out int eaters, out int dashers, out bool intro);
             if (intro)
                 for (int i = 1; i < enemies.Count; i++) enemies[i].gameObject.SetActive(false);   // the new type, alone
 
-            float speed = (_fails >= failsBeforeHelp ? helpSpeed : 1f) * TierSpeed(number);
-            if (boss != null)
-            {
-                enemies.Remove(boss);
-                boss.ApplyVariant(EnemyVariant.Boss, bossSpeed * speed, bossScale, true, null);
-                var hud = FindFirstObjectByType<DrawRush.Boosters.BoosterHud>();
-                if (hud != null) hud.Toast("GIANT ERASER!", "Keep moving, it wipes fresh paint", new Color(0.9f, 0.25f, 0.4f));
-            }
             int k = 0;
             k = Dress(enemies, k, tanks, EnemyVariant.Tank, tankSpeed * speed, tankScale, true, tankColor);
             k = Dress(enemies, k, dashers, EnemyVariant.Dasher, speed, 1f, false, dasherColor);
