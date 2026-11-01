@@ -51,6 +51,9 @@ namespace DrawRush.Player
         /// <summary>Speed multiple from boosters (1 = none).</summary>
         public float SpeedMultiplier { get; set; } = 1f;
 
+        /// <summary>Speed multiple from the shop's Speed stat (1 = none).</summary>
+        public float StatSpeedMultiplier { get; set; } = 1f;
+
         /// <summary>Speed multiple from the pencil's length: shorter runs faster (1 = full height).</summary>
         public float HeightSpeedMultiplier { get; set; } = 1f;
 
@@ -132,7 +135,7 @@ namespace DrawRush.Player
                 if (Vector3.Angle(_lastDirection, heading) > sharp) { _movingTime = 0f; _lastDirection = heading; }
                 _movingTime += Time.deltaTime;
                 _lastDirection = Vector3.Slerp(_lastDirection, heading, 1f - Mathf.Exp(-10f * Time.deltaTime));
-                target = heading * (speed * SpeedFactor(_movingTime) * SpeedMultiplier * HeightSpeedMultiplier * HazardMultiplier);
+                target = heading * (speed * SpeedFactor(_movingTime) * SpeedMultiplier * StatSpeedMultiplier * HeightSpeedMultiplier * HazardMultiplier);
 
                 // Only the model's facing is smoothed; the velocity below follows the stick.
                 float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref _turnSmoothVelocity, ResolveTurnSmoothTime());

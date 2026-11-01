@@ -95,6 +95,25 @@ namespace DrawRush.Drawing
         /// <summary>Confirm all pending paint.</summary>
         public void ConfirmAll() => ConfirmPendingOlderThan(float.PositiveInfinity);
 
+        /// <summary>Wipe all paint inside [<paramref name="t0"/>, <paramref name="t1"/>], kept paint
+        /// included (the eraser on an unfinished edge). True if any was lost.</summary>
+        public bool Erase(float t0, float t1)
+        {
+            Vector2 cut = Clamp(t0, t1);
+            bool lost = ErasePending(cut.x, cut.y);
+            for (int i = _confirmed.Count - 1; i >= 0; i--)
+            {
+                Vector2 s = _confirmed[i];
+                if (s.y <= cut.x || s.x >= cut.y) continue;
+                _confirmed.RemoveAt(i);
+                if (s.y > cut.y) _confirmed.Insert(i, new Vector2(cut.y, s.y));
+                if (s.x < cut.x) _confirmed.Insert(i, new Vector2(s.x, cut.x));
+                lost = true;
+            }
+            if (lost) _unionDirty = true;
+            return lost;
+        }
+
         /// <summary>Wipe the not-yet-confirmed paint inside [<paramref name="t0"/>, <paramref name="t1"/>]
         /// only (an Eater walking over it); pending stretches outside survive. True if any was lost.</summary>
         public bool ErasePending(float t0, float t1)

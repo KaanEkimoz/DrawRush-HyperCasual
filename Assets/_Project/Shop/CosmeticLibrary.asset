@@ -21,31 +21,49 @@ MonoBehaviour:
     pencilTexture: {fileID: 2800000, guid: 2f7280a57fca949788350f0ca2dc0339, type: 3}
   - id: crimson
     displayName: Crimson
-    price: 40
+    price: 60
     color: {r: 0.9, g: 0.15, b: 0.15, a: 1}
     preview: {fileID: 21300000, guid: f4e75a9d6b85b488a9c3489fe392ecb2, type: 3}
     pencilTexture: {fileID: 2800000, guid: 236f0aa6a4ddc455c9bb704a95d9b6af, type: 3}
   - id: lime
     displayName: Lime
-    price: 60
+    price: 90
     color: {r: 0.45, g: 0.85, b: 0.2, a: 1}
     preview: {fileID: 21300000, guid: 2c5bfa37b33854141aae3aae53a7b9b1, type: 3}
     pencilTexture: {fileID: 2800000, guid: 6b07e3d8891e74bcc8e12ed8ebb83b69, type: 3}
   - id: grape
     displayName: Grape
-    price: 90
+    price: 130
     color: {r: 0.58, g: 0.3, b: 0.9, a: 1}
     preview: {fileID: 21300000, guid: d5f2daaaa56a24e4cb53815df39fd693, type: 3}
     pencilTexture: {fileID: 2800000, guid: abe44d9317ce94cf09161ecc82c2be8a, type: 3}
   - id: sunset
     displayName: Sunset
-    price: 130
+    price: 180
     color: {r: 1, g: 0.55, b: 0.1, a: 1}
     preview: {fileID: 21300000, guid: 9b009b0ae2edb4744af34d5e31f73b6e, type: 3}
     pencilTexture: {fileID: 2800000, guid: 13a2898d205d84b519fb60a7aa322bd7, type: 3}
+  - id: ballpoint
+    displayName: Ballpoint
+    price: 240
+    color: {r: 0.1, g: 0.3, b: 0.85, a: 1}
+    preview: {fileID: 21300000, guid: 93fc67b48f7be4532b0cc8c9c2eee772, type: 3}
+    pencilTexture: {fileID: 2800000, guid: 7fcdd31e6b2e14f92873b5b248cc9aac, type: 3}
+  - id: highlighter
+    displayName: Highlighter
+    price: 320
+    color: {r: 0.72, g: 1, b: 0.15, a: 1}
+    preview: {fileID: 21300000, guid: f9866757ac1aa4564b13777c3c0f70e0, type: 3}
+    pencilTexture: {fileID: 2800000, guid: 2e35a7453b8d9449abee94cd010fa647, type: 3}
   - id: gold
     displayName: Gold
-    price: 200
+    price: 420
     color: {r: 1, g: 0.82, b: 0.15, a: 1}
     preview: {fileID: 21300000, guid: b2819226b5c1a437cbdd3b659b2e645f, type: 3}
     pencilTexture: {fileID: 2800000, guid: 7d325bdbcbb8f4c13b37eb8f5d6eb2a7, type: 3}
+  - id: fountain
+    displayName: Fountain Pen
+    price: 550
+    color: {r: 0.95, g: 0.75, b: 0.25, a: 1}
+    preview: {fileID: 21300000, guid: 0c5030f2ed7b9488f86e4e4215fb56fb, type: 3}
+    pencilTexture: {fileID: 2800000, guid: 975819bb7781e4873bee6918a81c2b78, type: 3}

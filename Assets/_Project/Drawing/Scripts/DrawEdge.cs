@@ -108,6 +108,13 @@ namespace DrawRush.Drawing
         }
 
         /// <summary>Wipe pending paint within [t0, t1] only. True if any was lost.</summary>
+        public bool Erase(float t0, float t1)
+        {
+            bool lost = Fill.Erase(t0, t1);
+            AfterChange(lost);
+            return lost;
+        }
+
         public bool ErasePending(float t0, float t1)
         {
             bool lost = Fill.ErasePending(t0, t1);

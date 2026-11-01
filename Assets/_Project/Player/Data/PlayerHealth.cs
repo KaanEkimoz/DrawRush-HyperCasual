@@ -26,12 +26,15 @@ namespace DrawRush.Player
         [NonSerialized] private int _current;
 
         public int Current => _current;
-        public int StartingValue => startingValue;
+        public int StartingValue => startingValue + BonusMax;
+
+        /// <summary>Extra health from the shop's Health stat, applied on the next reset.</summary>
+        [field: NonSerialized] public int BonusMax { get; set; }
         public bool IsAlive => _current > 0;
 
         public void ResetToStarting()
         {
-            _current = startingValue;
+            _current = StartingValue;
             Changed?.Invoke(_current);
         }
 
@@ -53,7 +56,7 @@ namespace DrawRush.Player
         public void Heal(int amount)
         {
             if (amount <= 0 || _current <= 0) return;
-            _current = Mathf.Min(startingValue, _current + amount);
+            _current = Mathf.Min(StartingValue, _current + amount);
             Changed?.Invoke(_current);
         }
     }

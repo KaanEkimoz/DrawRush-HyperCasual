@@ -47,6 +47,9 @@ namespace DrawRush.Core
                  "for testing a single level. Ignored in builds (always uses the normal flow).")]
         [SerializeField] private bool autoActivateOnStart = true;
 
+        [Tooltip("Picks the desk paper of each level. Optional.")]
+        [SerializeField] private DeskThemes deskThemes;
+
         private int _currentIndex = -1;
         private GameState _boundState;
         private HudPanels _hud;
@@ -178,10 +181,16 @@ namespace DrawRush.Core
             // survive into the next level and freeze the player there permanently.
             GameState state = gameState != null ? gameState : GameServices.State;
             if (state != null) state.Reset();
-            if (playerHealth != null) playerHealth.ResetToStarting();
+            if (playerHealth != null)
+            {
+                playerHealth.BonusMax = StatUpgrades.BonusHealth;
+                playerHealth.ResetToStarting();
+            }
 
             UpdateLevelLabel(index);
             MovePlayerToSpawn(activeLevel);
+            ClearLeftoverEffects();
+            if (deskThemes != null) deskThemes.Apply(activeLevel, PlayerProgress.LevelsPlayed);
 
             // Freeze + 3-2-1 before the player can move (every activation: start/next/restart).
             if (countdown == null) countdown = FindFirstObjectByType<LevelStartCountdown>();
@@ -204,6 +213,14 @@ namespace DrawRush.Core
                 : "Level " + Mathf.Max(1, PlayerProgress.LevelsPlayed));
         }
 
+        // The countdown runs at timeScale 0: anything left of the last level (confetti, poofs, the
+        // pencil trail) would hang there frozen and only move on once play starts.
+        private static void ClearLeftoverEffects()
+        {
+            foreach (ParticleSystem p in FindObjectsByType<ParticleSystem>(FindObjectsInactive.Exclude, FindObjectsSortMode.None)) p.Clear(false);
+            foreach (TrailRenderer t in FindObjectsByType<TrailRenderer>(FindObjectsInactive.Exclude, FindObjectsSortMode.None)) t.Clear();
+        }
+
         private void MovePlayerToSpawn(Transform activeLevel)
         {
             Transform playerTf = player != null ? player : GameServices.Player;
@@ -218,6 +235,9 @@ namespace DrawRush.Core
                 playerTf.SetPositionAndRotation(spawn.position, spawn.rotation);
                 if (controller != null) controller.enabled = true;
             }
+
+            var movement = playerTf.GetComponent<ThirdPersonMovement>();
+            if (movement != null) movement.StatSpeedMultiplier = StatUpgrades.SpeedMultiplier;
 
             // Wipe any in-progress chain/trail so the new level starts clean.
             playerTf.GetComponent<PlayerInteract>()?.ResetChain();

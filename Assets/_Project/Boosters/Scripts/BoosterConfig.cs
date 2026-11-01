@@ -127,7 +127,7 @@ namespace DrawRush.Boosters
                 BoosterType.Shield => "Blocks the next hit",
                 BoosterType.Freeze => "Enemies freeze in place",
                 BoosterType.Speed => "You run faster",
-                BoosterType.Ink => "Your pencil grows back",
+                BoosterType.Ink => "+1 health",
                 _ => "Blasts nearby enemies away",
             };
         }

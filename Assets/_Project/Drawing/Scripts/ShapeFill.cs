@@ -114,6 +114,15 @@ namespace DrawRush.Drawing
             return mesh;
         }
 
+        /// <summary>Ground area enclosed by <paramref name="outline"/>.</summary>
+        public static float Area(List<Vector3> outline)
+        {
+            float a = 0f;
+            for (int i = 0, j = outline.Count - 1; i < outline.Count; j = i++)
+                a += outline[j].x * outline[i].z - outline[i].x * outline[j].z;
+            return Mathf.Abs(a) * 0.5f;
+        }
+
         private static float SignedArea(List<Vector2> p)
         {
             float a = 0f;

@@ -202,6 +202,9 @@ namespace DrawRush.Enemy
             SetColor(frozenColor);
         }
 
+        /// <summary>End the freeze now; an enemy mid-slide finishes the skid first.</summary>
+        public void Thaw() => _frozenUntil = 0f;
+
         /// <summary>Shove this enemy <paramref name="distance"/> m along <paramref name="direction"/>
         /// (ground plane), staying on the NavMesh. Heavy enemies ignore it unless
         /// <paramref name="evenHeavy"/> (a shockwave moves everything).</summary>
@@ -293,18 +296,18 @@ namespace DrawRush.Enemy
             }
         }
 
-        // Eater: wipes any not-yet-kept paint it walks over.
+        // Eater: wipes the paint of any unfinished edge in its range.
         private void EatPaint(Transform player)
         {
             var painter = player.GetComponent<DrawRush.Drawing.FreeDrawPainter>();
-            if (painter != null) painter.ErasePendingNear(transform.position, Variant == EnemyVariant.Boss ? eatRadius * bossEatScale : eatRadius);
+            if (painter != null) painter.EraseNear(transform.position, Variant == EnemyVariant.Boss ? eatRadius * bossEatScale : eatRadius);
         }
 
         [Tooltip("Boss paint-wipe radius as a multiple of the Eater's.")]
         [SerializeField] private float bossEatScale = 3f;
 
         [Header("Eater")]
-        [Tooltip("Pending paint within this distance (m) of an Eater is wiped.")]
+        [Tooltip("Paint on unfinished edges within this distance (m) of an Eater is wiped.")]
         [SerializeField] private float eatRadius = 0.6f;
 
         private Renderer[] _renderers;

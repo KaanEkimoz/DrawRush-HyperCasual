@@ -56,9 +56,12 @@ namespace DrawRush.Drawing
         [Tooltip("Band multiple while the stall magnet is on.")]
         [SerializeField] private float stallBandScale = 1.6f;
 
-        [Tooltip("Pending paint this close (m) to the player cannot be eaten: an Eater only eats the " +
+        [Tooltip("Paint this close (m) to the player cannot be erased: an Eater only eats the " +
                  "trail left behind, so one hugging the player cannot stall the level.")]
         [SerializeField] private float brushProtectRadius = 1f;
+
+        [Tooltip("Ground speed (m/s) below which the player counts as standing still.")]
+        [SerializeField] private float movingSpeed = 0.2f;
 
         [SerializeField] private PlayerCombat combat;
 
@@ -84,12 +87,14 @@ namespace DrawRush.Drawing
         public bool IsPainting { get; private set; }
 
         /// <summary>Band currently in effect for straight edges (m).</summary>
-        public float CurrentBand => band * BandBoost * (_stallMagnet ? stallBandScale : 1f);
+        public float CurrentBand => band * BandBoost * _statBand * (_stallMagnet ? stallBandScale : 1f);
 
         private EdgeNetwork _network;
         private int _generation = -1;
         private readonly Dictionary<DrawEdge, float> _lastT = new();
         private float _lastPaintTime;
+        private float _statBand = 1f;
+        private Vector3 _lastPosition;
         private bool _stallMagnet, _sweeping, _highlighting;
         private Coroutine _sweep;
 
@@ -120,6 +125,7 @@ namespace DrawRush.Drawing
             _stallMagnet = false;
             _highlighting = false;
             _lastPaintTime = Time.time;
+            _statBand = StatUpgrades.DrawAreaMultiplier;
             Coverage = -1f;   // force the event so listeners reset even from 0
             SetCoverage(0f);
             LevelBound?.Invoke(network);
@@ -139,6 +145,8 @@ namespace DrawRush.Drawing
             if (_sweeping || (state != null && state.IsGameWon) || _network.IsComplete) return;
 
             Vector3 p = transform.position;
+            Vector3 step = p - _lastPosition; step.y = 0f;
+            _lastPosition = p;
             float now = Time.time;
             bool painted = false;
             IReadOnlyList<DrawEdge> edges = _network.Edges;
@@ -177,8 +185,9 @@ namespace DrawRush.Drawing
                 }
             }
 
-            IsPainting = painted;
-            if (painted) _lastPaintTime = now;
+            // Standing still on the line lays a dot, but that is not drawing: no sound, no glow.
+            IsPainting = painted && step.magnitude / Time.fixedDeltaTime >= movingSpeed;
+            if (IsPainting) _lastPaintTime = now;
             float cov = _network.Coverage;
             SetCoverage(cov);
 
@@ -207,23 +216,30 @@ namespace DrawRush.Drawing
             _sweep = null;
         }
 
-        /// <summary>Wipe not-yet-kept paint within <paramref name="radius"/> m of
-        /// <paramref name="worldPos"/> (a paint-eating enemy walking over it).</summary>
-        public void ErasePendingNear(Vector3 worldPos, float radius)
+        /// <summary>Wipe the paint of every unfinished edge within <paramref name="radius"/> m of
+        /// <paramref name="worldPos"/>. Finished edges are safe, and so is the stretch right under
+        /// the brush, so an eraser hugging the player cannot stall the level.</summary>
+        public void EraseNear(Vector3 worldPos, float radius)
         {
             if (_network == null || _sweeping) return;
-            Vector3 toPlayer = worldPos - transform.position; toPlayer.y = 0f;
-            if (toPlayer.magnitude < brushProtectRadius) return;   // wet paint under the brush is safe
             bool lost = false;
             foreach (DrawEdge e in _network.Edges)
             {
-                if (e.IsComplete || !e.Fill.HasPending) continue;
+                if (e.IsComplete) continue;
                 float len = e.Length;
                 if (len < 0.001f) continue;
                 float t = e.ClosestT(worldPos, out float dist);
                 if (dist > radius) continue;
                 float half = Mathf.Sqrt(radius * radius - dist * dist) / len;
-                lost |= e.ErasePending(t - half, t + half);
+                float from = t - half, to = t + half;
+                float brush = e.ClosestT(transform.position, out float brushDist);
+                if (brushDist < brushProtectRadius)
+                {
+                    float keep = brushProtectRadius / len;
+                    if (brush >= t) to = Mathf.Min(to, brush - keep);
+                    else from = Mathf.Max(from, brush + keep);
+                }
+                if (to > from) lost |= e.Erase(from, to);
             }
             if (!lost) return;
             SetCoverage(_network.Coverage);

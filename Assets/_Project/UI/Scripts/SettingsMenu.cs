@@ -7,19 +7,18 @@ namespace DrawRush.UI
 {
     /// <summary>
     /// A small settings menu for the two player-facing control options the redesign research
-    /// asked for: vibration on/off and floating vs fixed joystick. A round menu button sits under
-    /// the mute button; the panel pauses the game while open, like the shop. Built at runtime so
+    /// asked for: vibration on/off and floating vs fixed joystick. A round gear button sits under
+    /// the music button; the panel pauses the game while open, like the shop. Built at runtime so
     /// it needs no authored prefab.
     /// </summary>
     [RequireComponent(typeof(RectTransform))]
     public sealed class SettingsMenu : MonoBehaviour
     {
         [SerializeField] private TMP_FontAsset font;
-        [Tooltip("Menu button position from the top-right corner (canvas units), under the mute button.")]
-        [SerializeField] private Vector2 buttonOffset = new(-34f, -290f);
-        [SerializeField] private float buttonSize = 104f;
-        [SerializeField] private Color buttonColor = new(1f, 1f, 1f, 0.9f);
-        [SerializeField] private Color iconColor = new(0.2f, 0.22f, 0.3f, 1f);
+        [Tooltip("Gear button position from the top-left corner (canvas units), under the music button.")]
+        [SerializeField] private Vector2 buttonOffset = new(30f, -286f);
+        [SerializeField] private float buttonSize = 110f;
+        [SerializeField] private Sprite buttonIcon;
         [SerializeField] private Color cardColor = new(0.16f, 0.17f, 0.24f, 0.97f);
         [SerializeField] private Color onColor = new(0.25f, 0.8f, 0.4f, 1f);
         [SerializeField] private Color offColor = new(0.35f, 0.35f, 0.4f, 1f);
@@ -41,25 +40,13 @@ namespace DrawRush.UI
         {
             var go = NewUi("SettingsButton", transform, typeof(Image), typeof(Button));
             var rt = (RectTransform)go.transform;
-            rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(1f, 1f);
+            rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0f, 1f);
             rt.sizeDelta = Vector2.one * buttonSize;
             rt.anchoredPosition = buttonOffset;
             var img = go.GetComponent<Image>();
-            img.sprite = Circle(64);
-            img.color = buttonColor;
+            img.sprite = buttonIcon != null ? buttonIcon : Circle(64);
             go.GetComponent<Button>().onClick.AddListener(Open);
-            // A three-bar "menu" icon: no glyph needed from the font.
-            for (int i = 0; i < 3; i++)
-            {
-                var bar = NewUi("Bar" + i, go.transform, typeof(Image));
-                var brt = (RectTransform)bar.transform;
-                brt.anchorMin = brt.anchorMax = new Vector2(0.5f, 0.5f);
-                brt.sizeDelta = new Vector2(buttonSize * 0.46f, buttonSize * 0.08f);
-                brt.anchoredPosition = new Vector2(0f, (1 - i) * buttonSize * 0.16f);
-                var bi = bar.GetComponent<Image>();
-                bi.color = iconColor;
-                bi.raycastTarget = false;
-            }
+            go.AddComponent<ButtonJuice>();
         }
 
         private void BuildPanel()

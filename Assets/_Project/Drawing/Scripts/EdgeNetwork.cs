@@ -506,8 +506,21 @@ namespace DrawRush.Drawing
                 f.Renderer.sharedMaterial = _fillMaterial;
                 f.Renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 f.Renderer.receiveShadows = false;
+                // Under every line, and small over big whatever was finished first: an emoji's
+                // face must not cover the eyes and mouth inside it.
+                f.Renderer.sortingOrder = FillSortBase + Mathf.Clamp(FillSizeRank(f), 0, 99);
                 SetFillAlpha(f, 0f);
             }
+        }
+
+        private const int FillSortBase = -200;
+
+        private int FillSizeRank(Fill fill)
+        {
+            float size = ShapeFill.Area(fill.Loop.Points);
+            int rank = 0;
+            foreach (Fill other in _fills) if (ShapeFill.Area(other.Loop.Points) > size) rank++;
+            return rank;
         }
 
         private void SetFillAlpha(Fill f, float alpha)

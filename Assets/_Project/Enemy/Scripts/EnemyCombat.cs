@@ -164,6 +164,7 @@ namespace DrawRush.Enemy
             float touch = touchPerScale * transform.lossyScale.x;
             if (away.sqrMagnitude > touch * touch) return;
             _follow.Push(away, frozenShove, evenHeavy: true);
+            _follow.Thaw();   // the shove breaks the ice: it skids, then comes back for you
             Haptics.Light();
         }
 

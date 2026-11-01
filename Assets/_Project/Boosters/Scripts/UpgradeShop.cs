@@ -7,15 +7,21 @@ using UnityEngine.UI;
 namespace DrawRush.Boosters
 {
     /// <summary>
-    /// The upgrade half of the coin shop, under the skin grid: one row per booster (longer effect
-    /// per level) plus the bump pet (buy, then faster and farther). Rows are built at runtime and
-    /// refresh on every purchase or coin change, greying out what the player cannot afford yet.
+    /// The upgrade half of the coin shop, under the skin grid: one row per hero stat. The booster
+    /// and helper rows are parked behind <see cref="showBoosters"/> for now; what was already bought
+    /// keeps working. Rows are built at runtime and refresh on every purchase or coin change,
+    /// greying out what the player cannot afford yet.
     /// </summary>
     [RequireComponent(typeof(RectTransform))]
     public sealed class UpgradeShop : MonoBehaviour
     {
         [SerializeField] private BoosterConfig config;
         [SerializeField] private TMP_FontAsset font;
+        [Tooltip("Also list the booster, pet and buddy upgrades under the stats.")]
+        [SerializeField] private bool showBoosters;
+        [SerializeField] private Color speedColor = new(1f, 0.75f, 0.2f, 1f);
+        [SerializeField] private Color healthColor = new(0.95f, 0.35f, 0.35f, 1f);
+        [SerializeField] private Color drawAreaColor = new(0.35f, 0.7f, 1f, 1f);
         [Tooltip("List area inside the shop panel, from its centre (canvas units): between the " +
                  "skin grid (bottom at -250) and the Close button (top near -770).")]
         [SerializeField] private Vector2 areaPosition = new(0f, -470f);
@@ -40,6 +46,11 @@ namespace DrawRush.Boosters
             _area.sizeDelta = areaSize;
             _area.anchoredPosition = areaPosition;
 
+            AddStat("Speed", speedColor, PlayerStat.Speed);
+            AddStat("Health", healthColor, PlayerStat.Health);
+            AddStat("Draw Area", drawAreaColor, PlayerStat.DrawArea);
+            if (!showBoosters) return;
+
             foreach (BoosterType t in new[] { BoosterType.Shield, BoosterType.Freeze, BoosterType.Speed, BoosterType.Shockwave })
             {
                 BoosterType type = t;
@@ -55,8 +66,12 @@ namespace DrawRush.Boosters
                 () => BoosterUpgrades.BuddyNextPrice, BoosterUpgrades.TryUpgradeBuddy);
         }
 
+        private void AddStat(string title, Color accent, PlayerStat stat) =>
+            AddRow(title, accent, () => StatUpgrades.Describe(stat), () => StatUpgrades.NextPrice(stat), () => StatUpgrades.TryUpgrade(stat));
+
         private void OnEnable()
         {
+            StatUpgrades.Changed += Refresh;
             BoosterUpgrades.Changed += Refresh;
             PlayerProgress.CoinsChanged += OnCoins;
             Refresh();
@@ -64,6 +79,7 @@ namespace DrawRush.Boosters
 
         private void OnDisable()
         {
+            StatUpgrades.Changed -= Refresh;
             BoosterUpgrades.Changed -= Refresh;
             PlayerProgress.CoinsChanged -= OnCoins;
         }

@@ -180,5 +180,36 @@ namespace DrawRush.Tests.EditMode
                 Object.DestroyImmediate(go);
             }
         }
+
+        [Test]
+        public void BonusMax_RaisesTheCapOnTheNextReset()
+        {
+            _health.BonusMax = 2;
+            _health.ResetToStarting();
+            Assert.AreEqual(5, _health.Current);
+            _health.TakeDamage(1);
+            _health.Heal(3);
+            Assert.AreEqual(5, _health.Current);
+        }
+
+        [Test]
+        public void EdgeFill_EraseCutsKeptPaintAndLeavesTheRest()
+        {
+            var fill = new DrawRush.Drawing.EdgeFill();
+            fill.PaintRange(0f, 0.6f);
+            fill.PaintPending(0.6f, 0.8f, 0f);
+            Assert.IsTrue(fill.Erase(0.2f, 0.7f));
+            Assert.AreEqual(0.3f, fill.Coverage, 0.001f);
+            Assert.AreEqual(2, fill.Spans.Count);
+            Assert.IsFalse(fill.Erase(0.3f, 0.4f));
+        }
+
+        [Test]
+        public void DeskThemes_CycleThroughThePapers()
+        {
+            Assert.AreEqual(0, DrawRush.Core.DeskThemes.PaperIndex(0, 8));
+            Assert.AreEqual(7, DrawRush.Core.DeskThemes.PaperIndex(7, 8));
+            Assert.AreEqual(1, DrawRush.Core.DeskThemes.PaperIndex(9, 8));
+        }
     }
 }

@@ -49,6 +49,8 @@ namespace DrawRush.Drawing
         private Transform _glow;
         private Material _glowMaterial;
         private float _glowAlpha;
+        private GameState _state;
+        private DrawRush.Player.PlayerHealth _health;
 
         private void Awake()
         {
@@ -113,8 +115,25 @@ namespace DrawRush.Drawing
             _trail.widthMultiplier = width * (_boostColor.HasValue ? boostWidthScale : 1f);
         }
 
-        private void OnEnable() => _painter.LevelBound += OnLevelBound;
-        private void OnDisable() => _painter.LevelBound -= OnLevelBound;
+        private void OnEnable()
+        {
+            _painter.LevelBound += OnLevelBound;
+            _state = GameServices.State;
+            _health = GameServices.Health;
+            if (_state != null) _state.GameWonChanged += OnGameWonChanged;
+            if (_health != null) _health.Died += ClearTrail;
+        }
+
+        private void OnDisable()
+        {
+            _painter.LevelBound -= OnLevelBound;
+            if (_state != null) _state.GameWonChanged -= OnGameWonChanged;
+            if (_health != null) _health.Died -= ClearTrail;
+        }
+
+        // The stroke belongs to the run: it goes when the level ends, not when the next one starts.
+        private void OnGameWonChanged(bool won) { if (won) ClearTrail(); }
+        private void ClearTrail() { _trail.emitting = false; _trail.Clear(); }
 
         private void OnDestroy()
         {
@@ -168,7 +187,8 @@ namespace DrawRush.Drawing
             _lastPos = p;
 
             var state = GameServices.State;
-            bool playing = _painter.Network != null && (state == null || !state.IsGameWon);
+            bool playing = _painter.Network != null && (state == null || !state.IsGameWon)
+                           && (_health == null || _health.IsAlive);
             _trail.emitting = playing && moving;
             _trail.transform.position = OnGround(p);
             UpdateGlow(p, playing && _painter.IsPainting);

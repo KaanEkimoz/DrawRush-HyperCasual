@@ -279,6 +279,79 @@ namespace DrawRush.UI
             s.Save(UiFolder + "decor_coffee.png");
         }
 
+        private enum PaperRule { Lined, Grid, Dots, Plain }
+
+        /// <summary>The desk papers levels cycle through (see DeskThemes). All light, so every
+        /// paint colour and ghost line stays readable.</summary>
+        [MenuItem("DrawRush/Bake Desk Papers")]
+        public static void BakeDeskPapers()
+        {
+            BakeThemePaper("paper_grid", new Color(0.97f, 0.975f, 0.98f), new Color(0.62f, 0.76f, 0.9f), PaperRule.Grid);
+            BakeThemePaper("paper_dots", new Color(0.985f, 0.95f, 0.87f), new Color(0.72f, 0.62f, 0.5f), PaperRule.Dots);
+            BakeThemePaper("paper_pink", new Color(0.99f, 0.9f, 0.92f), new Color(0.93f, 0.62f, 0.72f), PaperRule.Lined);
+            BakeThemePaper("paper_mint", new Color(0.87f, 0.97f, 0.91f), new Color(0.55f, 0.82f, 0.7f), PaperRule.Grid);
+            BakeThemePaper("paper_legal", new Color(1f, 0.96f, 0.68f), new Color(0.6f, 0.72f, 0.88f), PaperRule.Lined);
+            BakeThemePaper("paper_sky", new Color(0.84f, 0.92f, 1f), new Color(0.58f, 0.72f, 0.92f), PaperRule.Dots);
+            BakeThemePaper("paper_kraft", new Color(0.87f, 0.76f, 0.6f), Color.white, PaperRule.Plain);
+            AssetDatabase.Refresh();
+        }
+
+        // Same fibre as the ruled page; every pattern wraps at the edge so the tile has no seam.
+        private static void BakeThemePaper(string name, Color page, Color rule, PaperRule kind)
+        {
+            const int S = 1024, Rules = 6;
+            float cell = S / (float)Rules;
+            var s = new Sheet(S, S);
+            for (int y = 0; y < S; y++)
+            for (int x = 0; x < S; x++)
+            {
+                float u = x * Mathf.PI * 2f / S, v = y * Mathf.PI * 2f / S;
+                float fibre = Mathf.Sin(u * 7f + Mathf.Sin(v * 5f) * 2f) * Mathf.Sin(v * 11f + Mathf.Sin(u * 3f) * 2f)
+                            + Mathf.Sin(u * 23f + v * 17f) * 0.5f;
+                Color c = page * (1f + fibre * (kind == PaperRule.Plain ? 0.03f : 0.006f));
+                float toX = Mathf.Abs(Mathf.Repeat(x, cell) - cell * 0.5f), toY = Mathf.Abs(Mathf.Repeat(y, cell) - cell * 0.5f);
+                float ink = kind switch
+                {
+                    PaperRule.Lined => Mathf.Clamp01(2.2f - toY),
+                    PaperRule.Grid => Mathf.Max(Mathf.Clamp01(2.2f - toX), Mathf.Clamp01(2.2f - toY)),
+                    PaperRule.Dots => Mathf.Clamp01(6f - new Vector2(toX, toY).magnitude),
+                    _ => 0f,
+                };
+                c = Color.Lerp(c, rule, ink * 0.75f);
+                c.a = 1f;
+                s.Px[y * S + x] = c;
+            }
+            s.Save("Assets/_Project/Art/Doodle/" + name + ".png");
+        }
+
+        /// <summary>The settings gear, drawn like the sound and music buttons.</summary>
+        [MenuItem("DrawRush/Bake Settings Icon")]
+        public static void BakeSettingsIcon()
+        {
+            const int Teeth = 8;
+            var s = new Sheet(256, 256);
+            Vector2 c = new(124f, 132f);
+            var disc = new bool[256 * 256];
+            for (int i = 0; i < disc.Length; i++) disc[i] = (new Vector2(i % 256, i / 256) - c).magnitude < 104f;
+            for (int i = 0; i < disc.Length; i++)
+                if ((new Vector2(i % 256, i / 256) - c - new Vector2(6f, -8f)).magnitude < 110f) s.Blend(i % 256, i / 256, Navy, 1f);
+            for (int i = 0; i < disc.Length; i++) if (disc[i]) s.Blend(i % 256, i / 256, Color.white, 1f);
+            Hatch(s, disc, Crayons[0], 35f, 11f, 5f, 2f);
+            s.Stroke(Circle(c, 106f, 1.04f, 1f), 5f, Navy, 3f, 8f);
+
+            var gear = new List<Vector2>();
+            for (int i = 0; i <= Teeth * 4; i++)
+            {
+                float a = i / (Teeth * 4f) * Mathf.PI * 2f + 0.2f;
+                float r = (i + 1) % 4 < 2 ? 76f : 54f;
+                gear.Add(c + new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * r);
+            }
+            s.Stroke(gear, 6f, Navy, 1.2f, 3f);
+            s.Stroke(Circle(c, 22f, 1.05f, 0.5f), 6f, Navy, 1.2f, 4f);
+            s.Save(UiFolder + "settings.png");
+            AssetDatabase.Refresh();
+        }
+
         private static void BakeSoundIcons()
         {
             var speaker = new List<List<Vector2>>

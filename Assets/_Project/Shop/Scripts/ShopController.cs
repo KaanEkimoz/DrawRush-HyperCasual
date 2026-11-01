@@ -140,7 +140,7 @@ namespace DrawRush.Shop
                 charImg.sprite = item.preview;
                 charImg.color = Color.white;
                 chrt.anchoredPosition = new Vector2(0f, -2f);
-                chrt.sizeDelta = new Vector2(cellSize * 0.70f, cellSize * 0.70f);
+                chrt.sizeDelta = new Vector2(cellSize * 0.76f, cellSize * 0.76f);
             }
             else
             {
