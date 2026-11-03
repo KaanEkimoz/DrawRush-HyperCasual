@@ -817,11 +817,12 @@ MonoBehaviour:
   bossTurnScale: 0.8
   voiceRange: 8
   voiceInterval: {x: 1.5, y: 3.5}
-  dashInterval: 4
-  dashWindUp: 0.6
-  dashDuration: 0.7
-  dashSpeedMultiplier: 3
-  dashRange: 6
+  lungeWindUp: 0.56
+  lungeTime: 0.4
+  lungeRest: 0.42
+  lungeDistance: 4.5
+  lungeOvershoot: 1.2
+  lungeSoundRange: 9
   windUpColor: {r: 1, g: 1, b: 1, a: 1}
   flankLead: 1.4
   flankDirectRange: 2.5
