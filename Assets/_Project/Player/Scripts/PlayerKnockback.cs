@@ -42,6 +42,19 @@ namespace DrawRush.Player
             _initialDuration = _remaining;
         }
 
+        /// <summary>Skid the player <paramref name="distance"/> units along
+        /// <paramref name="worldDirection"/> over <paramref name="seconds"/> (a table bump). Uses the
+        /// same linear decay as a knockback, so it eases out to a stop and owns the movement
+        /// meanwhile; Y is flattened so the hero stays on the ground. Deals no damage.</summary>
+        public void Slide(Vector3 worldDirection, float distance, float seconds)
+        {
+            worldDirection.y = 0f;
+            if (worldDirection.sqrMagnitude < 0.0001f || distance <= 0f || seconds <= 0f) return;
+            _velocity = worldDirection.normalized * (2f * distance / seconds);   // falls to 0, so the area under it is the distance
+            _remaining = seconds;
+            _initialDuration = seconds;
+        }
+
         /// <summary>Cancel any push in progress (level switch).</summary>
         public void Stop()
         {

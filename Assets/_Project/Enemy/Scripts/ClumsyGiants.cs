@@ -26,6 +26,7 @@ namespace DrawRush.Enemy
         [SerializeField] private PlayerCombat combat;
         [SerializeField] private ThirdPersonMovement movement;
         [SerializeField] private BoosterHud hud;
+        [SerializeField] private PlayerKnockback knockback;
 
         [Header("Timing")]
         [Tooltip("First campaign level (1-based) with hazards.")]
@@ -52,6 +53,8 @@ namespace DrawRush.Enemy
         [SerializeField] private float bumpPush = 2.5f;
         [Tooltip("Seconds the skid lasts.")]
         [SerializeField] private float slideSeconds = 0.7f;
+        [Tooltip("Hero slide distance as a multiple of the enemies' (bumpPush).")]
+        [SerializeField] private float heroSlideMultiplier = 0.7f;
         [Tooltip("How far (m) the desk decor jolts along the bump.")]
         [SerializeField] private float decorJolt = 0.45f;
         [SerializeField] private Color skidColor = new(0.12f, 0.16f, 0.42f, 0.45f);
@@ -72,6 +75,7 @@ namespace DrawRush.Enemy
 
         private void Awake()
         {
+            if (knockback == null) knockback = GetComponent<PlayerKnockback>();
             if (painter == null) painter = GetComponent<FreeDrawPainter>();
             if (combat == null) combat = GetComponent<PlayerCombat>();
             if (movement == null) movement = GetComponent<ThirdPersonMovement>();
@@ -228,6 +232,8 @@ namespace DrawRush.Enemy
             if (hud != null) hud.Toast("TABLE BUMP!", "Everything slides", new Color(0.95f, 0.4f, 0.15f));
             Haptics.Medium();
             TableBumped?.Invoke(direction);
+            // The hero is on the same desk: it skids the same way, a little less far.
+            if (knockback != null) knockback.Slide(direction, bumpPush * heroSlideMultiplier, slideSeconds);
 
             // One shove, one direction: all of them skid together, each leaving a mark on the page.
             var sliding = new List<EnemyFollow>();
