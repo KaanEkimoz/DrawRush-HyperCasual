@@ -117,12 +117,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: DrawRush::DrawRush.Enemy.HopAnimator
   hopRate: 3.5
   referenceSpeed: 2.5
-  hopHeight: 0.35
+  hopHeight: 0.12
   squash: 0.2
-  lean: 12
+  lean: 4
   waddle: 8
   faceCamera: 0
-  sideOn: 1
+  sideOn: 0
   limbs: {fileID: 0}
   limbSpeed: 1.2
   swingLimbs:
