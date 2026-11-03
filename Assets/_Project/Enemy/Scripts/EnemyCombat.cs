@@ -39,13 +39,17 @@ namespace DrawRush.Enemy
         [SerializeField] private float bossReachScale = 0.8f;
         [Tooltip("Full width of the cone (degrees).")]
         [SerializeField, Range(30f, 360f)] private float coneAngle = 100f;
-        [SerializeField] private Color coneColor = new(0.92f, 0.16f, 0.16f, 0.3f);
+        [SerializeField] private Color coneColor = new(0.92f, 0.16f, 0.16f, 0.42f);
+        [Tooltip("Cone opacity at rest; it rises to full while the enemy winds up an attack.")]
+        [SerializeField, Range(0f, 1f)] private float coneRest = 0.72f;
         [Tooltip("World height of the cone: on the page, over the drawn lines.")]
         [SerializeField] private float coneY = 0.03f;
 
         [Header("Attack move")]
         [Tooltip("The attack move starts when the hero is this many cone lengths away.")]
-        [SerializeField] private float swingReach = 1.35f;
+        [SerializeField] private float swingReach = 1.5f;
+        [Tooltip("When the move lands it hits a hero within this many cone lengths.")]
+        [SerializeField] private float strikeReach = 1.45f;
         [SerializeField] private float swingCooldown = 0.9f;
 
         private float _nextSwing;
@@ -87,6 +91,7 @@ namespace DrawRush.Enemy
                 enemyAnim = GetComponentInChildren<Animator>();
             }
             _follow = GetComponent<EnemyFollow>();
+            if (_follow != null) _follow.Struck += OnStrike;
             BuildCone();
         }
 
@@ -147,6 +152,7 @@ namespace DrawRush.Enemy
 
         private void OnDestroy()
         {
+            if (_follow != null) _follow.Struck -= OnStrike;
             if (_cone != null) Destroy(_cone.gameObject);
             Destroy(_coneMesh);
             Destroy(_coneMaterial);
@@ -164,7 +170,18 @@ namespace DrawRush.Enemy
                 _nextSwing = Time.time + swingCooldown;
                 _follow.PlayAttack();
             }
-            if (InCone(transform.position, transform.forward, player.position, Reach, coneAngle * 0.5f)) Hit(player);
+            // Damage comes with the attack move landing (OnStrike), so every hit is a readable,
+            // dodgeable swing. The pushpin is the exception: its leap is the attack, so touching
+            // it mid-leap hurts.
+            if (_follow != null && _follow.Variant == EnemyVariant.Dasher
+                && InCone(transform.position, transform.forward, player.position, Reach, coneAngle * 0.5f)) Hit(player);
+        }
+
+        private void OnStrike()
+        {
+            Transform player = GameServices.Player;
+            if (player == null || !CanHit) return;
+            if (InCone(transform.position, transform.forward, player.position, Reach * strikeReach, coneAngle * 0.5f)) Hit(player);
         }
 
         /// <summary>Damage the hero from <paramref name="from"/> (a thrown chunk's landing point),
@@ -196,7 +213,10 @@ namespace DrawRush.Enemy
             if (!show) return;
             Vector3 p = transform.position;
             _cone.SetPositionAndRotation(new Vector3(p.x, coneY, p.z), Quaternion.Euler(0f, transform.eulerAngles.y, 0f));
-            _cone.localScale = Vector3.one * Reach;
+            _cone.localScale = Vector3.one * (Reach * (_follow != null && _follow.Variant == EnemyVariant.Dasher ? 1f : strikeReach));
+            float gather = _follow != null ? _follow.AttackGather : 0f;
+            float pulse = gather > 0f ? Mathf.Lerp(coneRest, 1f, 0.6f + 0.4f * Mathf.Sin(gather * Mathf.PI * 6f)) : coneRest;
+            _coneMaterial.color = new Color(1f, 1f, 1f, pulse);
         }
 
         private void Hit(Transform other) => HitFrom(other, transform.position, repel: true);

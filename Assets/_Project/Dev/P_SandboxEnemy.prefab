@@ -615,6 +615,11 @@ MonoBehaviour:
   throwArc: 2.2
   throwRadius: 0.9
   throwShrink: 0.85
+  attackFx:
+  - {fileID: 21300000, guid: 77eb9324ad9d14767aeabac23ea9387b, type: 3}
+  - {fileID: 21300000, guid: aaf03ee31428d4c9a93f148b8e9f4616, type: 3}
+  - {fileID: 21300000, guid: c3e39275fb3d64898bac89b7c8ed3a7b, type: 3}
+  - {fileID: 21300000, guid: 8e7840b20b1584777b9ed26de25a689f, type: 3}
   gluePuddleSprite: {fileID: 21300000, guid: 8e7840b20b1584777b9ed26de25a689f, type: 3}
   glueSpacing: 0.9
   glueRadius: 0.6
@@ -643,9 +648,11 @@ MonoBehaviour:
   reachPerScale: 1.4
   bossReachScale: 0.8
   coneAngle: 100
-  coneColor: {r: 0.92, g: 0.16, b: 0.16, a: 0.3}
+  coneColor: {r: 0.92, g: 0.16, b: 0.16, a: 0.42}
+  coneRest: 0.72
   coneY: 0.03
-  swingReach: 1.35
+  swingReach: 1.5
+  strikeReach: 1.45
   swingCooldown: 0.9
 --- !u!135 &7170537937590943087
 SphereCollider:

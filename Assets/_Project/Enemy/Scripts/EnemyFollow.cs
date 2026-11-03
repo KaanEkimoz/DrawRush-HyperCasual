@@ -153,6 +153,10 @@ namespace DrawRush.Enemy
         [Tooltip("Orbiter: size it keeps after a throw, before growing back.")]
         [SerializeField, Range(0.5f, 1f)] private float throwShrink = 0.85f;
 
+        [Header("Attack")]
+        [Tooltip("Hit marks: 0 star burst, 1 slash, 2 shockwave ring, 3 glue splat.")]
+        [SerializeField] private Sprite[] attackFx = new Sprite[0];
+
         [Header("Glue")]
         [SerializeField] private Sprite gluePuddleSprite;
         [Tooltip("Metres walked between two puddles.")]
@@ -202,6 +206,13 @@ namespace DrawRush.Enemy
             ApplySpeed();
             ApplyTint();
             if (variant == EnemyVariant.Dasher && _agent.isOnNavMesh) _agent.ResetPath();   // it only ever lunges
+            FitStoppingDistance();
+        }
+
+        // Stop at the hero's edge, not on top of the pencil: a bigger enemy stops further out.
+        private void FitStoppingDistance()
+        {
+            if (_agent != null) _agent.stoppingDistance = 1.2f * transform.lossyScale.x + 0.3f;
         }
 
         /// <summary>Back to the enemy as authored in the scene.</summary>
@@ -219,6 +230,7 @@ namespace DrawRush.Enemy
             ApplySkin(EnemyVariant.Normal);
             ApplySpeed();
             ApplyTint();
+            FitStoppingDistance();
         }
 
         // Show this role's stationery character; an unset slot falls back to the Normal one.
@@ -233,8 +245,9 @@ namespace DrawRush.Enemy
             if (visual == null) return;
             // Each look drives its own animator (the rigged eraser has one, the hopping stationery none).
             _anim = visual.GetComponentInChildren<Animator>(true);
-            if (_hop != null) { _hop.ExtraLean = 0f; _hop.ExtraStretch = 1f; _hop.SizeFactor = 1f; }
+            if (_hop != null) { _hop.ExtraLean = 0f; _hop.ExtraStretch = 1f; _hop.SizeFactor = 1f; _hop.Struck -= OnStruck; }
             _hop = visual.GetComponent<HopAnimator>();
+            if (_hop != null) _hop.Struck += OnStruck;
             if (visual.TryGetComponent(out EnemyPalette palette)) palette.ApplyRandom();
         }
 
@@ -277,6 +290,7 @@ namespace DrawRush.Enemy
             _slideLeft = seconds;
             if (_dash != DashPhase.Idle) { _dash = DashPhase.Idle; _dashTimer = lungeRest; }
             Pose(0f, 1f);
+            if (_hop != null) _hop.PlayAttack(HopAnimator.AttackStyle.Recoil);
             _slideSpeed = 2f * distance / seconds;   // falls to 0, so the area under it is the distance
             _agent.isStopped = true;
             _agent.velocity = Vector3.zero;
@@ -566,6 +580,12 @@ namespace DrawRush.Enemy
                 _agent.SetDestination(target);
             }
 
+            // At the hero it stands its ground facing them, instead of jostling and spinning on the
+            // spot (the agent stops steering once it is inside its stopping distance).
+            Vector3 toHero = player.position - transform.position;
+            toHero.y = 0f;
+            if (toHero.sqrMagnitude < (_agent.stoppingDistance + 0.6f) * (_agent.stoppingDistance + 0.6f)) Face(toHero, 10f);
+
             // Drive the run/idle blend by how fast the agent is actually moving, so a blocked or
             // barely-moving enemy doesn't sprint on the spot.
             SetAnimSpeed(_agent.velocity.magnitude);
@@ -652,6 +672,34 @@ namespace DrawRush.Enemy
             _lastPuddle = transform.position;
             GluePuddle.Spawn(gluePuddleSprite, transform.position, glueRadius, glueSlow, glueSeconds);
         }
+
+        /// <summary>Raised the moment this enemy's attack move lands (combat deals the damage then).</summary>
+        public event System.Action Struck;
+
+        // The hit mark at the moment the move lands.
+        private void OnStruck(HopAnimator.AttackStyle style)
+        {
+            Struck?.Invoke();
+            int fx = style switch
+            {
+                HopAnimator.AttackStyle.Snip => 1,
+                HopAnimator.AttackStyle.Slam => 2,
+                HopAnimator.AttackStyle.Squirt => 3,
+                HopAnimator.AttackStyle.Throw => -1,
+                _ => 0,
+            };
+            if (fx < 0 || fx >= attackFx.Length) return;
+            float s = transform.lossyScale.x;
+            if (fx >= 2)   // on the page
+            {
+                Vector3 ground = transform.position + transform.forward * (fx == 2 ? 0.4f : 1.1f) * s;
+                AttackFx.Spawn(attackFx[fx], new Vector3(ground.x, 0.05f, ground.z), (fx == 2 ? 3.2f : 1.6f) * s, true);
+            }
+            else AttackFx.Spawn(attackFx[fx], transform.position + transform.forward * (1.2f * s) + Vector3.up * (1.1f * s), 1.3f * s, false);
+        }
+
+        /// <summary>0..1 while the attack move winds up (the cone brightens as a warning).</summary>
+        public float AttackGather => _hop != null ? _hop.AttackGather : 0f;
 
         /// <summary>Play this enemy's attack move (its look decides how it hits).</summary>
         public void PlayAttack()
