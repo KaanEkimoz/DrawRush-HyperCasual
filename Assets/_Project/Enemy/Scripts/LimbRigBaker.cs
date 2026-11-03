@@ -49,12 +49,12 @@ namespace DrawRush.Enemy.EditorTools
                 new Mark(false, true, 115, 388, Px(85, 385, 128, 452), Px(128, 408, 162, 452)),
                 new Mark(false, false, 470, 388, Px(468, 378, 600, 450)),
             }),
-            ("Doodle/sharpener/P_sharpener", false, new[]
+            ("Doodle/sharpener/P_sharpener_v2", false, new[]
             {
-                new Mark(true, true, 210, 268, Px(100, 260, 208, 358)),
-                new Mark(true, false, 420, 322, Px(418, 312, 502, 405)),
-                new Mark(false, true, 203, 386, Px(168, 386, 228, 426)),
-                new Mark(false, false, 385, 385, Px(360, 386, 420, 450)),
+                new Mark(true, true, 232, 290, Px(140, 282, 228, 408)),
+                new Mark(true, false, 368, 290, Px(372, 282, 460, 408)),
+                new Mark(false, true, 260, 388, Px(224, 390, 276, 452)),
+                new Mark(false, false, 338, 388, Px(320, 390, 376, 452)),
             }),
             ("Doodle/pushpin/P_pushpin", false, new[]
             {
