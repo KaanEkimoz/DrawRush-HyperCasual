@@ -153,7 +153,6 @@ namespace DrawRush.UI
             BakePaper();
             BakePencilStroke();
             BakeSoundIcons();
-            BakeCoffeeStain();
             BakeCollection();
             AssetDatabase.Refresh();
         }
@@ -257,26 +256,6 @@ namespace DrawRush.UI
                 s.Px[y * W + x] = new Color(1f, 1f, 1f, a);
             }
             s.Save(UiFolder + "pencil_stroke.png");
-        }
-
-        /// <summary>A coffee ring with nothing around it, so it never covers the page's lines.</summary>
-        private static void BakeCoffeeStain()
-        {
-            const int S = 512;
-            var s = new Sheet(S, S);
-            Color coffee = new(0.55f, 0.35f, 0.17f);
-            Vector2 c = new(256f, 256f);
-            for (int y = 0; y < S; y++)
-            for (int x = 0; x < S; x++)
-            {
-                Vector2 d = new Vector2(x, y) - c;
-                float r = d.magnitude + (Mathf.PerlinNoise(x * 0.012f, y * 0.012f) - 0.5f) * 26f;
-                float ring = Mathf.Clamp01(1f - Mathf.Abs(r - 190f) / 16f);
-                float wash = r < 190f ? 0.07f : 0f;
-                float wear = Mathf.SmoothStep(0.25f, 0.6f, Mathf.PerlinNoise(x * 0.02f + 9f, y * 0.02f + 3f));
-                s.Px[y * S + x] = new Color(coffee.r, coffee.g, coffee.b, Mathf.Clamp01(ring * ring * 0.5f * wear + wash));
-            }
-            s.Save(UiFolder + "decor_coffee.png");
         }
 
         private enum PaperRule { Lined, Grid, Dots, Plain }
