@@ -1,4 +1,5 @@
 using UnityEngine;
+using DrawRush.Boosters;
 using DrawRush.Player;
 
 namespace DrawRush.Core
@@ -245,6 +246,8 @@ namespace DrawRush.Core
             // Same persistence problem for the post-hit window: start every level hittable and
             // not blinking, however the last one ended.
             playerTf.GetComponent<PlayerCombat>()?.ResetForLevel();
+            playerTf.GetComponent<PencilHeight>()?.Snap();
+            playerTf.GetComponent<PlayerBoosts>()?.EndAll();
         }
 
         private Transform ResolveSpawn(Transform activeLevel)

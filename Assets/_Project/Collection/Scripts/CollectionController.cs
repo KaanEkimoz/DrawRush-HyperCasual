@@ -34,6 +34,7 @@ namespace DrawRush.Collection
         [SerializeField] private Color starColor = new Color(1f, 0.82f, 0.15f, 1f);
         [SerializeField] private Color starOffColor = new Color(0.30f, 0.30f, 0.36f, 1f);
         [SerializeField] private Sprite starSprite;
+        [SerializeField] private Color countColor = new Color(0.125f, 0.157f, 0.36f, 1f);
 
         private readonly List<Cell> _cells = new();
 
@@ -48,10 +49,47 @@ namespace DrawRush.Collection
         private void Awake()
         {
             if (openButtons != null)
-                foreach (Button b in openButtons) if (b != null) b.onClick.AddListener(Open);
+                foreach (Button b in openButtons)
+                    if (b != null)
+                    {
+                        b.onClick.AddListener(Open);
+                        AddCountLabel(b);
+                    }
             if (closeButton != null) closeButton.onClick.AddListener(Close);
             if (panel != null) panel.SetActive(false);
             BuildCells();
+        }
+
+        private string CountText()
+        {
+            int owned = 0;
+            for (int i = 0; i < collection.Count; i++)
+            {
+                ShapeCollection.Entry entry = collection.Get(i);
+                if (entry != null && PlayerProgress.BestStars(entry.LevelIndex) > 0) owned++;
+            }
+            return $"{owned}/{collection.Count}";
+        }
+
+        // A small count under the button, so the goal shows before the screen is opened.
+        private void AddCountLabel(Button button)
+        {
+            if (collection == null) return;
+            var go = new GameObject("Count", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI), typeof(CollectionCountLabel));
+            var rt = go.GetComponent<RectTransform>();
+            rt.SetParent(button.transform, false);
+            rt.anchorMin = new Vector2(0f, 0f);
+            rt.anchorMax = new Vector2(1f, 0f);
+            rt.pivot = new Vector2(0.5f, 1f);
+            rt.anchoredPosition = new Vector2(0f, -8f);
+            rt.sizeDelta = new Vector2(0f, 56f);
+            var label = go.GetComponent<TextMeshProUGUI>();
+            if (font != null) label.font = font;
+            label.alignment = TextAlignmentOptions.Center;
+            label.fontSize = 46f;
+            label.color = countColor;
+            label.raycastTarget = false;
+            go.GetComponent<CollectionCountLabel>().Bind(label, CountText);
         }
 
         public void Open()

@@ -286,11 +286,18 @@ namespace DrawRush.Boosters
 
         private void OnDamaged() => _lastHitTime = Time.time;
 
-        private void OnLevelBound(EdgeNetwork _)
+        /// <summary>End every running booster now. Called at level start, because the level-bound
+        /// event only fires after the countdown and the timers would sit frozen on the HUD until then.</summary>
+        public void EndAll()
         {
             foreach (Active a in _active) End(a.Type);
             _active.Clear();
             Changed?.Invoke();
+        }
+
+        private void OnLevelBound(EdgeNetwork _)
+        {
+            EndAll();
             foreach (BoosterType t in _queued) Grant(t);
             _queued.Clear();
         }

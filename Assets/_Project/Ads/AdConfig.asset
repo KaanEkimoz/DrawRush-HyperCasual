@@ -15,7 +15,8 @@ MonoBehaviour:
   androidAppKey: 27f1c2215
   interstitialAdUnitId: gn5krubs30l4gsgf
   rewardedAdUnitId: yucbr0o8l7jz27n7
+  bannerAdUnitId: p1q6pbiz873u0hym
   simulateRewardedInEditor: 1
-  interstitialEveryNWins: 2
-  minSecondsBetweenAds: 70
+  interstitialEveryNWins: 3
+  minSecondsBetweenAds: 90
   verboseLogging: 0

@@ -22,6 +22,10 @@ namespace DrawRush.Ads
                  "rewarded offers stay hidden. Create it in the LevelPlay console → Ad Units.")]
         [SerializeField] private string rewardedAdUnitId = "";
 
+        [Tooltip("Ad Unit ID of the bottom banner. Empty = no banner. Create it in the LevelPlay " +
+                 "console → Ad Units.")]
+        [SerializeField] private string bannerAdUnitId = "";
+
         [Tooltip("Editor only: pretend a rewarded ad was watched, so the offer flows can be tested " +
                  "without a device (ads never fill in the Editor).")]
         [SerializeField] private bool simulateRewardedInEditor = true;
@@ -30,12 +34,12 @@ namespace DrawRush.Ads
         [Tooltip("Show an interstitial at most once every N wins/completed levels (1 = every win). " +
                  "The ad only shows when this AND the time gate below are both satisfied.")]
         [Min(1)]
-        [SerializeField] private int interstitialEveryNWins = 2;
+        [SerializeField] private int interstitialEveryNWins = 3;
 
         [Tooltip("Minimum real seconds between interstitials. Even if the win count is due, an ad is " +
                  "held back until this long has passed since the last one — a hard frequency cap.")]
         [Min(0f)]
-        [SerializeField] private float minSecondsBetweenAds = 70f;
+        [SerializeField] private float minSecondsBetweenAds = 90f;
 
         [Tooltip("Log init/load/show steps to the console. Handy on device; leave off for release.")]
         [SerializeField] private bool verboseLogging = false;
@@ -43,6 +47,7 @@ namespace DrawRush.Ads
         public string AndroidAppKey => androidAppKey;
         public string InterstitialAdUnitId => interstitialAdUnitId;
         public string RewardedAdUnitId => rewardedAdUnitId;
+        public string BannerAdUnitId => bannerAdUnitId;
         public bool SimulateRewardedInEditor => simulateRewardedInEditor;
         public int InterstitialEveryNWins => interstitialEveryNWins;
         public float MinSecondsBetweenAds => minSecondsBetweenAds;

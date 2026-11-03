@@ -1,3 +1,17 @@
+# Draw Rush — Google Play Store Listing
+
+**2026-11-03: the current listing lives in `PlayStore/listings/<language>/`** (en-US, tr-TR, es-ES, es-419):
+`title.txt`, `short.txt`, `full.txt`, `feature.png` (1024x500) and `screen_1..5.png` (1080x1920).
+Upload all four languages in one edit:
+
+    node ~/.claude/skills/play-console-release/scripts/play-publish.mjs listing --project . --dir PlayStore/listings          # dry run
+    node ~/.claude/skills/play-console-release/scripts/play-publish.mjs listing --project . --dir PlayStore/listings --commit
+
+The service account needs the "Store presence" permission on this app for the commit. The text below is the
+first-release copy, kept for history.
+
+---
+
 # DrawRush — Google Play Store Listing
 
 Package: `com.ekimozgames.drawrush` · Developer: Ekimoz Games

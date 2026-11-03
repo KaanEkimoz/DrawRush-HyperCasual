@@ -57,6 +57,15 @@ namespace DrawRush.Player
             if (_movement != null) _movement.HeightSpeedMultiplier = SpeedFor(value, health.StartingValue, speedPerHit);
         }
 
+        /// <summary>Jump straight to the height for the current health. The level-start countdown
+        /// freezes time, so easing there would show last level's short pencil until "GO".</summary>
+        public void Snap()
+        {
+            if (health != null && health.Current > 0) OnChanged(health.Current);
+            _shown = _target;
+            if (pencil != null) pencil.HeightFactor = _shown;
+        }
+
         private void Update()
         {
             _shown = Mathf.Lerp(_shown, _target, 1f - Mathf.Exp(-ease * Time.deltaTime));

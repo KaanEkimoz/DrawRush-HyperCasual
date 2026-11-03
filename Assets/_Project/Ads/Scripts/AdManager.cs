@@ -24,12 +24,12 @@ namespace DrawRush.Ads
 
         private LevelPlayInterstitialAd _interstitial;
         private LevelPlayRewardedAd _rewarded;
+        private LevelPlayBannerAd _banner;
         private bool _initialised;
         private Action _onReward;
         private bool _rewardEarned;
 
-        private int _winsSinceLastAd;
-        private float _lastShownRealtime = float.NegativeInfinity;  // so the first eligible ad isn't time-gated
+        private AdPacing _pacing;
 
         private void Start()
         {
@@ -44,6 +44,8 @@ namespace DrawRush.Ads
                 return;
             }
 
+            _pacing = new AdPacing(config.InterstitialEveryNWins, config.MinSecondsBetweenAds, Time.realtimeSinceStartup);
+
             LevelPlay.OnInitSuccess += OnInitSuccess;
             LevelPlay.OnInitFailed += OnInitFailed;
             LevelPlay.Init(config.AndroidAppKey);
@@ -55,6 +57,7 @@ namespace DrawRush.Ads
             LevelPlay.OnInitFailed -= OnInitFailed;
             _interstitial?.Dispose();
             _rewarded?.Dispose();
+            _banner?.Dispose();
         }
 
         /// <summary>True when a rewarded video can be shown right now.</summary>
@@ -88,6 +91,7 @@ namespace DrawRush.Ads
             if (config.VerboseLogging) Debug.Log("[Ads] LevelPlay init success.");
 
             SetUpRewarded();
+            SetUpBanner();
 
             if (string.IsNullOrEmpty(config.InterstitialAdUnitId))
             {
@@ -127,48 +131,50 @@ namespace DrawRush.Ads
             _rewarded.LoadAd();
         }
 
+        // The banner shows itself as soon as it loads and refreshes on its own from then on.
+        private void SetUpBanner()
+        {
+            if (string.IsNullOrEmpty(config.BannerAdUnitId)) return;
+            var bannerConfig = new LevelPlayBannerAd.Config.Builder()
+                .SetPosition(LevelPlayBannerPosition.BottomCenter)
+                .SetRespectSafeArea(true)
+                .Build();
+            _banner = new LevelPlayBannerAd(config.BannerAdUnitId, bannerConfig);
+            if (config.VerboseLogging) _banner.OnAdLoadFailed += e => Debug.Log($"[Ads] Banner load failed: {e}");
+            _banner.LoadAd();
+        }
+
         // A rewarded video the player chose to watch counts as an ad shown: it resets the win
         // count and the time gate, so no interstitial lands right after it (e.g. x2 Coins → Next).
         private void MarkAdShown()
         {
-            _winsSinceLastAd = 0;
-            _lastShownRealtime = Time.realtimeSinceStartup;
+            _pacing?.MarkShown(Time.realtimeSinceStartup);
         }
 
         private void OnInitFailed(LevelPlayInitError error)
             => Debug.LogWarning($"[Ads] LevelPlay init failed: {error}");
 
         /// <summary>
-        /// Call once per win/level-advance (from <c>LevelFlow.NextLevel</c>). Shows an interstitial only
-        /// when BOTH frequency gates pass: at least <see cref="AdConfig.InterstitialEveryNWins"/> wins
-        /// since the last ad, AND at least <see cref="AdConfig.MinSecondsBetweenAds"/> real seconds since
-        /// the last ad. When only the count is due but the time gate blocks (or no ad is loaded), the
-        /// win tally is kept so the ad shows on a later win once the cooldown clears.
+        /// Call once per win/level-advance (from <c>LevelFlow.NextLevel</c>). Shows an interstitial
+        /// once <see cref="AdPacing"/> says it is due. When it is not due, or no ad is loaded, the
+        /// win count is kept so the ad shows on a later win.
         /// </summary>
         public void MaybeShowInterstitial()
         {
             if (!_initialised || _interstitial == null) return;
 
-            _winsSinceLastAd++;
-            if (_winsSinceLastAd < Mathf.Max(1, config.InterstitialEveryNWins)) return;
-
-            float sinceLast = Time.realtimeSinceStartup - _lastShownRealtime;
-            if (sinceLast < config.MinSecondsBetweenAds)
-            {
-                if (config.VerboseLogging)
-                    Debug.Log($"[Ads] Win count due but only {sinceLast:F0}s since last ad (need {config.MinSecondsBetweenAds:F0}s) — holding.");
-                return;   // keep the win tally; retry on a later win once the cooldown clears
-            }
+            _pacing.RecordWin();
+            float now = Time.realtimeSinceStartup;
+            if (!_pacing.IsDue(now)) return;
 
             if (!_interstitial.IsAdReady())
             {
                 if (config.VerboseLogging) Debug.Log("[Ads] Interstitial not loaded yet — skipping, will retry next win.");
-                return;   // keep the tally so we try again as soon as one is loaded
+                return;
             }
 
             _interstitial.ShowAd();
-            _winsSinceLastAd = 0;
-            _lastShownRealtime = Time.realtimeSinceStartup;
+            _pacing.MarkShown(now);
         }
     }
 }
