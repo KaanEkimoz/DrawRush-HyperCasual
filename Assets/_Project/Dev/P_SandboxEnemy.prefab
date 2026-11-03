@@ -817,9 +817,9 @@ MonoBehaviour:
   bossTurnScale: 0.8
   voiceRange: 8
   voiceInterval: {x: 1.5, y: 3.5}
-  lungeWindUp: 0.56
-  lungeTime: 0.4
-  lungeRest: 0.42
+  lungeWindUp: 0.616
+  lungeTime: 0.44
+  lungeRest: 0.462
   lungeDistance: 4.5
   lungeOvershoot: 1.2
   lungeSoundRange: 9

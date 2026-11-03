@@ -120,11 +120,11 @@ namespace DrawRush.Enemy
 
         [Header("Dasher (pushpin)")]
         [Tooltip("Seconds it crouches, aims and flashes before each lunge (the telegraph).")]
-        [SerializeField] private float lungeWindUp = 0.56f;
+        [SerializeField] private float lungeWindUp = 0.616f;
         [Tooltip("Seconds a lunge lasts.")]
-        [SerializeField] private float lungeTime = 0.4f;
+        [SerializeField] private float lungeTime = 0.44f;
         [Tooltip("Seconds it stands after landing.")]
-        [SerializeField] private float lungeRest = 0.42f;
+        [SerializeField] private float lungeRest = 0.462f;
         [Tooltip("How far one lunge goes (m), at speed 1.")]
         [SerializeField] private float lungeDistance = 4.5f;
         [Tooltip("How far past the player a lunge may carry it (m), so a late dodge still works.")]
