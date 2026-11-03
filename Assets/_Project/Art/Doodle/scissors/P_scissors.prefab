@@ -169,6 +169,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4845549705742264150}
   - component: {fileID: 2875353435443024544}
+  - component: {fileID: 8485004676382832600}
   m_Layer: 0
   m_Name: P_scissors
   m_TagString: Untagged
@@ -232,6 +233,24 @@ MonoBehaviour:
     axis: {x: 0, y: 0, z: 1}
     direction: -1
   swingAngle: 42
+  slideLean: 26
+--- !u!114 &8485004676382832600
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3452597112170839279}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1c425e5306cd0410d94d44211ce67b2e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: DrawRush::DrawRush.Enemy.EnemyPalette
+  skins:
+  - {fileID: 2800000, guid: 89efb99eb62b1427db672f8e19c06226, type: 3}
+  - {fileID: 2800000, guid: 973cdd9d9d74c43d3a988b3368fedadb, type: 3}
+  - {fileID: 2800000, guid: a927688d4458a40d9bb1dfe22d3dc3e1, type: 3}
+  - {fileID: 2800000, guid: 5885b1d8e5c6444efadc3cf0c29975bc, type: 3}
 --- !u!1 &8450246477901545672
 GameObject:
   m_ObjectHideFlags: 0

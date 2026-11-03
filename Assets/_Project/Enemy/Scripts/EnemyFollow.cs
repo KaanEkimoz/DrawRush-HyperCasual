@@ -13,6 +13,8 @@ namespace DrawRush.Enemy
         Eater = 3,      // eats paint that is not kept for good yet
         Dasher = 4,     // winds up (flashing), then lunges
         Boss = 5,       // the Giant Eraser: huge, unpushable, wipes fresh paint in a wide circle
+        Flanker = 6,    // runs to where the player is heading, not where they are
+        Orbiter = 7,    // circles the player, then dives in after a flash
     }
 
     /// <summary>
@@ -101,6 +103,9 @@ namespace DrawRush.Enemy
         private bool _skinned;
         private float _variantScale = 1f;
         private float _voiceIn;
+        private Vector3 _playerLast, _playerVelocity;
+        private float _orbitTimer, _orbitSide = 1f, _burst = 1f;
+        private int _orbitPhase;   // 0 circling, 1 warning, 2 diving
         [Tooltip("Enemies closer than this (m) to the player make their noise.")]
         [SerializeField] private float voiceRange = 8f;
         [SerializeField] private Vector2 voiceInterval = new(1.5f, 3.5f);
@@ -124,6 +129,18 @@ namespace DrawRush.Enemy
         [Tooltip("Only lunges at a player closer than this (m).")]
         [SerializeField] private float dashRange = 6f;
         [SerializeField] private Color windUpColor = Color.white;
+
+        [Header("Flanker / Orbiter")]
+        [Tooltip("Flanker: furthest ahead (seconds of player movement) it aims.")]
+        [SerializeField] private float flankLead = 1.4f;
+        [Tooltip("Flanker: closer than this it simply chases.")]
+        [SerializeField] private float flankDirectRange = 2.5f;
+        [SerializeField] private float orbitRadius = 4.5f;
+        [Tooltip("Orbiter: seconds of circling between dives.")]
+        [SerializeField] private float orbitDiveEvery = 4f;
+        [SerializeField] private float orbitWarn = 0.45f;
+        [SerializeField] private float orbitDiveSeconds = 1.4f;
+        [SerializeField] private float orbitDiveSpeed = 1.5f;
 
         /// <summary>Raised when any Dasher starts its wind-up (audio and haptics listen).</summary>
         public static event System.Action DashWindUpStarted;
@@ -187,7 +204,12 @@ namespace DrawRush.Enemy
             if (!_skinned) return;
             int shown = (int)variant < variantVisuals.Length && variantVisuals[(int)variant] != null ? (int)variant : 0;
             for (int k = 0; k < variantVisuals.Length; k++)
-                if (variantVisuals[k] != null) variantVisuals[k].SetActive(k == shown);
+                if (variantVisuals[k] != null) variantVisuals[k].SetActive(variantVisuals[k] == variantVisuals[shown]);
+            GameObject visual = variantVisuals[shown];
+            if (visual == null) return;
+            // Each look drives its own animator (the rigged eraser has one, the hopping stationery none).
+            _anim = visual.GetComponentInChildren<Animator>(true);
+            if (visual.TryGetComponent(out EnemyPalette palette)) palette.ApplyRandom();
         }
 
         /// <summary>Stop in place for <paramref name="seconds"/>, tinted icy, then resume.</summary>
@@ -254,7 +276,7 @@ namespace DrawRush.Enemy
         private void ApplySpeed()
         {
             float lunge = _dash == DashPhase.Lunge ? dashSpeedMultiplier : 1f;
-            if (_agent != null) _agent.speed = _baseSpeed * globalSpeed * Mathf.Max(0.05f, speedMultiplier) * _pressure * lunge;
+            if (_agent != null) _agent.speed = _baseSpeed * globalSpeed * Mathf.Max(0.05f, speedMultiplier) * _pressure * lunge * _burst;
         }
 
         // Dasher: every few seconds near the player it stops and flashes (the telegraph the
@@ -350,6 +372,12 @@ namespace DrawRush.Enemy
             if (_anim != null) _anim.speed = 1f;
             _dash = DashPhase.Idle;
             _dashTimer = dashInterval;
+            _orbitPhase = 0;
+            _orbitTimer = orbitDiveEvery;
+            _orbitSide = Random.value < 0.5f ? -1f : 1f;
+            _burst = 1f;
+            _playerVelocity = Vector3.zero;
+            _playerLast = GameServices.Player != null ? GameServices.Player.position : transform.position;
 
             // Restart: send the enemy back to its authored spawn. Warp keeps the agent on
             // the NavMesh; transform.SetPositionAndRotation handles the off-NavMesh edge
@@ -452,18 +480,90 @@ namespace DrawRush.Enemy
             if (Variant == EnemyVariant.Eater || Variant == EnemyVariant.Boss) EatPaint(player);
             if (Variant == EnemyVariant.Dasher && UpdateDash(player)) { SetAnimSpeed(_agent.velocity.magnitude); return; }
 
+            TrackPlayer(player);
+            Vector3 target = Variant switch
+            {
+                EnemyVariant.Flanker => FlankTarget(player),
+                EnemyVariant.Orbiter => OrbitTarget(player),
+                _ => player.position,
+            };
+
             // Throttled re-target — SetDestination throws off-mesh (handled above) and is wasteful
-            // every frame, so re-plan a few times a second toward the player's current position.
+            // every frame, so re-plan a few times a second toward the target.
             _retargetTimer -= Time.deltaTime;
             if (_retargetTimer <= 0f)
             {
                 _retargetTimer = RetargetInterval;
-                _agent.SetDestination(player.position);
+                _agent.SetDestination(target);
             }
 
             // Drive the run/idle blend by how fast the agent is actually moving, so a blocked or
             // barely-moving enemy doesn't sprint on the spot.
             SetAnimSpeed(_agent.velocity.magnitude);
+        }
+
+        // A smoothed player velocity, for the flanker's lead.
+        private void TrackPlayer(Transform player)
+        {
+            float dt = Time.deltaTime;
+            if (dt <= 0f) return;
+            Vector3 v = (player.position - _playerLast) / dt;
+            v.y = 0f;
+            _playerLast = player.position;
+            if (v.sqrMagnitude > 400f) v = Vector3.zero;   // a teleport (respawn), not a run
+            _playerVelocity = Vector3.Lerp(_playerVelocity, v, 1f - Mathf.Exp(-6f * dt));
+        }
+
+        // Flanker: aim where the player will be by the time it gets there, up to flankLead
+        // seconds ahead, so running in a straight line runs into it.
+        private Vector3 FlankTarget(Transform player)
+        {
+            Vector3 to = player.position - transform.position;
+            to.y = 0f;
+            float dist = to.magnitude;
+            if (dist < flankDirectRange) return player.position;
+            float lead = Mathf.Min(flankLead, dist / Mathf.Max(0.5f, _agent.speed));
+            Vector3 aim = player.position + _playerVelocity * lead;
+            return NavMesh.SamplePosition(aim, out NavMeshHit hit, 2f, NavMesh.AllAreas) ? hit.position : player.position;
+        }
+
+        // Orbiter: circle the player at orbitRadius; every orbitDiveEvery seconds flash for
+        // orbitWarn, then dive straight in, faster, for orbitDiveSeconds.
+        private Vector3 OrbitTarget(Transform player)
+        {
+            _orbitTimer -= Time.deltaTime;
+            switch (_orbitPhase)
+            {
+                case 1:
+                    SetColor(Mathf.Repeat(_orbitTimer * 10f, 1f) < 0.5f ? windUpColor : fastColor);
+                    if (_orbitTimer <= 0f)
+                    {
+                        _orbitPhase = 2;
+                        _orbitTimer = orbitDiveSeconds;
+                        _burst = orbitDiveSpeed;
+                        ApplySpeed();
+                        ApplyTint();
+                        _retargetTimer = 0f;
+                    }
+                    return player.position;
+                case 2:
+                    if (_orbitTimer <= 0f)
+                    {
+                        _orbitPhase = 0;
+                        _orbitTimer = orbitDiveEvery;
+                        _burst = 1f;
+                        ApplySpeed();
+                    }
+                    return player.position;
+                default:
+                    if (_orbitTimer <= 0f) { _orbitPhase = 1; _orbitTimer = orbitWarn; }
+                    Vector3 from = transform.position - player.position;
+                    from.y = 0f;
+                    if (from.sqrMagnitude < 0.01f) from = Vector3.forward;
+                    float angle = Mathf.Atan2(from.z, from.x) + _orbitSide * 0.8f;
+                    Vector3 spot = player.position + new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)) * orbitRadius;
+                    return NavMesh.SamplePosition(spot, out NavMeshHit hit, 2f, NavMesh.AllAreas) ? hit.position : player.position;
+            }
         }
 
         // f_speed feeds the Idle<->Run blend in Enemy.controller.

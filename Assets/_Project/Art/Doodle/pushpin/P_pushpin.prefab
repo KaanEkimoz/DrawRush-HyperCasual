@@ -41,6 +41,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2733502967510840318}
   - component: {fileID: 8381982418291253907}
+  - component: {fileID: 636872869766898266}
   m_Layer: 0
   m_Name: P_pushpin
   m_TagString: Untagged
@@ -100,6 +101,24 @@ MonoBehaviour:
     axis: {x: -0.67251295, y: 0.74008536, z: 0}
     direction: -1
   swingAngle: 42
+  slideLean: 26
+--- !u!114 &636872869766898266
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1245238425753917656}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1c425e5306cd0410d94d44211ce67b2e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: DrawRush::DrawRush.Enemy.EnemyPalette
+  skins:
+  - {fileID: 2800000, guid: c3429fa68be064f5ea78b0b83659df9d, type: 3}
+  - {fileID: 2800000, guid: 0471402b8f49648aea2a8f8cf3be8360, type: 3}
+  - {fileID: 2800000, guid: 9896e51647c3e47bcb1229016809ba52, type: 3}
+  - {fileID: 2800000, guid: eadbbdc229c24454cb83bd22b4e8f027, type: 3}
 --- !u!1 &1793283412833384619
 GameObject:
   m_ObjectHideFlags: 0

@@ -262,6 +262,7 @@ GameObject:
   m_Component:
   - component: {fileID: 436213986026071269}
   - component: {fileID: 4927045188662145468}
+  - component: {fileID: 6290129682670249584}
   m_Layer: 0
   m_Name: P_stapler
   m_TagString: Untagged
@@ -325,3 +326,21 @@ MonoBehaviour:
     axis: {x: -0.08964969, y: 0.9959734, z: 0}
     direction: -1
   swingAngle: 42
+  slideLean: 26
+--- !u!114 &6290129682670249584
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9219723982367773621}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1c425e5306cd0410d94d44211ce67b2e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: DrawRush::DrawRush.Enemy.EnemyPalette
+  skins:
+  - {fileID: 2800000, guid: a8d40301f20a145ee8323147d58ece5e, type: 3}
+  - {fileID: 2800000, guid: f88835a7f5543448fb311b759e1b0319, type: 3}
+  - {fileID: 2800000, guid: 39407a5c9152f4414992d32ebd60cd51, type: 3}
+  - {fileID: 2800000, guid: 44ee7c260bb884f81ac92f6e146d775b, type: 3}

@@ -262,6 +262,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1136226486712310585}
   - component: {fileID: 8351545344745560123}
+  - component: {fileID: 494122524337252887}
   m_Layer: 0
   m_Name: P_holepunch
   m_TagString: Untagged
@@ -325,3 +326,21 @@ MonoBehaviour:
     axis: {x: -0.46665362, y: 0.8844401, z: 0}
     direction: -1
   swingAngle: 42
+  slideLean: 26
+--- !u!114 &494122524337252887
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9139549568386155043}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1c425e5306cd0410d94d44211ce67b2e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: DrawRush::DrawRush.Enemy.EnemyPalette
+  skins:
+  - {fileID: 2800000, guid: ff5a47ca5eeef43569a8bb4b6e186f3a, type: 3}
+  - {fileID: 2800000, guid: 78ac69968d0f5411aba57656845c3e6c, type: 3}
+  - {fileID: 2800000, guid: b3b134e61b6a541c3a29d3df6a005cbd, type: 3}
+  - {fileID: 2800000, guid: 5f3bf004ecb0d4780987c29088fd26e0, type: 3}

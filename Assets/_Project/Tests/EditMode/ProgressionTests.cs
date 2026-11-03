@@ -66,6 +66,19 @@ namespace DrawRush.Tests.EditMode
         }
 
         [Test]
+        public void FlankerAndOrbiter_DebutAloneThenJoinTheMix()
+        {
+            _director.Plan(9, out int s, out int t, out int e, out int d, out int f, out int o, out bool intro);
+            Assert.AreEqual((0, 0, 0, 0, 1, 0, true), (s, t, e, d, f, o, intro));
+            _director.Plan(15, out s, out t, out e, out d, out f, out o, out intro);
+            Assert.AreEqual((0, 0, 0, 0, 0, 1, true), (s, t, e, d, f, o, intro));
+            _director.Plan(16, out s, out t, out e, out d, out f, out o, out intro);
+            Assert.AreEqual((1, 1, 0, 0, 1, 1, false), (s, t, e, d, f, o, intro));
+            _director.Plan(40, out _, out _, out _, out _, out f, out o, out intro);
+            Assert.AreEqual((3, 2, false), (f, o, intro));
+        }
+
+        [Test]
         public void ShopPrices_ClimbAndTheFirstStepIsCheap()
         {
             const int averageWin = 12;   // LevelScore pays 6/12/20 by stars

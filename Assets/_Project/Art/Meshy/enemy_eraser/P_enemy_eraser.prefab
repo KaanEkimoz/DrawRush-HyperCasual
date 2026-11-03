@@ -79,5 +79,29 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 7eef3bffd08ab404ebef1d6fe4a814ab, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6629937410187784625}
   m_SourcePrefab: {fileID: 100100000, guid: 7eef3bffd08ab404ebef1d6fe4a814ab, type: 3}
+--- !u!1 &5659989080401160903 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 7eef3bffd08ab404ebef1d6fe4a814ab, type: 3}
+  m_PrefabInstance: {fileID: 4777540498311845782}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &6629937410187784625
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5659989080401160903}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1c425e5306cd0410d94d44211ce67b2e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: DrawRush::DrawRush.Enemy.EnemyPalette
+  skins:
+  - {fileID: 2800000, guid: 653926aa1df9545ecbba17e9c85574ff, type: 3}
+  - {fileID: 2800000, guid: 7a57fbdf493f14e8084e251ae1837834, type: 3}
+  - {fileID: 2800000, guid: 2ca1192f73e3b4e70a28b8d916a28864, type: 3}
