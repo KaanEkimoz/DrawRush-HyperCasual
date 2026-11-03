@@ -5,7 +5,7 @@ namespace DrawRush.Player
 {
     /// <summary>
     /// Health shown on the hero itself: the pencil gets shorter with every hit and grows back with
-    /// an ink pot. Replaces the heart counter, so the player reads their health without looking
+    /// a health heart. Replaces the heart counter, so the player reads their health without looking
     /// away from the action. A shorter pencil is also a faster one, which gives a losing player a
     /// little more room to escape.
     /// </summary>

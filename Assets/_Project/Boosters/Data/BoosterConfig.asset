@@ -48,11 +48,11 @@ MonoBehaviour:
   - type: 4
     duration: 0
     upgradeStep: 0
-    color: {r: 0.1, g: 0.6, b: 0.7, a: 1}
+    color: {r: 0.92, g: 0.25, b: 0.3, a: 1}
     weight: 0
-    title: INK
+    title: HEALTH
     hint: 
-    icon: {fileID: 21300000, guid: 2b09f29189222458e9b9a1a22b617730, type: 3}
+    icon: {fileID: 21300000, guid: cce225925848c4503bfefbc7873df510, type: 3}
   _speedMultiplier: 1.35
   _shockwaveRadius: 6
   _shockwavePush: 3.5

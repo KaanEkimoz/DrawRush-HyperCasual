@@ -37,7 +37,7 @@ namespace DrawRush.Boosters
 
         public BoosterConfig Config => config;
 
-        /// <summary>True when an ink pot would do something.</summary>
+        /// <summary>True when a health heart would do something.</summary>
         public bool IsHurt => health != null && health.IsAlive && health.Current < health.StartingValue;
 
         /// <summary>Raised whenever the running set changes.</summary>

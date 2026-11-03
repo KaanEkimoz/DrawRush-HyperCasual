@@ -69,7 +69,7 @@ namespace DrawRush.Boosters
         [SerializeField] private float _minEnemyDistance = 2.5f;
         [Tooltip("...or closer than this (m) to the player.")]
         [SerializeField] private float _minPlayerDistance = 2f;
-        [Tooltip("Chance that a pickup is an ink pot while the player is missing health.")]
+        [Tooltip("Chance that a pickup is a health heart while the player is missing health.")]
         [SerializeField, Range(0f, 1f)] private float _inkChance = 0.4f;
         [Tooltip("At most this many different boosters run at once; a new one replaces the one closest to ending.")]
         [SerializeField] private int _maxActiveTypes = 2;
