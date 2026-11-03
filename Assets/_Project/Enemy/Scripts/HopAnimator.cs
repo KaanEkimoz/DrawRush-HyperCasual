@@ -33,6 +33,10 @@ namespace DrawRush.Enemy
         [Tooltip("For flat cut-out models: always face the camera like a paper doll and mirror to " +
                  "the side it is moving, instead of turning with the character.")]
         [SerializeField] private bool faceCamera;
+        [Tooltip("Stand side-on to the camera (front of the model toward the player's eye), turning to " +
+                 "the side it faces, and roll to point at the target when attacking. For the scissors, " +
+                 "whose blades only read from the front.")]
+        [SerializeField] private bool sideOn;
         [Tooltip("Optional limb rig: arms and legs swing on this Animator while the body stays rigid.")]
         [SerializeField] private Animator limbs;
         [Tooltip("Limb playback speed at the reference speed.")]
@@ -342,7 +346,28 @@ namespace DrawRush.Enemy
             float stretch = ExtraStretch * aHeight * height;
             float widen = 1f / Mathf.Sqrt(Mathf.Max(0.2f, stretch));   // keep the volume
             var scale = new Vector3(_baseScale.x * widen, _baseScale.y * HeightFactor * stretch, _baseScale.z * widen * aReach) * SizeFactor;
-            if (faceCamera && Camera.main != null)
+            if (sideOn && Camera.main != null && transform.parent != null)
+            {
+                Transform cam = Camera.main.transform;
+                Vector3 facing = transform.parent.forward;
+                float sideways = Vector3.Dot(facing, cam.right);
+                if (Mathf.Abs(sideways) > 0.05f) _flip = Mathf.Sign(sideways);
+                // During an attack it tips over sideways so the blades point at the target.
+                float tip = 0f;
+                if (_attackTime >= 0f)
+                {
+                    float k = Mathf.Clamp01(_attackTime / Moves[(int)_attackStyle].Seconds);
+                    tip = k < 0.3f ? Mathf.SmoothStep(0f, 1f, k / 0.3f) : k > 0.75f ? Mathf.SmoothStep(0f, 1f, (1f - k) / 0.25f) : 1f;
+                }
+                float roll = side - _flip * 80f * tip;   // handles swing away, blades swing at the target
+                Vector3 toCam = -cam.forward;
+                toCam.y = Mathf.Max(0f, toCam.y) * 0.35f;   // stays mostly upright, just turned to the camera
+                transform.rotation = Quaternion.LookRotation(toCam.normalized, Vector3.up) * Quaternion.Euler(0f, 0f, roll);
+                // Tip over around the middle of the body, not the feet, so it stays where it stands.
+                float half = 0.5f * transform.lossyScale.y;
+                transform.position += Vector3.up * half - transform.rotation * Vector3.up * half;
+            }
+            else if (faceCamera && Camera.main != null)
             {
                 Transform cam = Camera.main.transform;
                 float sideways = Vector3.Dot(_step, cam.right);
