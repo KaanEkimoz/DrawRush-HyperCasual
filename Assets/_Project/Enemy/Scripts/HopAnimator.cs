@@ -37,6 +37,11 @@ namespace DrawRush.Enemy
                  "the side it faces, and roll to point at the target when attacking. For the scissors, " +
                  "whose blades only read from the front.")]
         [SerializeField] private bool sideOn;
+        [Tooltip("Fixed tilt (degrees, around the limb's side axis) added to the legs, e.g. 90 to stand " +
+                 "a model that lies flat up on its legs.")]
+        [SerializeField] private float legTilt;
+        [Tooltip("Fixed tilt (degrees) added to the arms, to lift them off the page on a flat model.")]
+        [SerializeField] private float armTilt;
         [Tooltip("Optional limb rig: arms and legs swing on this Animator while the body stays rigid.")]
         [SerializeField] private Animator limbs;
         [Tooltip("Limb playback speed at the reference speed.")]
@@ -338,7 +343,9 @@ namespace DrawRush.Enemy
                 }
                 bool arm = limb.bone.name.Contains("Arm");
                 float angle = arm ? _armSpring.Value + idleArms : stride * (limb.bone.name.StartsWith("L") ? 1f : -1f);
-                limb.bone.localRotation = Quaternion.AngleAxis(angle * limb.direction, limb.axis);
+                float tilt = arm ? armTilt : legTilt;
+                limb.bone.localRotation = (tilt != 0f ? Quaternion.Euler(tilt, 0f, 0f) : Quaternion.identity)
+                                        * Quaternion.AngleAxis(angle * limb.direction, limb.axis);
             }
 
             transform.localPosition = _basePos + Vector3.up * (y + aLift) + Vector3.forward * aForward;

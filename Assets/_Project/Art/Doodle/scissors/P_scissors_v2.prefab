@@ -123,6 +123,8 @@ MonoBehaviour:
   waddle: 8
   faceCamera: 0
   sideOn: 0
+  legTilt: 90
+  armTilt: 35
   limbs: {fileID: 0}
   limbSpeed: 1.2
   swingLimbs:

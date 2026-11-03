@@ -407,6 +407,8 @@ MonoBehaviour:
   waddle: 8
   faceCamera: 0
   sideOn: 0
+  legTilt: 0
+  armTilt: 0
   limbs: {fileID: 0}
   limbSpeed: 1.2
   swingLimbs:
@@ -965,6 +967,8 @@ MonoBehaviour:
   waddle: 8
   faceCamera: 0
   sideOn: 0
+  legTilt: 0
+  armTilt: 0
   limbs: {fileID: 0}
   limbSpeed: 1.2
   swingLimbs:
@@ -1055,6 +1059,8 @@ MonoBehaviour:
   waddle: 8
   faceCamera: 0
   sideOn: 0
+  legTilt: 0
+  armTilt: 0
   limbs: {fileID: 0}
   limbSpeed: 1.2
   swingLimbs:
@@ -1496,6 +1502,8 @@ MonoBehaviour:
   waddle: 8
   faceCamera: 0
   sideOn: 0
+  legTilt: 0
+  armTilt: 0
   limbs: {fileID: 0}
   limbSpeed: 1.2
   swingLimbs:
@@ -1910,7 +1918,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6652191760766441840, guid: 5a25da6fd9eee4264857e1d1a1e552ea, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.59800005
+      value: -0.19800004
       objectReference: {fileID: 0}
     - target: {fileID: 6652191760766441840, guid: 5a25da6fd9eee4264857e1d1a1e552ea, type: 3}
       propertyPath: m_LocalPosition.z
