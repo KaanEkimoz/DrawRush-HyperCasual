@@ -102,6 +102,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: DrawRush::DrawRush.Enemy.EnemyPalette
   skins:
+  - {fileID: 2800000, guid: 2ca1192f73e3b4e70a28b8d916a28864, type: 3}
   - {fileID: 2800000, guid: 653926aa1df9545ecbba17e9c85574ff, type: 3}
   - {fileID: 2800000, guid: 7a57fbdf493f14e8084e251ae1837834, type: 3}
-  - {fileID: 2800000, guid: 2ca1192f73e3b4e70a28b8d916a28864, type: 3}

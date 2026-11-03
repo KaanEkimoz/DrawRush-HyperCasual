@@ -1,195 +1,231 @@
-using System.Collections;
 using System.Collections.Generic;
 using DrawRush.Core;
 using DrawRush.Enemy;
+using Unity.AI.Navigation;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.InputSystem;
-using UnityEngine.SceneManagement;
 
 namespace DrawRush.Dev
 {
     /// <summary>
-    /// Test bench for enemies, used only by the EnemySandbox scene (not in the build). It loads
-    /// the game scene, empties the current level of enemies, then spawns any enemy type in any
-    /// colour on a key press. A gallery lays out every type in every colour, standing still.
-    ///
-    /// Keys: 1-8 spawn a type · Q/E previous/next colour · G gallery · X clear ·
-    /// H god mode · F freeze all.
+    /// Test bench for enemies, in its own small scene (Assets/Scenes/Dev/EnemySandbox.unity,
+    /// not in the build): a paper floor, a pencil you walk with WASD or the arrow keys, and a
+    /// panel that spawns any enemy type in any colour. "Show all" lines up every type in every
+    /// colour, standing still. Enemies cannot hurt the pencil here.
     /// </summary>
     public sealed class EnemySandbox : MonoBehaviour
     {
-        private const string GameScene = "Assets/Scenes/01_DrawRushGame.unity";
-
-        private static readonly EnemyVariant[] Types =
+        private sealed class Kind
         {
-            EnemyVariant.Normal, EnemyVariant.Sprinter, EnemyVariant.Tank, EnemyVariant.Eater,
-            EnemyVariant.Dasher, EnemyVariant.Flanker, EnemyVariant.Orbiter, EnemyVariant.Boss,
-        };
-
-        private static readonly string[] TypeNames =
-        {
-            "Normal (zımba)", "Sprinter (makas)", "Tank (delgeç)", "Eater (kalemtıraş)",
-            "Dasher (raptiye)", "Flanker (silgi)", "Orbiter (küçük silgi)", "Boss (dev silgi)",
-        };
-
-        [SerializeField] private float spawnDistance = 7f;
-        [SerializeField] private float gallerySpacing = 2.1f;
-
-        private readonly List<EnemyFollow> _spawned = new();
-        private EnemyFollow _template;
-        private LevelManager _levels;
-        private DrawRush.Player.PlayerHealth _health;
-        private Transform _parent;
-        private int _colour = -2;   // -2 random, -1 the original colour, 0.. a palette colour
-        private bool _god = true, _ready;
-        private string _status = "Loading the game scene...";
-
-        private IEnumerator Start()
-        {
-            if (SceneManager.GetSceneByPath(GameScene).isLoaded == false)
-            {
-#if UNITY_EDITOR
-                yield return UnityEditor.SceneManagement.EditorSceneManager.LoadSceneAsyncInPlayMode(
-                    GameScene, new LoadSceneParameters(LoadSceneMode.Additive));
-#else
-                yield return SceneManager.LoadSceneAsync(GameScene, LoadSceneMode.Additive);
-#endif
-            }
-            SceneManager.SetActiveScene(SceneManager.GetSceneByPath(GameScene));
-
-            // Wait for the level and its 3-2-1 countdown.
-            while ((_levels = FindFirstObjectByType<LevelManager>()) == null || Time.timeScale <= 0f) yield return null;
-            yield return null;
-
-            yield return new WaitForSeconds(0.5f);   // let the tier director dress the level first
-            _health = GameServices.Health;
-
-            foreach (EnemyFollow e in FindObjectsByType<EnemyFollow>(FindObjectsInactive.Include, FindObjectsSortMode.None))
-                if (e.CanBeBoss) { _template = e; break; }
-            if (_template == null) { _status = "No enemy with every look was found."; yield break; }
-
-            _parent = _levels.GetLevel(_levels.CurrentIndex);
-            Clear();
-            _ready = true;
-            _status = "Ready";
+            public string Name;
+            public EnemyVariant Variant;
+            public float Speed, Scale;
+            public bool Heavy;
         }
+
+        private static readonly Kind[] Kinds =
+        {
+            new() { Name = "Zımba", Variant = EnemyVariant.Normal, Speed = 1f, Scale = 1f },
+            new() { Name = "Makas · hızlı", Variant = EnemyVariant.Sprinter, Speed = 1.5f, Scale = 0.8f },
+            new() { Name = "Delgeç · ağır", Variant = EnemyVariant.Tank, Speed = 0.7f, Scale = 1.35f, Heavy = true },
+            new() { Name = "Kalemtıraş · boya yer", Variant = EnemyVariant.Eater, Speed = 1f, Scale = 1f },
+            new() { Name = "Raptiye · atılır", Variant = EnemyVariant.Dasher, Speed = 1f, Scale = 1f },
+            new() { Name = "Silgi · önünü keser", Variant = EnemyVariant.Flanker, Speed = 1.1f, Scale = 1f },
+            new() { Name = "Küçük silgi · döner", Variant = EnemyVariant.Orbiter, Speed = 1.25f, Scale = 0.8f },
+            new() { Name = "Dev silgi · boss", Variant = EnemyVariant.Boss, Speed = 0.675f, Scale = 1.8f, Heavy = true },
+        };
+
+        // Palette order on every enemy look: teal, orange, green, purple (the eraser has no purple).
+        private static readonly string[] ColourNames = { "Rastgele", "Orijinal", "Turkuaz", "Turuncu", "Yeşil", "Mor" };
+        private static readonly Color[] ColourSwatches =
+        {
+            new(0.85f, 0.85f, 0.85f), new(0.25f, 0.35f, 0.85f), new(0.2f, 0.8f, 0.75f),
+            new(1f, 0.6f, 0.2f), new(0.35f, 0.8f, 0.3f), new(0.6f, 0.35f, 0.85f),
+        };
+
+        [SerializeField] private EnemyFollow enemyPrefab;
+        [SerializeField] private Transform player;
+        [SerializeField] private NavMeshSurface floor;
+        [SerializeField] private Camera viewCamera;
+        [SerializeField] private float walkSpeed = 6f;
+        [SerializeField] private float floorHalfSize = 38f;
+        [SerializeField] private float spawnDistance = 7f;
+
+        private readonly List<EnemyFollow> _enemies = new();
+        private readonly List<(string label, Vector3 at)> _rowLabels = new();
+        private Vector3 _galleryCentre;
+        private int _colour;   // index into ColourNames; 0 = random
+        private float _cameraHeight = 16f, _cameraTarget = 16f;
+        private GUIStyle _panel, _title, _button, _small, _rowLabel;
+
+        private void Awake()
+        {
+            floor.BuildNavMesh();
+            GameServices.Register(player, player, viewCamera.transform, null, null);
+        }
+
+        private void OnDestroy() => GameServices.Clear();
 
         private void Update()
         {
-            if (!_ready) return;
-            if (_god && _health != null && _health.Current < _health.StartingValue) _health.Heal(_health.StartingValue - _health.Current);
+            Walk();
+            Keyboard k = Keyboard.current;
+            if (k != null)
+            {
+                Key[] digits = { Key.Digit1, Key.Digit2, Key.Digit3, Key.Digit4, Key.Digit5, Key.Digit6, Key.Digit7, Key.Digit8 };
+                for (int i = 0; i < digits.Length; i++)
+                    if (k[digits[i]].wasPressedThisFrame) Spawn(i);
+            }
+        }
 
+        private void LateUpdate()
+        {
+            _cameraHeight = Mathf.Lerp(_cameraHeight, _cameraTarget, 1f - Mathf.Exp(-4f * Time.deltaTime));
+            // Look a little below the pencil so it sits above the panel at the bottom of the screen.
+            Vector3 focus = (_rowLabels.Count > 0 ? _galleryCentre : player.position) + new Vector3(0f, 0f, -_cameraHeight * 0.22f);
+            // The gallery is seen flatter, so tall and flat enemies both read from the front.
+            float back = _rowLabels.Count > 0 ? 0.8f : 0.55f;
+            viewCamera.transform.position = focus + new Vector3(0f, _cameraHeight, -_cameraHeight * back);
+            viewCamera.transform.LookAt(focus);
+        }
+
+        private void Walk()
+        {
             Keyboard k = Keyboard.current;
             if (k == null) return;
-            Key[] digits = { Key.Digit1, Key.Digit2, Key.Digit3, Key.Digit4, Key.Digit5, Key.Digit6, Key.Digit7, Key.Digit8 };
-            for (int i = 0; i < digits.Length; i++)
-                if (k[digits[i]].wasPressedThisFrame) Spawn(i);
-            if (k.qKey.wasPressedThisFrame) _colour = Mathf.Max(-2, _colour - 1);
-            if (k.eKey.wasPressedThisFrame) _colour = Mathf.Min(3, _colour + 1);
-            if (k.gKey.wasPressedThisFrame) Gallery();
-            if (k.xKey.wasPressedThisFrame) Clear();
-            if (k.hKey.wasPressedThisFrame) _god = !_god;
-            if (k.fKey.wasPressedThisFrame) foreach (EnemyFollow e in _spawned) if (e != null) e.Freeze(4f);
+            Vector3 move = Vector3.zero;
+            if (k.wKey.isPressed || k.upArrowKey.isPressed) move.z += 1f;
+            if (k.sKey.isPressed || k.downArrowKey.isPressed) move.z -= 1f;
+            if (k.dKey.isPressed || k.rightArrowKey.isPressed) move.x += 1f;
+            if (k.aKey.isPressed || k.leftArrowKey.isPressed) move.x -= 1f;
+            if (move.sqrMagnitude < 0.01f) return;
+            move.Normalize();
+            Vector3 p = player.position + move * (walkSpeed * Time.deltaTime);
+            p.x = Mathf.Clamp(p.x, -floorHalfSize, floorHalfSize);
+            p.z = Mathf.Clamp(p.z, -floorHalfSize, floorHalfSize);
+            player.position = p;
+            player.rotation = Quaternion.Slerp(player.rotation, Quaternion.LookRotation(move), 1f - Mathf.Exp(-12f * Time.deltaTime));
         }
 
-        /// <summary>Spawn one enemy of <paramref name="type"/> (index into the type list) near the player.</summary>
-        public void Spawn(int type)
+        private void Spawn(int kind)
         {
-            Transform player = GameServices.Player;
-            if (player == null) return;
+            if (_rowLabels.Count > 0) Clear();
+            _cameraTarget = 16f;
             float angle = Random.Range(0f, Mathf.PI * 2f);
-            Vector3 at = player.position + new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)) * spawnDistance;
-            EnemyFollow e = Make(at, Types[type], true);
-            if (e != null) _status = $"{TypeNames[type]} · {ColourName(_colour)}";
+            Make(player.position + new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)) * spawnDistance, Kinds[kind], _colour, true);
         }
 
-        // Every type in every colour, in rows in front of the player, standing still.
-        private void Gallery()
+        // Every type in every colour, one row per type, standing still around the pencil.
+        private void ShowAll()
         {
             Clear();
-            Transform player = GameServices.Player;
-            if (player == null) return;
-            // Centred on the player, so the follow camera sees it all: types run down the page.
-            Vector3 origin = player.position + new Vector3(-2f * gallerySpacing, 0f, 3.5f * gallerySpacing);
-            int was = _colour;
-            for (int row = 0; row < Types.Length; row++)
+            const float gap = 3.2f;
+            Vector3 origin = player.position + new Vector3(-0.5f * gap, 0f, 4f * gap);
+            _galleryCentre = origin + new Vector3(0.9f * gap, 0f, -4.2f * gap);   // leaves room for the row names
+            for (int row = 0; row < Kinds.Length; row++)
             {
-                int colours = 1;
-                for (int c = 0; c < colours; c++)
+                Vector3 rowStart = origin + new Vector3(0f, 0f, -row * gap);
+                _rowLabels.Add((Kinds[row].Name, rowStart + new Vector3(-gap * 0.9f, 0f, 0f)));
+                for (int c = 1; c < ColourNames.Length; c++)
                 {
-                    _colour = c - 1;
-                    EnemyFollow e = Make(origin + new Vector3(c * gallerySpacing, 0f, -row * gallerySpacing), Types[row], false);
-                    if (c == 0 && e.GetComponentInChildren<EnemyPalette>(false) is { } p) colours += p.Count;
+                    EnemyFollow e = Make(rowStart + new Vector3((c - 1) * gap, 0f, 0f), Kinds[row], c, false);
+                    // The eraser has one colour fewer: drop the repeat.
+                    EnemyPalette p = e.GetComponentInChildren<EnemyPalette>(false);
+                    if (c > 1 && (p == null || c - 2 >= p.Count)) { _enemies.Remove(e); Destroy(e.gameObject); }
                 }
             }
-            _colour = was;
-            _status = "Gallery: every type in every colour (rows top to bottom: Normal → Boss)";
+            _cameraTarget = 31f;
         }
 
-        private EnemyFollow Make(Vector3 at, EnemyVariant type, bool live)
+        private EnemyFollow Make(Vector3 at, Kind kind, int colour, bool live)
         {
             if (NavMesh.SamplePosition(at, out NavMeshHit hit, 4f, NavMesh.AllAreas)) at = hit.position;
-            bool wasActive = _template.gameObject.activeSelf;
-            _template.gameObject.SetActive(false);   // the copy starts inactive, so it wakes at its new spot
-            EnemyFollow e = Instantiate(_template, at, Quaternion.identity, _parent);
-            _template.gameObject.SetActive(wasActive);
-            e.name = "Sandbox_" + type;
-            e.gameObject.SetActive(true);
-
-            bool boss = type == EnemyVariant.Boss;
-            float speed = type switch { EnemyVariant.Sprinter => 1.5f, EnemyVariant.Tank => 0.7f, EnemyVariant.Flanker => 1.1f, EnemyVariant.Orbiter => 1.25f, EnemyVariant.Boss => 0.675f, _ => 1f };
-            float scale = type switch { EnemyVariant.Sprinter => 0.8f, EnemyVariant.Tank => 1.35f, EnemyVariant.Orbiter => 0.8f, EnemyVariant.Boss => live ? 1.8f : 1f, _ => 1f };
-            e.ApplyVariant(type, speed, scale, boss || type == EnemyVariant.Tank, null);
-
+            EnemyFollow e = Instantiate(enemyPrefab, at, Quaternion.Euler(0f, 180f, 0f));
+            e.ApplyVariant(kind.Variant, kind.Speed, live ? kind.Scale : Mathf.Min(kind.Scale, 1.2f), kind.Heavy, null);
             EnemyPalette palette = e.GetComponentInChildren<EnemyPalette>(false);
-            if (palette != null && _colour > -2) palette.Apply(Mathf.Min(_colour, palette.Count - 1));
-
+            if (palette != null && colour > 0) palette.Apply(Mathf.Min(colour - 2, palette.Count - 1));
+            if (e.TryGetComponent(out EnemyCombat combat)) combat.enabled = live;
             if (!live)
             {
                 e.enabled = false;
-                if (e.TryGetComponent(out EnemyCombat combat)) combat.enabled = false;
-                if (e.TryGetComponent(out NavMeshAgent agent) && agent.isOnNavMesh) agent.isStopped = true;
-                e.transform.rotation = Quaternion.Euler(0f, 180f, 0f);
+                if (e.TryGetComponent(out NavMeshAgent agent)) agent.enabled = false;
             }
-            _spawned.Add(e);
+            _enemies.Add(e);
             return e;
         }
 
-        private static string ColourName(int c) => c switch { -2 => "random colour", -1 => "original colour", _ => "colour " + (c + 1) };
-
         private void Clear()
         {
-            foreach (EnemyFollow e in _spawned) if (e != null) Destroy(e.gameObject);
-            _spawned.Clear();
-            if (_levels != null) _parent = _levels.GetLevel(_levels.CurrentIndex);
-            if (_parent == null) return;
-            foreach (EnemyFollow e in _parent.GetComponentsInChildren<EnemyFollow>(false)) e.gameObject.SetActive(false);
-            _status = "Cleared";
+            foreach (EnemyFollow e in _enemies) if (e != null) Destroy(e.gameObject);
+            _enemies.Clear();
+            _rowLabels.Clear();
+            _cameraTarget = 16f;
         }
 
         private void OnGUI()
         {
-            float s = Mathf.Max(1f, Screen.height / 1300f);
+            float s = Screen.height / 1280f;
             GUI.matrix = Matrix4x4.Scale(new Vector3(s, s, 1f));
-            float h = 470f;
-            GUILayout.BeginArea(new Rect(6, Screen.height / s - h - 90f, 230, h), GUI.skin.box);
-            GUILayout.Label("<b>ENEMY SANDBOX</b>", new GUIStyle(GUI.skin.label) { richText = true, fontSize = 16 });
-            GUILayout.Label(_status);
-            if (!_ready) { GUILayout.EndArea(); return; }
-            for (int i = 0; i < Types.Length; i++)
-                if (GUILayout.Button($"{i + 1}  {TypeNames[i]}")) Spawn(i);
+            float w = Screen.width / s;
+            Styles();
+
+            foreach (var (label, at) in _rowLabels)
+            {
+                Vector3 sp = viewCamera.WorldToScreenPoint(at);
+                if (sp.z > 0f) GUI.Label(new Rect(sp.x / s - 230f, (Screen.height - sp.y) / s - 14f, 220f, 28f), label, _rowLabel);
+            }
+
+            const float panelHeight = 500f;
+            GUILayout.BeginArea(new Rect(12f, Screen.height / s - panelHeight - 12f, w - 24f, panelHeight), _panel);
+            GUILayout.Label("Düşman testi", _title);
+            GUILayout.Label("WASD / ok tuşları: yürü · düşmanlar hasar vermez", _small);
+
+            for (int i = 0; i < Kinds.Length; i += 2)
+            {
+                GUILayout.BeginHorizontal();
+                for (int j = i; j < i + 2 && j < Kinds.Length; j++)
+                    if (GUILayout.Button($"{j + 1}. {Kinds[j].Name}", _button, GUILayout.Height(52f))) Spawn(j);
+                GUILayout.EndHorizontal();
+            }
+
+            GUILayout.Space(8f);
+            GUILayout.Label("Renk", _small);
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("◀ Q")) _colour = Mathf.Max(-2, _colour - 1);
-            GUILayout.Label(ColourName(_colour), GUILayout.Width(120));
-            if (GUILayout.Button("E ▶")) _colour = Mathf.Min(3, _colour + 1);
+            for (int c = 0; c < ColourNames.Length; c++)
+            {
+                Color was = GUI.backgroundColor;
+                GUI.backgroundColor = ColourSwatches[c];
+                string text = c == _colour ? $"[{ColourNames[c]}]" : ColourNames[c];
+                if (GUILayout.Button(text, _button, GUILayout.Height(44f))) _colour = c;
+                GUI.backgroundColor = was;
+            }
             GUILayout.EndHorizontal();
-            if (GUILayout.Button("G  Gallery (all colours)")) Gallery();
-            if (GUILayout.Button("F  Freeze all 4 s")) foreach (EnemyFollow e in _spawned) if (e != null) e.Freeze(4f);
-            if (GUILayout.Button("X  Clear")) Clear();
-            if (GUILayout.Button($"H  God mode: {(_god ? "ON" : "OFF")}")) _god = !_god;
-            GUILayout.Label($"Enemies: {_spawned.Count} · keys 1-8, Q/E, G, F, X, H");
+
+            GUILayout.Space(8f);
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("Hepsini göster", _button, GUILayout.Height(52f))) ShowAll();
+            if (GUILayout.Button("Temizle", _button, GUILayout.Height(52f))) Clear();
+            GUILayout.EndHorizontal();
             GUILayout.EndArea();
+        }
+
+        private void Styles()
+        {
+            if (_title != null) return;
+            var dark = new Texture2D(1, 1);
+            dark.SetPixel(0, 0, new Color(0.1f, 0.12f, 0.24f, 0.92f));
+            dark.Apply();
+            _panel = new GUIStyle(GUI.skin.box) { padding = new RectOffset(14, 14, 10, 10) };
+            _panel.normal.background = dark;
+            _title = new GUIStyle(GUI.skin.label) { fontSize = 30, fontStyle = FontStyle.Bold };
+            _title.normal.textColor = Color.white;
+            _small = new GUIStyle(GUI.skin.label) { fontSize = 20 };
+            _small.normal.textColor = new Color(0.85f, 0.87f, 0.95f);
+            _button = new GUIStyle(GUI.skin.button) { fontSize = 21 };
+            _button.normal.textColor = _button.hover.textColor = Color.white;
+            _rowLabel = new GUIStyle(GUI.skin.label) { fontSize = 18, fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleRight, wordWrap = false };
+            _rowLabel.normal.textColor = new Color(0.12f, 0.15f, 0.36f);
         }
     }
 }

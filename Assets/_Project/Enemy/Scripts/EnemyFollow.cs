@@ -11,7 +11,7 @@ namespace DrawRush.Enemy
         Sprinter = 1,   // fast and small
         Tank = 2,       // slow, big, cannot be pushed
         Eater = 3,      // eats paint that is not kept for good yet
-        Dasher = 4,     // winds up (flashing), then lunges
+        Dasher = 4,     // moves only by lunges: crouch and flash, leap, land, again
         Boss = 5,       // the Giant Eraser: huge, unpushable, wipes fresh paint in a wide circle
         Flanker = 6,    // runs to where the player is heading, not where they are
         Orbiter = 7,    // circles the player, then dives in after a flash
@@ -118,16 +118,19 @@ namespace DrawRush.Enemy
 
         public bool CanBeBoss => variantVisuals != null && variantVisuals.Length > (int)EnemyVariant.Boss && variantVisuals[(int)EnemyVariant.Boss] != null;
 
-        [Header("Dasher")]
-        [Tooltip("Seconds between lunges.")]
-        [SerializeField] private float dashInterval = 4f;
-        [Tooltip("Seconds of flashing wind-up before a lunge (the telegraph).")]
-        [SerializeField] private float dashWindUp = 0.6f;
-        [Tooltip("Seconds the lunge lasts.")]
-        [SerializeField] private float dashDuration = 0.7f;
-        [SerializeField] private float dashSpeedMultiplier = 3f;
-        [Tooltip("Only lunges at a player closer than this (m).")]
-        [SerializeField] private float dashRange = 6f;
+        [Header("Dasher (pushpin)")]
+        [Tooltip("Seconds it crouches, aims and flashes before each lunge (the telegraph).")]
+        [SerializeField] private float lungeWindUp = 0.4f;
+        [Tooltip("Seconds a lunge lasts.")]
+        [SerializeField] private float lungeTime = 0.4f;
+        [Tooltip("Seconds it stands after landing.")]
+        [SerializeField] private float lungeRest = 0.3f;
+        [Tooltip("How far one lunge goes (m), at speed 1.")]
+        [SerializeField] private float lungeDistance = 4.5f;
+        [Tooltip("How far past the player a lunge may carry it (m), so a late dodge still works.")]
+        [SerializeField] private float lungeOvershoot = 1.2f;
+        [Tooltip("The wind-up sound plays only for a player closer than this (m).")]
+        [SerializeField] private float lungeSoundRange = 9f;
         [SerializeField] private Color windUpColor = Color.white;
 
         [Header("Flanker / Orbiter")]
@@ -148,6 +151,9 @@ namespace DrawRush.Enemy
         private enum DashPhase { Idle, WindUp, Lunge }
         private DashPhase _dash;
         private float _dashTimer;
+        private Vector3 _lungeFrom, _lungeTo;
+        private HopAnimator _hop;   // the shown look's hop animator, for the lunge pose
+        private float _lastWhine = float.NegativeInfinity;
 
         /// <summary>True while this enemy can land a hit: chasing, not frozen, asleep or done.</summary>
         public bool CanAttack => isActiveAndEnabled && _awake && !_frozen && !_halted && _slideLeft <= 0f;
@@ -168,7 +174,7 @@ namespace DrawRush.Enemy
             CaptureAuthored();
             Variant = variant;
             _dash = DashPhase.Idle;
-            _dashTimer = dashInterval;
+            _dashTimer = lungeRest;
             speedMultiplier = speed;
             _variantScale = scale;
             transform.localScale = _authoredScale * scale;
@@ -178,6 +184,7 @@ namespace DrawRush.Enemy
             ApplySkin(variant);
             ApplySpeed();
             ApplyTint();
+            if (variant == EnemyVariant.Dasher && _agent.isOnNavMesh) _agent.ResetPath();   // it only ever lunges
         }
 
         /// <summary>Back to the enemy as authored in the scene.</summary>
@@ -209,12 +216,16 @@ namespace DrawRush.Enemy
             if (visual == null) return;
             // Each look drives its own animator (the rigged eraser has one, the hopping stationery none).
             _anim = visual.GetComponentInChildren<Animator>(true);
+            if (_hop != null) { _hop.ExtraLean = 0f; _hop.ExtraStretch = 1f; }
+            _hop = visual.GetComponent<HopAnimator>();
             if (visual.TryGetComponent(out EnemyPalette palette)) palette.ApplyRandom();
         }
 
         /// <summary>Stop in place for <paramref name="seconds"/>, tinted icy, then resume.</summary>
         public void Freeze(float seconds)
         {
+            if (_dash != DashPhase.Idle) { _dash = DashPhase.Idle; _dashTimer = lungeRest; }
+            Pose(0f, 1f);
             if (seconds <= 0f || _halted) return;
             _frozenUntil = Mathf.Max(_frozenUntil, Time.time + seconds);
             if (_frozen) return;
@@ -247,6 +258,8 @@ namespace DrawRush.Enemy
             _slideDirection = direction.normalized;
             _slideSeconds = seconds;
             _slideLeft = seconds;
+            if (_dash != DashPhase.Idle) { _dash = DashPhase.Idle; _dashTimer = lungeRest; }
+            Pose(0f, 1f);
             _slideSpeed = 2f * distance / seconds;   // falls to 0, so the area under it is the distance
             _agent.isStopped = true;
             _agent.velocity = Vector3.zero;
@@ -275,47 +288,84 @@ namespace DrawRush.Enemy
 
         private void ApplySpeed()
         {
-            float lunge = _dash == DashPhase.Lunge ? dashSpeedMultiplier : 1f;
-            if (_agent != null) _agent.speed = _baseSpeed * globalSpeed * Mathf.Max(0.05f, speedMultiplier) * _pressure * lunge * _burst;
+            if (_agent != null) _agent.speed = _baseSpeed * globalSpeed * Mathf.Max(0.05f, speedMultiplier) * _pressure * _burst;
         }
 
-        // Dasher: every few seconds near the player it stops and flashes (the telegraph the
-        // research asks for, so a hit never comes from nowhere), then lunges at where the player
-        // stood when the flash began.
-        // Returns true while the dash owns movement this frame.
+        // Dasher: it never walks. Each step is a lunge: crouch and flash while aiming (the
+        // telegraph), leap along a straight line to where the player stood (a little past it),
+        // land, and go again. Moved by hand on the NavMesh so the leap is instant, not eased in by
+        // the agent's acceleration.
+        // Returns true while the lunge cycle owns movement this frame (always, for a Dasher).
         private bool UpdateDash(Transform player)
         {
             _dashTimer -= Time.deltaTime;
+            Vector3 toPlayer = player.position - transform.position;
+            toPlayer.y = 0f;
             switch (_dash)
             {
-                case DashPhase.Idle:
-                    if (_dashTimer > 0f) return false;
-                    if ((player.position - transform.position).sqrMagnitude > dashRange * dashRange) { _dashTimer = 0.5f; return false; }
+                case DashPhase.Idle:   // resting after a landing
+                    Pose(-8f * Mathf.Clamp01(_dashTimer / Mathf.Max(0.01f, lungeRest)), 1f);
+                    if (_dashTimer > 0f) return true;
                     _dash = DashPhase.WindUp;
-                    _dashTimer = dashWindUp;
-                    DashWindUpStarted?.Invoke();
+                    _dashTimer = lungeWindUp;
+                    // A whine every lunge would drone; one every few seconds still warns.
+                    if (toPlayer.sqrMagnitude < lungeSoundRange * lungeSoundRange && Time.time - _lastWhine > 2.5f)
+                    {
+                        _lastWhine = Time.time;
+                        DashWindUpStarted?.Invoke();
+                    }
                     if (_anim != null) _anim.SetTrigger(AnimatorIds.EnemyWindUp);
-                    _agent.isStopped = true;
-                    _agent.velocity = Vector3.zero;
-                    _agent.SetDestination(player.position);   // aim now; the lunge commits to it
                     return true;
                 case DashPhase.WindUp:
-                    SetColor(Mathf.Repeat(_dashTimer * 10f, 1f) < 0.5f ? windUpColor : (_tierColor ?? fastColor));
+                {
+                    float k = 1f - Mathf.Clamp01(_dashTimer / Mathf.Max(0.01f, lungeWindUp));
+                    Pose(-22f * k, 1f - 0.25f * k);   // rears back and crouches
+                    Face(toPlayer, 14f);
+                    SetColor(Mathf.Repeat(_dashTimer * 12f, 1f) < 0.5f ? windUpColor : (_tierColor ?? fastColor));
                     if (_dashTimer > 0f) return true;
+
+                    float reach = lungeDistance * Mathf.Clamp(speedMultiplier * globalSpeed * _pressure, 0.6f, 1.6f);
+                    float dist = Mathf.Min(reach, toPlayer.magnitude + lungeOvershoot);
+                    Vector3 dir = toPlayer.sqrMagnitude > 0.001f ? toPlayer.normalized : transform.forward;
+                    _lungeFrom = transform.position;
+                    _lungeTo = _lungeFrom + dir * dist;
                     _dash = DashPhase.Lunge;
-                    _dashTimer = dashDuration;
+                    _dashTimer = lungeTime;
                     if (_anim != null) _anim.SetTrigger(AnimatorIds.EnemyLunge);
-                    _agent.isStopped = false;
-                    ApplySpeed();
                     ApplyTint();
                     return true;
-                default:
+                }
+                default:   // Lunge
+                {
+                    float k = 1f - Mathf.Clamp01(_dashTimer / Mathf.Max(0.01f, lungeTime));
+                    float eased = 1f - (1f - k) * (1f - k) * (1f - k);   // fast off the mark, settles on landing
+                    Vector3 want = Vector3.Lerp(_lungeFrom, _lungeTo, eased);
+                    Vector3 step = want - transform.position;
+                    step.y = 0f;
+                    _agent.Move(step);   // stays on the NavMesh, stops at walls
+                    Face(_lungeTo - _lungeFrom, 30f);
+                    Pose(38f * Mathf.Sin(k * Mathf.PI), 1f + 0.3f * Mathf.Sin(k * Mathf.PI));   // stretched, pin first
                     if (_dashTimer > 0f) return true;
                     _dash = DashPhase.Idle;
-                    _dashTimer = dashInterval;
-                    ApplySpeed();
-                    return false;
+                    _dashTimer = lungeRest;
+                    Pose(0f, 0.85f);
+                    return true;
+                }
             }
+        }
+
+        private void Pose(float lean, float stretch)
+        {
+            if (_hop == null) return;
+            _hop.ExtraLean = lean;
+            _hop.ExtraStretch = stretch;
+        }
+
+        private void Face(Vector3 dir, float sharpness)
+        {
+            dir.y = 0f;
+            if (dir.sqrMagnitude < 0.0001f) return;
+            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(dir), 1f - Mathf.Exp(-sharpness * Time.deltaTime));
         }
 
         // Eater: wipes the paint of any unfinished edge in its range.
@@ -371,7 +421,7 @@ namespace DrawRush.Enemy
             _slideLeft = 0f;
             if (_anim != null) _anim.speed = 1f;
             _dash = DashPhase.Idle;
-            _dashTimer = dashInterval;
+            _dashTimer = lungeRest;
             _orbitPhase = 0;
             _orbitTimer = orbitDiveEvery;
             _orbitSide = Random.value < 0.5f ? -1f : 1f;

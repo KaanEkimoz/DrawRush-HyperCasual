@@ -42,13 +42,6 @@ namespace DrawRush.Enemy.EditorTools
                 new Mark(false, true, 212, 286, Px(150, 288, 228, 345)),
                 new Mark(false, false, 365, 322, Px(345, 326, 415, 372)),
             }),
-            ("Doodle/scissors/P_scissors", true, new[]
-            {
-                new Mark(true, true, 283, 348, Px(235, 345, 282, 400)),
-                new Mark(true, false, 358, 342, Px(358, 332, 420, 370)),
-                new Mark(false, true, 300, 386, Px(262, 383, 335, 450)),
-                new Mark(false, false, 388, 408, Px(390, 405, 420, 448)),
-            }),
             ("Doodle/holepunch/P_holepunch", false, new[]
             {
                 new Mark(true, true, 152, 270, Px(0, 232, 150, 370)),
@@ -76,8 +69,38 @@ namespace DrawRush.Enemy.EditorTools
                 new Mark(false, true, 255, 395, Px(210, 394, 278, 452)),
                 new Mark(false, false, 345, 393, Px(322, 394, 392, 452)),
             }),
+            ("Doodle/scissors/P_scissors_v2", false, new[]
+            {
+                new Mark(true, true, 255, 272, Px(183, 262, 252, 368)),
+                new Mark(true, false, 345, 272, Px(348, 262, 417, 368)),
+                new Mark(false, true, 258, 385, Px(208, 385, 262, 452)),
+                new Mark(false, false, 340, 385, Px(338, 385, 394, 445)),
+            }),
+            ("Doodle/eraser/P_eraser", false, new[]
+            {
+                new Mark(true, true, 230, 300, Px(146, 290, 228, 412)),
+                new Mark(true, false, 370, 300, Px(372, 290, 456, 412)),
+                new Mark(false, true, 255, 392, Px(226, 392, 280, 452)),
+                new Mark(false, false, 345, 392, Px(320, 392, 374, 452)),
+            }),
+            ("Doodle/putty/P_putty", false, new[]
+            {
+                new Mark(true, true, 185, 295, Px(116, 280, 182, 394)),
+                new Mark(true, false, 415, 295, Px(418, 280, 484, 394)),
+                new Mark(false, true, 225, 390, Px(191, 392, 254, 452)),
+                new Mark(false, false, 378, 390, Px(346, 392, 410, 452)),
+            }),
         };
 
+        /// <summary>Bake only the named prefabs (paths as in the table), e.g. a newly added enemy.</summary>
+        public static string Bake(params string[] prefabs)
+        {
+            var report = new StringBuilder();
+            foreach (var e in Enemies)
+                if (System.Array.IndexOf(prefabs, e.prefab) >= 0) report.AppendLine(Bake(e.prefab, e.inPlane, e.marks));
+            AssetDatabase.SaveAssets();
+            return report.ToString();
+        }
         [MenuItem("DrawRush/Bake Enemy Limbs")]
         public static string BakeAll()
         {

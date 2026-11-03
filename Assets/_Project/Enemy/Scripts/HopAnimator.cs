@@ -41,6 +41,13 @@ namespace DrawRush.Enemy
         /// <summary>Extra height multiple (the pencil hero shortens as it takes hits).</summary>
         public float HeightFactor { get; set; } = 1f;
 
+        /// <summary>Extra forward tilt in degrees (negative leans back), set by the owner for
+        /// moves the hop cannot express, like the pushpin's wind-up and lunge.</summary>
+        public float ExtraLean { get; set; }
+
+        /// <summary>Extra height multiple on top of the hop's squash (below 1 crouches).</summary>
+        public float ExtraStretch { get; set; } = 1f;
+
         [System.Serializable]
         public struct Limb
         {
@@ -113,7 +120,9 @@ namespace DrawRush.Enemy
             float side = Mathf.Sin(_phase * Mathf.PI) * waddle * _move;
 
             transform.localPosition = _basePos + Vector3.up * y;
-            var scale = new Vector3(_baseScale.x * (1f - s * 0.5f), _baseScale.y * (1f + s) * HeightFactor, _baseScale.z * (1f - s * 0.5f));
+            float stretch = ExtraStretch;
+            float widen = 1f / Mathf.Sqrt(Mathf.Max(0.2f, stretch));   // keep the volume when it stretches
+            var scale = new Vector3(_baseScale.x * (1f - s * 0.5f) * widen, _baseScale.y * (1f + s) * HeightFactor * stretch, _baseScale.z * (1f - s * 0.5f) * widen);
             if (faceCamera && Camera.main != null)
             {
                 Transform cam = Camera.main.transform;
@@ -122,7 +131,7 @@ namespace DrawRush.Enemy
                 scale.x *= _flip;
                 transform.rotation = Quaternion.LookRotation(-cam.forward, Vector3.up) * Quaternion.Euler(0f, 0f, side);
             }
-            else transform.localRotation = _baseRot * Quaternion.Euler(lean * _move, 0f, side);
+            else transform.localRotation = _baseRot * Quaternion.Euler(lean * _move + ExtraLean, 0f, side);
             if (slide > 0f)
             {
                 float wobble = 0.75f + 0.25f * Mathf.Sin(Time.time * 30f);
