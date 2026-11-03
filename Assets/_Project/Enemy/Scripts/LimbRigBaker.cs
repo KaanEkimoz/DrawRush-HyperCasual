@@ -62,6 +62,13 @@ namespace DrawRush.Enemy.EditorTools
                 new Mark(false, true, 292, 322, Px(225, 316, 290, 352), Px(160, 350, 255, 432)),
                 new Mark(false, false, 330, 324, Px(322, 326, 405, 390)),
             }),
+            ("Doodle/glue/P_glue", false, new[]
+            {
+                new Mark(true, true, 228, 305, Px(150, 298, 222, 408)),
+                new Mark(true, false, 372, 305, Px(378, 298, 450, 408)),
+                new Mark(false, true, 262, 390, Px(222, 392, 282, 452)),
+                new Mark(false, false, 338, 390, Px(322, 392, 368, 452)),
+            }),
             ("Doodle3D/gianteraser3d/P_gianteraser3d", false, new[]
             {
                 new Mark(true, true, 215, 262, Px(172, 252, 224, 378)),

@@ -218,6 +218,9 @@ namespace DrawRush.Core
         // pencil trail) would hang there frozen and only move on once play starts.
         private static void ClearLeftoverEffects()
         {
+            SlowZones.Clear();
+            foreach (var glob in FindObjectsByType<DrawRush.Enemy.PuttyGlob>(FindObjectsSortMode.None)) Destroy(glob.gameObject);
+            foreach (var puddle in FindObjectsByType<DrawRush.Enemy.GluePuddle>(FindObjectsSortMode.None)) Destroy(puddle.gameObject);
             foreach (ParticleSystem p in FindObjectsByType<ParticleSystem>(FindObjectsInactive.Exclude, FindObjectsSortMode.None)) p.Clear(false);
             foreach (TrailRenderer t in FindObjectsByType<TrailRenderer>(FindObjectsInactive.Exclude, FindObjectsSortMode.None)) t.Clear();
         }

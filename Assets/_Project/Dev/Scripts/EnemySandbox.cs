@@ -32,8 +32,9 @@ namespace DrawRush.Dev
             new() { Name = "Kalemtıraş · boya yer", Variant = EnemyVariant.Eater, Speed = 1f, Scale = 1f },
             new() { Name = "Raptiye · atılır", Variant = EnemyVariant.Dasher, Speed = 1f, Scale = 1f },
             new() { Name = "Silgi · önünü keser", Variant = EnemyVariant.Flanker, Speed = 1.1f, Scale = 1f },
-            new() { Name = "Küçük silgi · döner", Variant = EnemyVariant.Orbiter, Speed = 1.25f, Scale = 0.8f },
+            new() { Name = "Hamur silgi · parça atar", Variant = EnemyVariant.Orbiter, Speed = 1.25f, Scale = 0.8f },
             new() { Name = "Dev silgi · boss", Variant = EnemyVariant.Boss, Speed = 0.675f, Scale = 1.8f, Heavy = true },
+            new() { Name = "Yapıştırıcı · yavaşlatır", Variant = EnemyVariant.Glue, Speed = 0.8f, Scale = 1f },
         };
 
         // Palette order on every enemy look: teal, orange, green, purple (the eraser has no purple).
@@ -73,7 +74,7 @@ namespace DrawRush.Dev
             Keyboard k = Keyboard.current;
             if (k != null)
             {
-                Key[] digits = { Key.Digit1, Key.Digit2, Key.Digit3, Key.Digit4, Key.Digit5, Key.Digit6, Key.Digit7, Key.Digit8 };
+                Key[] digits = { Key.Digit1, Key.Digit2, Key.Digit3, Key.Digit4, Key.Digit5, Key.Digit6, Key.Digit7, Key.Digit8, Key.Digit9 };
                 for (int i = 0; i < digits.Length; i++)
                     if (k[digits[i]].wasPressedThisFrame) Spawn(i);
             }
@@ -176,7 +177,7 @@ namespace DrawRush.Dev
                 if (sp.z > 0f) GUI.Label(new Rect(sp.x / s - 230f, (Screen.height - sp.y) / s - 14f, 220f, 28f), label, _rowLabel);
             }
 
-            const float panelHeight = 500f;
+            const float panelHeight = 556f;
             GUILayout.BeginArea(new Rect(12f, Screen.height / s - panelHeight - 12f, w - 24f, panelHeight), _panel);
             GUILayout.Label("Düşman testi", _title);
             GUILayout.Label("WASD / ok tuşları: yürü · düşmanlar hasar vermez", _small);

@@ -43,6 +43,13 @@ namespace DrawRush.Enemy
         [Tooltip("World height of the cone: on the page, over the drawn lines.")]
         [SerializeField] private float coneY = 0.03f;
 
+        [Header("Attack move")]
+        [Tooltip("The attack move starts when the hero is this many cone lengths away.")]
+        [SerializeField] private float swingReach = 1.35f;
+        [SerializeField] private float swingCooldown = 0.9f;
+
+        private float _nextSwing;
+
         private const int ConeSegments = 24;
         private const float RimStart = 0.93f;
 
@@ -151,7 +158,21 @@ namespace DrawRush.Enemy
             if (player == null) return;
             if (_follow != null && _follow.IsFrozen) { ShoveWhenTouched(player); return; }
             if (!CanHit) return;
+            // Swing at a hero close in front, a little before the hit lands, so every hit has a move.
+            if (Time.time >= _nextSwing && InCone(transform.position, transform.forward, player.position, Reach * swingReach, coneAngle * 0.5f))
+            {
+                _nextSwing = Time.time + swingCooldown;
+                _follow.PlayAttack();
+            }
             if (InCone(transform.position, transform.forward, player.position, Reach, coneAngle * 0.5f)) Hit(player);
+        }
+
+        /// <summary>Damage the hero from <paramref name="from"/> (a thrown chunk's landing point),
+        /// with the same shield, invulnerability and knockback rules as a touch.</summary>
+        public void HitPlayer(Transform player, Vector3 from)
+        {
+            if (GameServices.Health != null && !GameServices.Health.IsAlive) return;
+            HitFrom(player, from, repel: false);
         }
 
         // A frozen enemy is just a block on the page: the hero barges it along.
@@ -178,7 +199,9 @@ namespace DrawRush.Enemy
             _cone.localScale = Vector3.one * Reach;
         }
 
-        private void Hit(Transform other)
+        private void Hit(Transform other) => HitFrom(other, transform.position, repel: true);
+
+        private void HitFrom(Transform other, Vector3 from, bool repel)
         {
             if (_state != null && _state.IsGameWon) return;
 
@@ -191,7 +214,7 @@ namespace DrawRush.Enemy
             if (_playerCombat != null && _playerCombat.ShieldCharges > 0)
             {
                 _playerCombat.TakeDamage(1);
-                if (_follow != null) _follow.Push(transform.position - other.position, shieldRepel, evenHeavy: true);
+                if (repel && _follow != null) _follow.Push(transform.position - other.position, shieldRepel, evenHeavy: true);
                 return;
             }
 
@@ -201,7 +224,7 @@ namespace DrawRush.Enemy
                 var kb = other.GetComponent<PlayerKnockback>();
                 if (kb != null)
                 {
-                    Vector3 dir = other.transform.position - transform.position;
+                    Vector3 dir = other.transform.position - from;
                     kb.ApplyKnockback(dir, knockbackForce);
                 }
             }

@@ -79,6 +79,17 @@ namespace DrawRush.Tests.EditMode
         }
 
         [Test]
+        public void Glue_DebutsAloneAtLevel22ThenStays()
+        {
+            _director.Plan(22, out int s, out int t, out int e, out int d, out int f, out int o, out int g, out bool intro);
+            Assert.AreEqual((0, 0, 0, 0, 0, 0, 1, true), (s, t, e, d, f, o, g, intro));
+            _director.Plan(23, out _, out _, out _, out _, out _, out _, out g, out intro);
+            Assert.AreEqual((1, false), (g, intro));
+            _director.Plan(21, out _, out _, out _, out _, out _, out _, out g, out _);
+            Assert.AreEqual(0, g);
+        }
+
+        [Test]
         public void ShopPrices_ClimbAndTheFirstStepIsCheap()
         {
             const int averageWin = 12;   // LevelScore pays 6/12/20 by stars

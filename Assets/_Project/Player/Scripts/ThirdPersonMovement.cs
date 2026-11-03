@@ -135,7 +135,7 @@ namespace DrawRush.Player
                 if (Vector3.Angle(_lastDirection, heading) > sharp) { _movingTime = 0f; _lastDirection = heading; }
                 _movingTime += Time.deltaTime;
                 _lastDirection = Vector3.Slerp(_lastDirection, heading, 1f - Mathf.Exp(-10f * Time.deltaTime));
-                target = heading * (speed * SpeedFactor(_movingTime) * SpeedMultiplier * StatSpeedMultiplier * HeightSpeedMultiplier * HazardMultiplier);
+                target = heading * (speed * SpeedFactor(_movingTime) * SpeedMultiplier * StatSpeedMultiplier * HeightSpeedMultiplier * HazardMultiplier * DrawRush.Core.SlowZones.Factor);
 
                 // Only the model's facing is smoothed; the velocity below follows the stick.
                 float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref _turnSmoothVelocity, ResolveTurnSmoothTime());

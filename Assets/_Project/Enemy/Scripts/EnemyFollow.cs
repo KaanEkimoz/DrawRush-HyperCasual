@@ -14,7 +14,8 @@ namespace DrawRush.Enemy
         Dasher = 4,     // moves only by lunges: crouch and flash, leap, land, again
         Boss = 5,       // the Giant Eraser: huge, unpushable, wipes fresh paint in a wide circle
         Flanker = 6,    // runs to where the player is heading, not where they are
-        Orbiter = 7,    // circles the player, then dives in after a flash
+        Orbiter = 7,    // circles the player and throws chunks of itself
+        Glue = 8,       // slow, leaves glue puddles that slow the player
     }
 
     /// <summary>
@@ -105,7 +106,8 @@ namespace DrawRush.Enemy
         private float _voiceIn;
         private Vector3 _playerLast, _playerVelocity;
         private float _orbitTimer, _orbitSide = 1f, _burst = 1f;
-        private int _orbitPhase;   // 0 circling, 1 warning, 2 diving
+        private int _orbitPhase;   // 0 circling, 1 winding up a throw
+        private Vector3 _lastPuddle;
         [Tooltip("Enemies closer than this (m) to the player make their noise.")]
         [SerializeField] private float voiceRange = 8f;
         [SerializeField] private Vector2 voiceInterval = new(1.5f, 3.5f);
@@ -139,11 +141,26 @@ namespace DrawRush.Enemy
         [Tooltip("Flanker: closer than this it simply chases.")]
         [SerializeField] private float flankDirectRange = 2.5f;
         [SerializeField] private float orbitRadius = 4.5f;
-        [Tooltip("Orbiter: seconds of circling between dives.")]
-        [SerializeField] private float orbitDiveEvery = 4f;
-        [SerializeField] private float orbitWarn = 0.45f;
-        [SerializeField] private float orbitDiveSeconds = 1.4f;
-        [SerializeField] private float orbitDiveSpeed = 1.5f;
+        [Tooltip("Orbiter: seconds of circling between throws.")]
+        [SerializeField] private float throwEvery = 3f;
+        [Tooltip("Orbiter: seconds it winds up (flashing) before a throw.")]
+        [SerializeField] private float throwWarn = 0.45f;
+        [Tooltip("Orbiter: seconds a thrown chunk flies.")]
+        [SerializeField] private float throwFlight = 0.9f;
+        [SerializeField] private float throwArc = 2.2f;
+        [Tooltip("Orbiter: radius (m) of the landing ring; the hero is hit only inside it.")]
+        [SerializeField] private float throwRadius = 0.9f;
+        [Tooltip("Orbiter: size it keeps after a throw, before growing back.")]
+        [SerializeField, Range(0.5f, 1f)] private float throwShrink = 0.85f;
+
+        [Header("Glue")]
+        [SerializeField] private Sprite gluePuddleSprite;
+        [Tooltip("Metres walked between two puddles.")]
+        [SerializeField] private float glueSpacing = 0.9f;
+        [SerializeField] private float glueRadius = 0.6f;
+        [Tooltip("Hero speed multiple inside a puddle.")]
+        [SerializeField, Range(0.2f, 1f)] private float glueSlow = 0.6f;
+        [SerializeField] private float glueSeconds = 6f;
 
         /// <summary>Raised when any Dasher starts its wind-up (audio and haptics listen).</summary>
         public static event System.Action DashWindUpStarted;
@@ -216,7 +233,7 @@ namespace DrawRush.Enemy
             if (visual == null) return;
             // Each look drives its own animator (the rigged eraser has one, the hopping stationery none).
             _anim = visual.GetComponentInChildren<Animator>(true);
-            if (_hop != null) { _hop.ExtraLean = 0f; _hop.ExtraStretch = 1f; }
+            if (_hop != null) { _hop.ExtraLean = 0f; _hop.ExtraStretch = 1f; _hop.SizeFactor = 1f; }
             _hop = visual.GetComponent<HopAnimator>();
             if (visual.TryGetComponent(out EnemyPalette palette)) palette.ApplyRandom();
         }
@@ -423,7 +440,8 @@ namespace DrawRush.Enemy
             _dash = DashPhase.Idle;
             _dashTimer = lungeRest;
             _orbitPhase = 0;
-            _orbitTimer = orbitDiveEvery;
+            _orbitTimer = throwEvery;
+            _lastPuddle = transform.position;
             _orbitSide = Random.value < 0.5f ? -1f : 1f;
             _burst = 1f;
             _playerVelocity = Vector3.zero;
@@ -531,6 +549,7 @@ namespace DrawRush.Enemy
             if (Variant == EnemyVariant.Dasher && UpdateDash(player)) { SetAnimSpeed(_agent.velocity.magnitude); return; }
 
             TrackPlayer(player);
+            if (Variant == EnemyVariant.Glue) DropGlue();
             Vector3 target = Variant switch
             {
                 EnemyVariant.Flanker => FlankTarget(player),
@@ -577,43 +596,79 @@ namespace DrawRush.Enemy
             return NavMesh.SamplePosition(aim, out NavMeshHit hit, 2f, NavMesh.AllAreas) ? hit.position : player.position;
         }
 
-        // Orbiter: circle the player at orbitRadius; every orbitDiveEvery seconds flash for
-        // orbitWarn, then dive straight in, faster, for orbitDiveSeconds.
+        // Orbiter: circle the player at orbitRadius; every throwEvery seconds stop, flash and wind
+        // up for throwWarn, then tear a chunk off itself and lob it at where the player stands.
+        // It shrinks a little with each throw and grows back.
         private Vector3 OrbitTarget(Transform player)
         {
             _orbitTimer -= Time.deltaTime;
-            switch (_orbitPhase)
+            if (_hop != null) _hop.SizeFactor = Mathf.MoveTowards(_hop.SizeFactor, 1f, Time.deltaTime * 0.08f);
+            if (_orbitPhase == 1)
             {
-                case 1:
-                    SetColor(Mathf.Repeat(_orbitTimer * 10f, 1f) < 0.5f ? windUpColor : fastColor);
-                    if (_orbitTimer <= 0f)
-                    {
-                        _orbitPhase = 2;
-                        _orbitTimer = orbitDiveSeconds;
-                        _burst = orbitDiveSpeed;
-                        ApplySpeed();
-                        ApplyTint();
-                        _retargetTimer = 0f;
-                    }
-                    return player.position;
-                case 2:
-                    if (_orbitTimer <= 0f)
-                    {
-                        _orbitPhase = 0;
-                        _orbitTimer = orbitDiveEvery;
-                        _burst = 1f;
-                        ApplySpeed();
-                    }
-                    return player.position;
-                default:
-                    if (_orbitTimer <= 0f) { _orbitPhase = 1; _orbitTimer = orbitWarn; }
-                    Vector3 from = transform.position - player.position;
-                    from.y = 0f;
-                    if (from.sqrMagnitude < 0.01f) from = Vector3.forward;
-                    float angle = Mathf.Atan2(from.z, from.x) + _orbitSide * 0.8f;
-                    Vector3 spot = player.position + new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)) * orbitRadius;
-                    return NavMesh.SamplePosition(spot, out NavMeshHit hit, 2f, NavMesh.AllAreas) ? hit.position : player.position;
+                SetColor(Mathf.Repeat(_orbitTimer * 10f, 1f) < 0.5f ? windUpColor : fastColor);
+                Vector3 look = player.position - transform.position;
+                look.y = 0f;
+                if (look.sqrMagnitude > 0.001f) transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(look), 1f - Mathf.Exp(-14f * Time.deltaTime));
+                if (_orbitTimer > 0f) return transform.position;   // stands still while winding up
+                ThrowChunk(player);
+                _orbitPhase = 0;
+                _orbitTimer = throwEvery;
+                ApplyTint();
+                _retargetTimer = 0f;
             }
+            if (_orbitTimer <= 0f)
+            {
+                _orbitPhase = 1;
+                _orbitTimer = throwWarn;
+                if (_hop != null) _hop.PlayAttack(HopAnimator.AttackStyle.Throw);
+                return transform.position;
+            }
+            Vector3 from = transform.position - player.position;
+            from.y = 0f;
+            if (from.sqrMagnitude < 0.01f) from = Vector3.forward;
+            float angle = Mathf.Atan2(from.z, from.x) + _orbitSide * 0.8f;
+            Vector3 spot = player.position + new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)) * orbitRadius;
+            return NavMesh.SamplePosition(spot, out NavMeshHit hit, 2f, NavMesh.AllAreas) ? hit.position : player.position;
+        }
+
+        private void ThrowChunk(Transform player)
+        {
+            var combat = GetComponent<EnemyCombat>();
+            if (combat == null) return;
+            Renderer look = _hop != null ? _hop.GetComponentInChildren<Renderer>() : null;
+            Vector3 hand = transform.position + Vector3.up * (1.2f * transform.lossyScale.y);
+            Vector3 at = player.position;
+            at.y = 0f;
+            PuttyGlob.Launch(combat, look, hand, at, throwFlight, throwArc, throwRadius);
+            if (_hop != null) _hop.SizeFactor = Mathf.Max(throwShrink, _hop.SizeFactor * throwShrink);
+        }
+
+        // Glue: a puddle every glueSpacing metres it walks.
+        private void DropGlue()
+        {
+            Vector3 d = transform.position - _lastPuddle;
+            d.y = 0f;
+            if (d.sqrMagnitude < glueSpacing * glueSpacing) return;
+            _lastPuddle = transform.position;
+            GluePuddle.Spawn(gluePuddleSprite, transform.position, glueRadius, glueSlow, glueSeconds);
+        }
+
+        /// <summary>Play this enemy's attack move (its look decides how it hits).</summary>
+        public void PlayAttack()
+        {
+            if (_hop == null) return;
+            _hop.PlayAttack(Variant switch
+            {
+                EnemyVariant.Normal => HopAnimator.AttackStyle.Chomp,
+                EnemyVariant.Sprinter => HopAnimator.AttackStyle.Snip,
+                EnemyVariant.Tank => HopAnimator.AttackStyle.Slam,
+                EnemyVariant.Eater => HopAnimator.AttackStyle.Grind,
+                EnemyVariant.Dasher => HopAnimator.AttackStyle.Stab,
+                EnemyVariant.Orbiter => HopAnimator.AttackStyle.Throw,
+                EnemyVariant.Boss => HopAnimator.AttackStyle.Slam,
+                EnemyVariant.Glue => HopAnimator.AttackStyle.Squirt,
+                _ => HopAnimator.AttackStyle.Bash,
+            });
         }
 
         // f_speed feeds the Idle<->Run blend in Enemy.controller.

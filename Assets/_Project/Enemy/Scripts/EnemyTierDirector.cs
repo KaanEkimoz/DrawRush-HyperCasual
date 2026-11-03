@@ -32,6 +32,7 @@ namespace DrawRush.Enemy
         [SerializeField] private int dasherFrom = 25;
         [SerializeField] private int flankerFrom = 9;
         [SerializeField] private int orbiterFrom = 15;
+        [SerializeField] private int glueFrom = 22;
         [SerializeField] private int doubleFrom = 20;
         [Tooltip("Levels in one lap of the campaign (the tutorial excluded). Past it, each lap is a harder tier.")]
         [SerializeField] private int campaignLength = 34;
@@ -59,6 +60,7 @@ namespace DrawRush.Enemy
         [SerializeField] private float flankerSpeed = 1.1f;
         [SerializeField] private float orbiterSpeed = 1.25f;
         [SerializeField] private float orbiterScale = 0.8f;
+        [SerializeField] private float glueSpeed = 0.8f;
 
         [Header("Boss: Giant Eraser")]
         [Tooltip("Every Nth campaign level is a boss level.")]
@@ -117,7 +119,7 @@ namespace DrawRush.Enemy
                 return;
             }
 
-            Plan(number, out int sprinters, out int tanks, out int eaters, out int dashers, out int flankers, out int orbiters, out bool intro);
+            Plan(number, out int sprinters, out int tanks, out int eaters, out int dashers, out int flankers, out int orbiters, out int glues, out bool intro);
             if (intro)
                 for (int i = 1; i < enemies.Count; i++) enemies[i].gameObject.SetActive(false);   // the new type, alone
 
@@ -127,6 +129,7 @@ namespace DrawRush.Enemy
             k = Dress(enemies, k, eaters, EnemyVariant.Eater, speed, 1f, false, eaterColor);
             k = Dress(enemies, k, flankers, EnemyVariant.Flanker, flankerSpeed * speed, 1f, false, null);
             k = Dress(enemies, k, orbiters, EnemyVariant.Orbiter, orbiterSpeed * speed, orbiterScale, false, null);
+            k = Dress(enemies, k, glues, EnemyVariant.Glue, glueSpeed * speed, 1f, false, null);
             k = Dress(enemies, k, sprinters, EnemyVariant.Sprinter, sprinterSpeed * speed, sprinterScale, false, sprinterColor);
             if (!Mathf.Approximately(speed, 1f))
                 for (; k < enemies.Count; k++)
@@ -170,11 +173,16 @@ namespace DrawRush.Enemy
 
         /// <summary>How many of each variant a campaign level fields, and whether it introduces one.</summary>
         public void Plan(int levelNumber, out int sprinters, out int tanks, out int eaters, out int dashers, out bool intro)
-            => Plan(levelNumber, out sprinters, out tanks, out eaters, out dashers, out _, out _, out intro);
+            => Plan(levelNumber, out sprinters, out tanks, out eaters, out dashers, out _, out _, out _, out intro);
 
-        /// <summary>The full plan, with the flankers and orbiters.</summary>
+        /// <summary>The plan with the flankers and orbiters (glue left out).</summary>
         public void Plan(int levelNumber, out int sprinters, out int tanks, out int eaters, out int dashers,
                          out int flankers, out int orbiters, out bool intro)
+            => Plan(levelNumber, out sprinters, out tanks, out eaters, out dashers, out flankers, out orbiters, out _, out intro);
+
+        /// <summary>The full plan, every type.</summary>
+        public void Plan(int levelNumber, out int sprinters, out int tanks, out int eaters, out int dashers,
+                         out int flankers, out int orbiters, out int glues, out bool intro)
         {
             int lap = Lap(levelNumber);
             int n = lap > 0 ? campaignLength : levelNumber;   // later laps keep the full roster unlocked
@@ -184,10 +192,12 @@ namespace DrawRush.Enemy
             dashers = n >= dasherFrom ? 1 : 0;
             flankers = n >= flankerFrom ? (n >= doubleFrom + 8 ? 2 : 1) : 0;
             orbiters = n >= orbiterFrom ? 1 : 0;
-            if (lap > 0) { sprinters++; tanks++; eaters++; dashers++; flankers++; orbiters++; }   // the hard tier: one more of each
+            glues = n >= glueFrom ? 1 : 0;
+            if (lap > 0) { sprinters++; tanks++; eaters++; dashers++; flankers++; orbiters++; glues++; }   // the hard tier: one more of each
 
             intro = lap == 0 && (levelNumber == sprinterFrom || levelNumber == tankFrom || levelNumber == eaterFrom
-                                 || levelNumber == dasherFrom || levelNumber == flankerFrom || levelNumber == orbiterFrom);
+                                 || levelNumber == dasherFrom || levelNumber == flankerFrom || levelNumber == orbiterFrom
+                                 || levelNumber == glueFrom);
             if (!intro) return;
             // An introduction fields only the new type.
             sprinters = levelNumber == sprinterFrom ? 1 : 0;
@@ -196,6 +206,7 @@ namespace DrawRush.Enemy
             dashers = levelNumber == dasherFrom ? 1 : 0;
             flankers = levelNumber == flankerFrom ? 1 : 0;
             orbiters = levelNumber == orbiterFrom ? 1 : 0;
+            glues = levelNumber == glueFrom ? 1 : 0;
         }
 
         private static int CurrentIndex()
