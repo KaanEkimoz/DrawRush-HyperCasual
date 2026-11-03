@@ -34,7 +34,7 @@ namespace DrawRush.Dev
             new() { Name = "Silgi · önünü keser", Variant = EnemyVariant.Flanker, Speed = 1.1f, Scale = 1f },
             new() { Name = "Hamur silgi · parça atar", Variant = EnemyVariant.Orbiter, Speed = 1.25f, Scale = 0.8f },
             new() { Name = "Dev silgi · boss", Variant = EnemyVariant.Boss, Speed = 0.675f, Scale = 1.8f, Heavy = true },
-            new() { Name = "Yapıştırıcı · yavaşlatır", Variant = EnemyVariant.Glue, Speed = 0.8f, Scale = 1f },
+            new() { Name = "Yapıştırıcı · yavaşlatır", Variant = EnemyVariant.Glue, Speed = 0.92f, Scale = 1f },
         };
 
         // Palette order on every enemy look: teal, orange, green, purple (the eraser has no purple).

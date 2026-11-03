@@ -139,11 +139,11 @@ namespace DrawRush.Enemy
                 Rest(1f)),
             // Snip: blades flash shut three times as it darts in.
             new(0.5f, 0.38f, Rest(0f),
-                new Key(0.28f, -9.6f, -18.0f, -0.16f, 0.00f, 0.85f, 1.00f, 60.0f),
-                new Key(0.38f, 12.0f, 24.0f, 0.61f, 0.00f, 1.15f, 1.56f, -60.0f),
-                new Key(0.46f, 12.0f, -24.0f, 0.63f, 0.00f, 1.08f, 1.40f, -40.0f),
-                new Key(0.54f, 10.8f, 20.0f, 0.61f, 0.00f, 1.08f, 1.32f, -30.0f),
-                new Key(0.62f, 9.6f, -14.0f, 0.57f, 0.00f, 1.00f, 1.16f, -20.0f),
+                new Key(0.28f, -9.6f, -5.4f, -0.16f, 0.00f, 0.85f, 1.00f, 60.0f),
+                new Key(0.38f, 12.0f, 7.2f, 0.61f, 0.00f, 1.15f, 1.56f, -60.0f),
+                new Key(0.46f, 12.0f, -7.2f, 0.63f, 0.00f, 1.08f, 1.40f, -40.0f),
+                new Key(0.54f, 10.8f, 6.0f, 0.61f, 0.00f, 1.08f, 1.32f, -30.0f),
+                new Key(0.62f, 9.6f, -4.2f, 0.57f, 0.00f, 1.00f, 1.16f, -20.0f),
                 Rest(1f)),
             // Slam: jumps up high, crashes down flat.
             new(0.7f, 0.46f, Rest(0f),
@@ -313,9 +313,25 @@ namespace DrawRush.Enemy
             float stride = Mathf.Sin(_phase * Mathf.PI) * Mathf.Lerp(5f, swingAngle, Mathf.Max(_move, slide));
             _armSpring.Step(stride * 0.8f + aArms, 6f, 0.25f, dt);
             float idleArms = 4f * Mathf.Sin((Time.time + _seed) * 2.4f + 1f) * (1f - _move);
+            // Scissor blades: snap open and shut as it runs, and fast and wide while it snips.
+            float blades = 14f * Mathf.Abs(Mathf.Sin(_phase * Mathf.PI)) * _move;
+            if (_attackTime >= 0f && _attackStyle == AttackStyle.Snip)
+            {
+                Move m = Moves[(int)_attackStyle];
+                float k = Mathf.Clamp01(_attackTime / m.Seconds);
+                float open = k < m.StrikeAt ? Mathf.SmoothStep(0f, 1f, k / m.StrikeAt)                 // opens wide
+                           : Mathf.Abs(Mathf.Cos((k - m.StrikeAt) / (1f - m.StrikeAt) * Mathf.PI * 3f))   // snaps shut three times
+                             * (1f - (k - m.StrikeAt) / (1f - m.StrikeAt) * 0.7f);
+                blades = 42f * open;
+            }
             foreach (Limb limb in swingLimbs)
             {
                 if (limb.bone == null) continue;
+                if (limb.bone.name.Contains("Blade"))
+                {
+                    limb.bone.localRotation = Quaternion.AngleAxis(blades * limb.direction, limb.axis);
+                    continue;
+                }
                 bool arm = limb.bone.name.Contains("Arm");
                 float angle = arm ? _armSpring.Value + idleArms : stride * (limb.bone.name.StartsWith("L") ? 1f : -1f);
                 limb.bone.localRotation = Quaternion.AngleAxis(angle * limb.direction, limb.axis);

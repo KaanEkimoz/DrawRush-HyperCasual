@@ -60,7 +60,7 @@ namespace DrawRush.Enemy
         [SerializeField] private float flankerSpeed = 1.1f;
         [SerializeField] private float orbiterSpeed = 1.25f;
         [SerializeField] private float orbiterScale = 0.8f;
-        [SerializeField] private float glueSpeed = 0.8f;
+        [SerializeField] private float glueSpeed = 0.92f;
 
         [Header("Boss: Giant Eraser")]
         [Tooltip("Every Nth campaign level is a boss level.")]

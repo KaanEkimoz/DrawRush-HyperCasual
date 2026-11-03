@@ -164,7 +164,7 @@ namespace DrawRush.Enemy
         [SerializeField] private float glueRadius = 0.6f;
         [Tooltip("Hero speed multiple inside a puddle.")]
         [SerializeField, Range(0.2f, 1f)] private float glueSlow = 0.6f;
-        [SerializeField] private float glueSeconds = 6f;
+        [SerializeField] private float glueSeconds = 9.6f;
 
         /// <summary>Raised when any Dasher starts its wind-up (audio and haptics listen).</summary>
         public static event System.Action DashWindUpStarted;

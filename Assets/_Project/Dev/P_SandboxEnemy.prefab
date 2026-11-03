@@ -624,7 +624,7 @@ MonoBehaviour:
   glueSpacing: 0.9
   glueRadius: 0.6
   glueSlow: 0.6
-  glueSeconds: 6
+  glueSeconds: 9.6
   bossEatScale: 3
   eatRadius: 0.6
 --- !u!114 &5140669442176437709

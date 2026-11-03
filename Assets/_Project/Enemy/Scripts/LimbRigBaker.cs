@@ -24,11 +24,20 @@ namespace DrawRush.Enemy.EditorTools
             public readonly bool Arm, Left;
             public readonly Vector2 Pivot;
             public readonly RectInt[] Areas;
+            public readonly string Part;   // "Arm"/"Leg" by default; "Blade" for the scissors
 
             public Mark(bool arm, bool left, float x, float y, params RectInt[] areas)
             {
-                Arm = arm; Left = left; Pivot = new Vector2(x, y); Areas = areas;
+                Arm = arm; Left = left; Pivot = new Vector2(x, y); Areas = areas; Part = arm ? "Arm" : "Leg";
             }
+
+            private Mark(string part, bool left, float x, float y, RectInt[] areas)
+            {
+                Arm = false; Left = left; Pivot = new Vector2(x, y); Areas = areas; Part = part;
+            }
+
+            /// <summary>A scissor blade: turns in the picture plane around the screw.</summary>
+            public static Mark Blade(bool left, float x, float y, params RectInt[] areas) => new("Blade", left, x, y, areas);
         }
 
         private static RectInt Px(int x0, int y0, int x1, int y1) => new(x0, y0, x1 - x0, y1 - y0);
@@ -78,6 +87,9 @@ namespace DrawRush.Enemy.EditorTools
             }),
             ("Doodle/scissors/P_scissors_v2", false, new[]
             {
+                // Blades first, so the legs win where the blade tips reach down between them.
+                Mark.Blade(true, 300, 298, Px(258, 300, 300, 436)),
+                Mark.Blade(false, 300, 298, Px(300, 300, 344, 436)),
                 new Mark(true, true, 255, 272, Px(183, 262, 252, 368)),
                 new Mark(true, false, 345, 272, Px(348, 262, 417, 368)),
                 new Mark(false, true, 258, 385, Px(208, 385, 262, 452)),
@@ -161,7 +173,7 @@ namespace DrawRush.Enemy.EditorTools
                     Vector3 tip = pivot;
                     foreach (int i in members) if (Vector3.Distance(v[i], pivot) > Vector3.Distance(tip, pivot)) tip = v[i];
 
-                    var bone = new GameObject((mark.Left ? "L" : "R") + (mark.Arm ? "Arm" : "Leg")).transform;
+                    var bone = new GameObject((mark.Left ? "L" : "R") + mark.Part).transform;
                     bone.SetParent(root.transform, false);
                     bone.localPosition = pivot;
                     bones.Add(bone);
@@ -170,7 +182,7 @@ namespace DrawRush.Enemy.EditorTools
                         float w = Mathf.SmoothStep(0f, 1f, Vector3.Distance(v[i], pivot) / Soft);
                         weights[i] = new BoneWeight { boneIndex0 = bones.Count - 1, weight0 = w, boneIndex1 = 0, weight1 = 1f - w };
                     }
-                    Vector3 axis = inPlane ? Vector3.forward : Vector3.Cross((tip - pivot).normalized, Vector3.forward).normalized;
+                    Vector3 axis = inPlane || mark.Part == "Blade" ? Vector3.forward : Vector3.Cross((tip - pivot).normalized, Vector3.forward).normalized;
                     limbs.Add(new HopAnimator.Limb(bone, axis, mark.Left ^ mark.Arm ? 1f : -1f));
                     line.Append($" {bone.name}={members.Count}v");
                 }
