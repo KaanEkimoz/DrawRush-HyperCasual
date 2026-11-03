@@ -17,6 +17,9 @@ namespace DrawRush.Enemy
         private Renderer[] _renderers;
         private MaterialPropertyBlock _mpb;
 
+        /// <summary>Number of extra colours (the material's own one not counted).</summary>
+        public int Count => skins.Length;
+
         /// <summary>Wear the material's own texture or one of <see cref="skins"/>, at random.</summary>
         public void ApplyRandom() => Apply(Random.Range(-1, skins.Length));
 
