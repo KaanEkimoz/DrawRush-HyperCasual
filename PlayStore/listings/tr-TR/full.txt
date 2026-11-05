@@ -1,6 +1,6 @@
 Dev bir masanın üstünde minicik bir kalemsin ve kırtasiye malzemeleri peşinde.
 
-Draw Rush, tek parmakla oynanan hızlı bir çizim oyunu. Noktalı çizgi boyunca koşarak her şekli çiz; silgiler, zımbalar ve delgeçler sayfanın üstünde seni kovalasın. Seni yakalamadan, çizdiklerini silmeden şekli tamamla.
+Draw Rush, tek parmakla oynanan hızlı bir çizim oyunu. Noktalı çizgi boyunca koşarak her şekli çiz; zımbalar, makaslar, silgiler ve yapıştırıcılar sayfanın üstünde seni kovalasın. Seni yakalamadan, çizdiklerini silmeden şekli tamamla.
 
 NASIL OYNANIR
 • Tek parmakla hareket et. Kalemin koştuğu her yere çizer.
@@ -11,11 +11,11 @@ NASIL OYNANIR
 NEDEN BIRAKAMAYACAKSIN
 • Koleksiyonunu doldur: bitirdiğin her şekil albüme girer, sayaç tamamlamana ne kadar kaldığını gösterir.
 • Her levelde 3 yıldıza kadar kazan. Temiz geçişler daha çok altın kazandırır.
-• Güçlendirmeleri topla: Kalkan, Dondurma, Hız, Şok Dalgası ve kalemini iyileştiren Mürekkep.
+• Güçlendirmeleri topla: Kalkan, Dondurma, Hız, Şok Dalgası ve kalemini iyileştiren Can kalbi.
 • Klasik kırmızıdan altın ve dolma kaleme kadar 9 kalem kostümü aç.
 • Mağazadan Hız, Can ve Çizim Alanı geliştir.
 • Değişen masalarda oyna: çizgili, kareli, noktalı, pembe, mint, mavi ve kraft kağıt.
-• Leveller zorlaştıkça daha büyük masa canavarlarıyla karşılaş.
+• Yeni masa canavarlarıyla karşılaş: kendinden parça koparıp atan hamur silgi, yapışkan iz bırakan yapıştırıcı, atılan raptiye ve dev boss silgi.
 
 Kısa leveller, el çizimi defter görünümü ve tek basit kontrolle kısa molalar için birebir.
 
