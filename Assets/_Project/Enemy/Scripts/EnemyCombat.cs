@@ -172,8 +172,8 @@ namespace DrawRush.Enemy
             }
             // Damage comes with the attack move landing (OnStrike), so every hit is a readable,
             // dodgeable swing. The pushpin is the exception: its leap is the attack, so touching
-            // it mid-leap hurts.
-            if (_follow != null && _follow.Variant == EnemyVariant.Dasher
+            // it mid-leap hurts. Resting or winding up it is harmless, so you can slip past it.
+            if (_follow != null && _follow.Variant == EnemyVariant.Dasher && _follow.IsLunging
                 && InCone(transform.position, transform.forward, player.position, Reach, coneAngle * 0.5f)) Hit(player);
         }
 

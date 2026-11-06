@@ -602,11 +602,11 @@ MonoBehaviour:
   bossTurnScale: 0.8
   voiceRange: 8
   voiceInterval: {x: 1.5, y: 3.5}
-  lungeWindUp: 0.616
+  lungeWindUp: 0.85
   lungeTime: 0.44
-  lungeRest: 0.462
-  lungeDistance: 4.5
-  lungeOvershoot: 1.2
+  lungeRest: 0.75
+  lungeDistance: 3.6
+  lungeOvershoot: 0.5
   lungeSoundRange: 9
   windUpColor: {r: 1, g: 1, b: 1, a: 1}
   flankLead: 1.4

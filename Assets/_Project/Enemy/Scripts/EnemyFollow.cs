@@ -122,15 +122,15 @@ namespace DrawRush.Enemy
 
         [Header("Dasher (pushpin)")]
         [Tooltip("Seconds it crouches, aims and flashes before each lunge (the telegraph).")]
-        [SerializeField] private float lungeWindUp = 0.616f;
+        [SerializeField] private float lungeWindUp = 0.85f;
         [Tooltip("Seconds a lunge lasts.")]
         [SerializeField] private float lungeTime = 0.44f;
         [Tooltip("Seconds it stands after landing.")]
-        [SerializeField] private float lungeRest = 0.462f;
+        [SerializeField] private float lungeRest = 0.75f;
         [Tooltip("How far one lunge goes (m), at speed 1.")]
-        [SerializeField] private float lungeDistance = 4.5f;
+        [SerializeField] private float lungeDistance = 3.6f;
         [Tooltip("How far past the player a lunge may carry it (m), so a late dodge still works.")]
-        [SerializeField] private float lungeOvershoot = 1.2f;
+        [SerializeField] private float lungeOvershoot = 0.5f;
         [Tooltip("The wind-up sound plays only for a player closer than this (m).")]
         [SerializeField] private float lungeSoundRange = 9f;
         [SerializeField] private Color windUpColor = Color.white;
@@ -187,6 +187,8 @@ namespace DrawRush.Enemy
 
         /// <summary>True while a Freeze booster holds this enemy.</summary>
         public bool IsFrozen => _frozen;
+        /// <summary>True only while a Dasher is mid-leap: the one moment its touch hurts.</summary>
+        public bool IsLunging => _dash == DashPhase.Lunge;
 
         /// <summary>Turn this enemy into a variant for the level: speed, size, pushability and an
         /// optional tint. Reverted to the authored enemy by <see cref="ClearVariant"/>.</summary>
