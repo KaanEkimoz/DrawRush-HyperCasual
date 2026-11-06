@@ -28,6 +28,9 @@ namespace DrawRush.Ads
         private bool _initialised;
         private Action _onReward;
         private bool _rewardEarned;
+        private bool _rewardClosed;
+        private int _initTries, _interstitialTries, _rewardedTries, _bannerTries;
+        private bool _bannerHidden;
 
         private AdPacing _pacing;
 
@@ -49,6 +52,32 @@ namespace DrawRush.Ads
             LevelPlay.OnInitSuccess += OnInitSuccess;
             LevelPlay.OnInitFailed += OnInitFailed;
             LevelPlay.Init(config.AndroidAppKey);
+        }
+
+        // The banner sits where the thumb lands for the joystick, so it only shows while the game
+        // is frozen (countdown, menus, win and lose panels) and hides the moment play runs.
+        private void Update()
+        {
+            if (_banner == null) return;
+            bool hide = Time.timeScale > 0f;
+            if (hide == _bannerHidden) return;
+            _bannerHidden = hide;
+            if (hide) _banner.HideAd();
+            else _banner.ShowAd();
+        }
+
+        // No network at boot or no fill used to kill that ad type for the whole session. Retry with
+        // a growing wait (5, 10, 20 ... 120 s) on unscaled time, so a paused game still retries.
+        private async void RetryLater(int tries, Action retry)
+        {
+            float wait = Mathf.Min(120f, 5f * Mathf.Pow(2f, Mathf.Min(tries, 5)));
+            try
+            {
+                for (float t = 0f; t < wait; t += Time.unscaledDeltaTime)
+                    await Awaitable.NextFrameAsync(destroyCancellationToken);
+            }
+            catch (OperationCanceledException) { return; }
+            retry?.Invoke();
         }
 
         private void OnDestroy()
@@ -82,12 +111,14 @@ namespace DrawRush.Ads
             if (!IsRewardedReady) return;
             _onReward = onReward;
             _rewardEarned = false;
+            _rewardClosed = false;
             _rewarded.ShowAd(placement);
         }
 
         private void OnInitSuccess(LevelPlayConfiguration _)
         {
             _initialised = true;
+            _initTries = 0;
             if (config.VerboseLogging) Debug.Log("[Ads] LevelPlay init success.");
 
             SetUpRewarded();
@@ -102,33 +133,67 @@ namespace DrawRush.Ads
             _interstitial = new LevelPlayInterstitialAd(config.InterstitialAdUnitId);
             _interstitial.OnAdClosed += _ => _interstitial.LoadAd();          // preload the next one
             _interstitial.OnAdDisplayFailed += (_, __) => _interstitial.LoadAd();
-            if (config.VerboseLogging)
+            _interstitial.OnAdLoaded += _ =>
             {
-                _interstitial.OnAdLoaded += _ => Debug.Log("[Ads] Interstitial loaded.");
-                _interstitial.OnAdLoadFailed += e => Debug.Log($"[Ads] Interstitial load failed: {e}");
-            }
+                _interstitialTries = 0;
+                if (config.VerboseLogging) Debug.Log("[Ads] Interstitial loaded.");
+            };
+            _interstitial.OnAdLoadFailed += e =>
+            {
+                if (config.VerboseLogging) Debug.Log($"[Ads] Interstitial load failed: {e}");
+                RetryLater(_interstitialTries++, () => _interstitial?.LoadAd());
+            };
             _interstitial.LoadAd();
         }
 
-        // Rewarded: grant on the reward callback, but hand it out after the ad closes so the game
-        // resumes under a fresh frame rather than behind the ad activity.
+        // Rewarded: hand the reward out once the ad has BOTH rewarded and closed, so the game
+        // resumes under a fresh frame rather than behind the ad activity. LevelPlay may send the
+        // reward before or after the close; granting only on "reward, then close" silently lost
+        // revives and x2 coins whenever the reward came late.
         private void SetUpRewarded()
         {
             if (string.IsNullOrEmpty(config.RewardedAdUnitId)) return;
             _rewarded = new LevelPlayRewardedAd(config.RewardedAdUnitId);
-            _rewarded.OnAdRewarded += (_, __) => _rewardEarned = true;
+            _rewarded.OnAdRewarded += (_, __) => { _rewardEarned = true; TryGrantReward(); };
             _rewarded.OnAdClosed += _ =>
             {
                 MarkAdShown();
-                Action grant = _rewardEarned ? _onReward : null;
-                _onReward = null;
-                _rewardEarned = false;
+                _rewardClosed = true;
                 _rewarded.LoadAd();
-                grant?.Invoke();
+                TryGrantReward();
+                // No reward by the close: allow a late one for a few seconds, then drop the offer.
+                if (_onReward != null) DropRewardLater();
             };
             _rewarded.OnAdDisplayFailed += (_, __) => { _onReward = null; _rewarded.LoadAd(); };
-            if (config.VerboseLogging) _rewarded.OnAdLoadFailed += e => Debug.Log($"[Ads] Rewarded load failed: {e}");
+            _rewarded.OnAdLoaded += _ => _rewardedTries = 0;
+            _rewarded.OnAdLoadFailed += e =>
+            {
+                if (config.VerboseLogging) Debug.Log($"[Ads] Rewarded load failed: {e}");
+                RetryLater(_rewardedTries++, () => _rewarded?.LoadAd());
+            };
             _rewarded.LoadAd();
+        }
+
+        private void TryGrantReward()
+        {
+            if (!_rewardEarned || !_rewardClosed || _onReward == null) return;
+            Action grant = _onReward;
+            _onReward = null;
+            _rewardEarned = false;
+            _rewardClosed = false;
+            grant.Invoke();
+        }
+
+        private async void DropRewardLater()
+        {
+            Action pending = _onReward;
+            try
+            {
+                for (float t = 0f; t < 5f; t += Time.unscaledDeltaTime)
+                    await Awaitable.NextFrameAsync(destroyCancellationToken);
+            }
+            catch (OperationCanceledException) { return; }
+            if (_onReward == pending) _onReward = null;   // the reward never came: the player skipped
         }
 
         // The banner shows itself as soon as it loads and refreshes on its own from then on.
@@ -140,7 +205,13 @@ namespace DrawRush.Ads
                 .SetRespectSafeArea(true)
                 .Build();
             _banner = new LevelPlayBannerAd(config.BannerAdUnitId, bannerConfig);
-            if (config.VerboseLogging) _banner.OnAdLoadFailed += e => Debug.Log($"[Ads] Banner load failed: {e}");
+            _banner.OnAdLoaded += _ => { _bannerTries = 0; if (_bannerHidden) _banner.HideAd(); };
+            _banner.OnAdLoadFailed += e =>
+            {
+                if (config.VerboseLogging) Debug.Log($"[Ads] Banner load failed: {e}");
+                RetryLater(_bannerTries++, () => _banner?.LoadAd());
+            };
+            _bannerHidden = false;
             _banner.LoadAd();
         }
 
@@ -152,7 +223,10 @@ namespace DrawRush.Ads
         }
 
         private void OnInitFailed(LevelPlayInitError error)
-            => Debug.LogWarning($"[Ads] LevelPlay init failed: {error}");
+        {
+            Debug.LogWarning($"[Ads] LevelPlay init failed: {error}");
+            RetryLater(_initTries++, () => { if (!_initialised) LevelPlay.Init(config.AndroidAppKey); });
+        }
 
         /// <summary>
         /// Call once per win/level-advance (from <c>LevelFlow.NextLevel</c>). Shows an interstitial

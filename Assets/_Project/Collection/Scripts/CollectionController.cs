@@ -92,9 +92,11 @@ namespace DrawRush.Collection
             go.GetComponent<CollectionCountLabel>().Bind(label, CountText);
         }
 
+        public bool IsOpen => panel != null && panel.activeSelf;
+
         public void Open()
         {
-            if (panel == null) return;
+            if (panel == null || IsOpen) return;   // MenuPause counts opens: never open twice
             MenuPause.Open();
             panel.SetActive(true);
             Refresh();
@@ -102,7 +104,8 @@ namespace DrawRush.Collection
 
         public void Close()
         {
-            if (panel != null) panel.SetActive(false);
+            if (!IsOpen) return;
+            panel.SetActive(false);
             MenuPause.Close();
         }
 

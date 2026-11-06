@@ -63,6 +63,13 @@ namespace DrawRush.Enemy
             go.transform.position = from;
         }
 
+        // The target ring is its own object (it stays flat on the page while the glob arcs), so a
+        // glob destroyed any other way than landing (level cleared mid-throw) takes it along.
+        private void OnDestroy()
+        {
+            if (_ring != null) Destroy(_ring.gameObject);
+        }
+
         private static LineRenderer MakeRing(Vector3 at, float radius)
         {
             if (_ringMaterial == null) _ringMaterial = new Material(Shader.Find("Sprites/Default")) { name = "Auto_GlobRing" };

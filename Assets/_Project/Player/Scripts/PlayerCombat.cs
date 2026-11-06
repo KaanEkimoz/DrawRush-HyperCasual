@@ -63,7 +63,7 @@ namespace DrawRush.Player
 
         // The one gate every hit passes: nothing can hurt the hero once the level is decided.
         private bool LevelIsOver => (health != null && !health.IsAlive)
-                                    || (GameServices.State != null && GameServices.State.IsGameWon);
+                                    || (GameServices.State != null && (GameServices.State.IsGameWon || GameServices.State.IsFinishing));
 
         /// <summary>Applies positive damage to the bound PlayerHealth asset, plays the
         /// hit-reaction animation/juice, and opens an invulnerability window. Hits during

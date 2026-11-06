@@ -64,6 +64,7 @@ namespace DrawRush.Audio
                 _boundHealth.Died += OnDied;
             }
 
+            _lastCoins = PlayerProgress.Coins;
             PlayerProgress.CoinsChanged += OnCoinsChanged;
             DrawRush.Drawing.DrawEdgeAuthor.EdgeFinished += OnEdgeFinished;
             DrawRush.UI.ButtonJuice.Clicked += OnUiClick;
@@ -110,10 +111,22 @@ namespace DrawRush.Audio
 
         private void OnEnemyVoiced(DrawRush.Enemy.EnemyVariant variant)
         {
-            if (library == null || library.enemyVoices == null || (int)variant >= library.enemyVoices.Length) return;
+            if (library == null || library.enemyVoices == null) return;
+            int index = (int)variant;
+            // The newer types have no voice of their own yet: borrow the closest one rather than
+            // stay silent (flanker ~ sprinter, putty ~ eraser-eater, glue ~ heavy tank).
+            if (index >= library.enemyVoices.Length)
+                index = variant switch
+                {
+                    DrawRush.Enemy.EnemyVariant.Flanker => (int)DrawRush.Enemy.EnemyVariant.Sprinter,
+                    DrawRush.Enemy.EnemyVariant.Orbiter => (int)DrawRush.Enemy.EnemyVariant.Eater,
+                    DrawRush.Enemy.EnemyVariant.Glue => (int)DrawRush.Enemy.EnemyVariant.Tank,
+                    _ => 0,
+                };
+            if (index >= library.enemyVoices.Length) return;
             if (Time.unscaledTime - _lastVoice < voiceGap) return;
             _lastVoice = Time.unscaledTime;
-            Play(library.enemyVoices[(int)variant]);
+            Play(library.enemyVoices[index]);
         }
 
         private void OnBooster(BoosterType _) { Play(library != null ? library.boosterPickup : null); Haptics.Light(); }
@@ -148,7 +161,14 @@ namespace DrawRush.Audio
 
         private void OnGameWonChanged(bool won) { if (won) Play(library != null ? library.win : null); }
         private void OnDied() => Play(library != null ? library.lose : null);
-        private void OnCoinsChanged(int total) => Play(library != null ? library.coin : null);
+        // Only earning jingles: spending in the shop used to play the same "coins in" sound.
+        private int _lastCoins = -1;
+        private void OnCoinsChanged(int total)
+        {
+            bool earned = _lastCoins < 0 || total > _lastCoins;
+            _lastCoins = total;
+            if (earned) Play(library != null ? library.coin : null);
+        }
         private void OnEdgeFinished(Vector3 _, Color __) => Play(library != null ? library.wallRise : null);
         private void OnUiClick() => Play(library != null ? library.uiClick : null);
 

@@ -88,8 +88,11 @@ namespace DrawRush.UI
             return go.GetComponent<Image>();
         }
 
+        public bool IsOpen => _panel != null && _panel.activeSelf;
+
         public void Open()
         {
+            if (_panel == null || IsOpen) return;   // MenuPause counts opens: never open twice
             MenuPause.Open();
             Refresh();
             _panel.SetActive(true);
@@ -97,6 +100,7 @@ namespace DrawRush.UI
 
         public void Close()
         {
+            if (!IsOpen) return;
             _panel.SetActive(false);
             MenuPause.Close();
         }

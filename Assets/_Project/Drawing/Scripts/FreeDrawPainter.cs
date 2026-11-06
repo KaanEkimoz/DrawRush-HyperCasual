@@ -202,6 +202,7 @@ namespace DrawRush.Drawing
         private IEnumerator Sweep()
         {
             _sweeping = true;
+            if (GameServices.State != null) GameServices.State.IsFinishing = true;
             var left = new List<DrawEdge>();
             foreach (DrawEdge e in _network.Edges) if (!e.IsComplete) left.Add(e);
             float step = left.Count > 0 ? sweepSeconds / left.Count : 0f;

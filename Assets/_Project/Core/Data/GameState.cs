@@ -27,6 +27,10 @@ namespace DrawRush.Core
         /// collection entry. Set by WinCondition before the win flag flips, like LastStars.</summary>
         public bool LastShapeWasNew { get; set; }
 
+        /// <summary>True during the quick sweep that paints the last few percent: the level is
+        /// decided, so nothing may hurt the hero any more even though the win flag is not up yet.</summary>
+        public bool IsFinishing { get; set; }
+
         public bool IsGameWon
         {
             get => _isGameWon;
@@ -43,6 +47,7 @@ namespace DrawRush.Core
             // Go through the property so GameWonChanged fires on a true->false reset —
             // shared subscribers (player dance/lock) have no scene reload to clear them.
             IsGameWon = false;
+            IsFinishing = false;
         }
     }
 }

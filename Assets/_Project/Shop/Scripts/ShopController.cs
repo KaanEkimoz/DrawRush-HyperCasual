@@ -66,9 +66,11 @@ namespace DrawRush.Shop
             Refresh();   // affordability may have changed
         }
 
+        public bool IsOpen => panel != null && panel.activeSelf;
+
         public void Open()
         {
-            if (panel == null) return;
+            if (panel == null || IsOpen) return;   // MenuPause counts opens: never open twice
             MenuPause.Open();
             panel.SetActive(true);
             if (coinText != null) coinText.text = PlayerProgress.Coins.ToString();
@@ -77,7 +79,8 @@ namespace DrawRush.Shop
 
         public void Close()
         {
-            if (panel != null) panel.SetActive(false);
+            if (!IsOpen) return;
+            panel.SetActive(false);
             MenuPause.Close();
         }
 
@@ -187,7 +190,7 @@ namespace DrawRush.Shop
             if (!owned)
             {
                 if (!PlayerProgress.TrySpendCoins(item.price)) { Refresh(); return; }  // can't afford
-                PlayerProgress.OwnCosmetic(item.id);
+                PlayerProgress.OwnCosmetic(item.id);   // saves coins and ownership together
             }
             PlayerProgress.EquipCosmetic(item.id);   // buying auto-equips; owning-but-not-equipped equips
             Refresh();

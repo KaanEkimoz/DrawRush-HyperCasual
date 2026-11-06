@@ -15,6 +15,7 @@ namespace DrawRush.Core
         private const string CoinsKey = "Coins";
         private const string LastLevelIndexKey = "LastLevelIndex";
         private const string LevelsPlayedKey = "LevelsPlayed";
+        private const string WonLevelKey = "WonLevelPendingAdvance";
         private const string LevelBagKey = "LevelBag";
         private const string LastLevelEnemiesKey = "LastLevelEnemies";
         private const string StarsKeyPrefix = "Stars_";
@@ -133,6 +134,19 @@ namespace DrawRush.Core
             }
         }
 
+        /// <summary>Level index that was just won and paid but not yet advanced past (the player is
+        /// on its win panel), or -1. Coins pay at the win while the advance happens on Next, so
+        /// without this, quitting on the win panel booted back into the same level to pay again.</summary>
+        public static int WonLevelPendingAdvance
+        {
+            get => PlayerPrefs.GetInt(WonLevelKey, -1);
+            set
+            {
+                PlayerPrefs.SetInt(WonLevelKey, value);
+                PlayerPrefs.Save();
+            }
+        }
+
         /// <summary>Enemies the sequencer switched on for <see cref="LastLevelIndex"/>. Levels no
         /// longer carry a fixed enemy count — it is chosen per playthrough — so without this a
         /// relaunch would restore the level with every authored enemy live, turning a breather the
@@ -169,8 +183,9 @@ namespace DrawRush.Core
             int total = Coins;
             if (total < amount) return false;
             total -= amount;
+            // No Save here: the caller records what was bought and saves once, so a kill between
+            // the two writes can never take the coins without handing over the item.
             PlayerPrefs.SetInt(CoinsKey, total);
-            PlayerPrefs.Save();
             CoinsChanged?.Invoke(total);
             return true;
         }

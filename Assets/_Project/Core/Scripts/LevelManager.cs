@@ -96,6 +96,12 @@ namespace DrawRush.Core
             }
 #endif
             int resume = startLevelIndex >= 0 ? startLevelIndex : ResolveResumeIndex();
+            // Quit on a win panel: that level is cleared and paid, so move on rather than replay it.
+            if (startLevelIndex < 0 && resume != tutorialLevelIndex && PlayerProgress.WonLevelPendingAdvance == resume)
+            {
+                var flow = FindFirstObjectByType<LevelFlow>();
+                if (flow != null) { flow.NextLevel(); return; }
+            }
             if (!RestoreEnemyBudget(resume)) BudgetBootLevel(resume);
             ActivateLevel(resume);
         }
@@ -216,7 +222,7 @@ namespace DrawRush.Core
 
         // The countdown runs at timeScale 0: anything left of the last level (confetti, poofs, the
         // pencil trail) would hang there frozen and only move on once play starts.
-        private static void ClearLeftoverEffects()
+        public static void ClearLeftoverEffects()
         {
             SlowZones.Clear();
             foreach (var glob in FindObjectsByType<DrawRush.Enemy.PuttyGlob>(FindObjectsSortMode.None)) Destroy(glob.gameObject);

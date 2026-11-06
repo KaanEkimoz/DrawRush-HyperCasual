@@ -112,17 +112,23 @@ namespace DrawRush.Ads
             Show(_startShield, ready && starting && failedHere && !_startShieldTaken);
         }
 
+        // Offers are spent inside the reward callback: an ad that fails to show (or is skipped)
+        // leaves the offer on the panel instead of eating it.
         private void OnRevive()
         {
-            _reviveUsed = true;
             ads.ShowRewarded("revive", () =>
             {
+                _reviveUsed = true;
+                _startShieldTaken = true;   // no "start with shield" offer over the revive's 3-2-1
                 hud.HideAllPanels();
+                LevelManager.ClearLeftoverEffects();   // globs, puddles, stains from the death
                 if (health != null) health.ResetToStarting();
                 if (combat != null) combat.ResetForLevel();
                 RespawnEnemies();
                 if (boosts != null) boosts.Grant(BoosterType.Shield);
-                MenuPause.SetGameTimeScale(1f);
+                // A short 3-2-1 so the player gets their bearings instead of a live chase at once.
+                if (countdown != null) countdown.Begin();
+                else MenuPause.SetGameTimeScale(1f);
             });
         }
 
@@ -139,9 +145,9 @@ namespace DrawRush.Ads
         // binding clears boosters: so queue it for the bind, and show the bubble right away too.
         private void OnStartShield()
         {
-            _startShieldTaken = true;
             ads.ShowRewarded("start_shield", () =>
             {
+                _startShieldTaken = true;
                 if (boosts == null) return;
                 boosts.GrantOnNextLevel(BoosterType.Shield);
                 boosts.Grant(BoosterType.Shield);
@@ -150,8 +156,12 @@ namespace DrawRush.Ads
 
         private void OnDoubleCoins()
         {
-            _doubleUsed = true;
-            ads.ShowRewarded("double_coins", () => PlayerProgress.AddCoins(CoinsThisWin()));
+            ads.ShowRewarded("double_coins", () =>
+            {
+                if (_doubleUsed) return;
+                _doubleUsed = true;
+                PlayerProgress.AddCoins(CoinsThisWin());
+            });
         }
 
         private static int CoinsThisWin()

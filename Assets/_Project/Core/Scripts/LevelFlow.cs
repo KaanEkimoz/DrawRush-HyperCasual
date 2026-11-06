@@ -76,6 +76,7 @@ namespace DrawRush.Core
             MenuPause.SetGameTimeScale(1f);   // in-scene switch: no scene reload to un-pause for us
             // Deliberately does NOT draw or advance the curve: a retry is the same level at the
             // same difficulty, otherwise dying would quietly reshuffle the player's run.
+            PlayerProgress.WonLevelPendingAdvance = -1;   // replaying a won level is a choice, not a quit
             levelManager.ActivateLevel(levelManager.CurrentIndex);
         }
 
@@ -105,6 +106,7 @@ namespace DrawRush.Core
                 target, LevelDifficulty.ShapeScore(level), LevelDifficulty.AvailableEnemies(level)));
             LevelDifficulty.ApplyEnemyBudget(level, enemies);
 
+            PlayerProgress.WonLevelPendingAdvance = -1;
             PlayerProgress.LevelsPlayed = played + 1;
             PlayerProgress.LevelBag = _bag.Serialize();
             // Save the count too, not just the index: the enemy budget is a per-playthrough choice

@@ -50,6 +50,10 @@ namespace DrawRush.Drawing
                 state.LastShapeWasNew = firstClear;
             }
 
+            // Mark the win as pending before paying, so a quit on the win panel advances on relaunch
+            // instead of replaying (and re-paying) this level. The tutorial has its own flag.
+            var lm = FindFirstObjectByType<LevelManager>();
+            if (levelIndex >= 0 && (lm == null || levelIndex != lm.TutorialIndex)) PlayerProgress.WonLevelPendingAdvance = levelIndex;
             PlayerProgress.AddCoins(LevelScore.CoinsForStars(stars));
 
             if (state != null) state.IsGameWon = true;
