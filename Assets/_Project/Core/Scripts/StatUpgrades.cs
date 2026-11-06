@@ -54,6 +54,7 @@ namespace DrawRush.Core
             if (price < 0 || !PlayerProgress.TrySpendCoins(price)) return false;
             PlayerPrefs.SetInt(KeyPrefix + stat, Level(stat) + 1);
             PlayerPrefs.Save();
+            DrawRush.Analytics.Telemetry.Record(DrawRush.Analytics.Telemetry.Events.ShopPurchase, ("itemId", "stat_" + stat + "_" + Level(stat)), ("price", price), ("coinsLeft", PlayerProgress.Coins));
             Changed?.Invoke();
             return true;
         }

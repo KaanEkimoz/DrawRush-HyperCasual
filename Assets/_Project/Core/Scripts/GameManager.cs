@@ -57,6 +57,10 @@ namespace DrawRush.Core
 
         private void OnPlayerDied()
         {
+            var painter = FindFirstObjectByType<DrawRush.Drawing.FreeDrawPainter>();
+            DrawRush.Analytics.Telemetry.Record(DrawRush.Analytics.Telemetry.Events.LevelFail, DrawRush.Analytics.Telemetry.LevelParams(
+                ("seconds", Mathf.RoundToInt(DrawRush.Analytics.Telemetry.LevelSeconds)),
+                ("coverage", painter != null ? Mathf.RoundToInt(painter.Coverage * 100f) : -1)));
             MenuPause.SetGameTimeScale(0f);
             if (pencilDeath != null) pencilDeath.Play(ShowLosePanel);
             else ShowLosePanel();

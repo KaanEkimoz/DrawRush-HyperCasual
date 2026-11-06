@@ -55,6 +55,12 @@ namespace DrawRush.Drawing
             var lm = FindFirstObjectByType<LevelManager>();
             if (levelIndex >= 0 && (lm == null || levelIndex != lm.TutorialIndex)) PlayerProgress.WonLevelPendingAdvance = levelIndex;
             PlayerProgress.AddCoins(LevelScore.CoinsForStars(stars));
+            if (lm != null && levelIndex == lm.TutorialIndex)
+                DrawRush.Analytics.Telemetry.Record(DrawRush.Analytics.Telemetry.Events.TutorialComplete, ("seconds", Mathf.RoundToInt(DrawRush.Analytics.Telemetry.LevelSeconds)));
+            else
+                DrawRush.Analytics.Telemetry.Record(DrawRush.Analytics.Telemetry.Events.LevelComplete, DrawRush.Analytics.Telemetry.LevelParams(
+                    ("seconds", Mathf.RoundToInt(DrawRush.Analytics.Telemetry.LevelSeconds)), ("stars", stars),
+                    ("health", health != null ? health.Current : 0)));
 
             if (state != null) state.IsGameWon = true;
         }

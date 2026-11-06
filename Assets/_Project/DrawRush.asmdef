@@ -6,7 +6,9 @@
         "Unity.InputSystem",
         "Unity.AI.Navigation",
         "Unity.Cinemachine",
-        "Unity.LevelPlay"
+        "Unity.LevelPlay",
+        "Unity.Services.Core",
+        "Unity.Services.Analytics"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

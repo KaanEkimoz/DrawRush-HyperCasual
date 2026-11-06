@@ -195,6 +195,7 @@ namespace DrawRush.Core
             }
 
             UpdateLevelLabel(index);
+            DrawRush.Analytics.Telemetry.LevelStarted(index, index == tutorialLevelIndex);
             MovePlayerToSpawn(activeLevel);
             ClearLeftoverEffects();
             if (deskThemes != null) deskThemes.Apply(activeLevel, PlayerProgress.LevelsPlayed);

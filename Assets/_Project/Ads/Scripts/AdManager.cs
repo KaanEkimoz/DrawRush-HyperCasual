@@ -29,6 +29,7 @@ namespace DrawRush.Ads
         private Action _onReward;
         private bool _rewardEarned;
         private bool _rewardClosed;
+        private string _placement;
         private int _initTries, _interstitialTries, _rewardedTries, _bannerTries;
         private bool _bannerHidden;
 
@@ -125,6 +126,7 @@ namespace DrawRush.Ads
 #endif
             if (!IsRewardedReady) return;
             _onReward = onReward;
+            _placement = placement;
             _rewardEarned = false;
             _rewardClosed = false;
             _rewarded.ShowAd(placement);
@@ -194,6 +196,7 @@ namespace DrawRush.Ads
             if (!_rewardEarned || !_rewardClosed || _onReward == null) return;
             Action grant = _onReward;
             _onReward = null;
+            RecordAd("rewarded", _placement);
             _rewardEarned = false;
             _rewardClosed = false;
             grant.Invoke();
@@ -232,6 +235,10 @@ namespace DrawRush.Ads
 
         // A rewarded video the player chose to watch counts as an ad shown: it resets the win
         // count and the time gate, so no interstitial lands right after it (e.g. x2 Coins → Next).
+        private static void RecordAd(string type, string placement) =>
+            DrawRush.Analytics.Telemetry.Record(DrawRush.Analytics.Telemetry.Events.AdWatched, ("adType", type), ("placement", placement ?? ""),
+                ("levelNumber", Mathf.Max(1, DrawRush.Core.PlayerProgress.LevelsPlayed)));
+
         private void MarkAdShown()
         {
             _pacing?.MarkShown(Time.realtimeSinceStartup);
@@ -264,6 +271,7 @@ namespace DrawRush.Ads
 
             _interstitial.ShowAd();
             _pacing.MarkShown(now);
+            RecordAd("interstitial", "between_levels");
         }
     }
 }

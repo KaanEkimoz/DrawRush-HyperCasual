@@ -191,6 +191,7 @@ namespace DrawRush.Shop
             {
                 if (!PlayerProgress.TrySpendCoins(item.price)) { Refresh(); return; }  // can't afford
                 PlayerProgress.OwnCosmetic(item.id);   // saves coins and ownership together
+                DrawRush.Analytics.Telemetry.Record(DrawRush.Analytics.Telemetry.Events.ShopPurchase, ("itemId", "skin_" + item.id), ("price", item.price), ("coinsLeft", PlayerProgress.Coins));
             }
             PlayerProgress.EquipCosmetic(item.id);   // buying auto-equips; owning-but-not-equipped equips
             Refresh();
