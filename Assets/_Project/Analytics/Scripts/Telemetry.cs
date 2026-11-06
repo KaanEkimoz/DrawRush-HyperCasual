@@ -1,28 +1,17 @@
-using System;
 using System.Collections.Generic;
-using DrawRush.Ads;
-using Unity.Services.Analytics;
-using Unity.Services.Core;
 using UnityEngine;
 
 namespace DrawRush.Analytics
 {
     /// <summary>
-    /// The game's analytics, on Unity Gaming Services (the project's linked cloud project). One
-    /// static entry point, <see cref="Record"/>, so gameplay code never touches the SDK. Events
-    /// recorded before the service is up (or without consent) are simply dropped.
-    ///
-    /// Consent: in the GDPR regions data collection starts only after the player accepted the
-    /// consent card (<see cref="AdConsent"/>); elsewhere it starts right away. Turning personalised
-    /// ads off in Settings also stops collection. Crash and exception reports come from the Cloud
-    /// Diagnostics package once Unity Services is initialised.
-    ///
-    /// Every event and parameter must exist in the dashboard's Event Manager, or the service drops
-    /// it as invalid: see <see cref="Events"/> for the full list.
+    /// One static entry point for game events. Today it sends nothing: Kaan chose to keep the
+    /// game SDK-free at this size and read installs, retention, crashes and ANRs from Play Console.
+    /// Gameplay already calls <see cref="Record"/> at every key moment, so adding a backend later
+    /// (Firebase, GameAnalytics) is a change to this file only. Respect <c>AdConsent</c> when you do.
     /// </summary>
     public static class Telemetry
     {
-        /// <summary>Event names and their parameters, as they must be defined in Event Manager.</summary>
+        /// <summary>Event names and their parameters.</summary>
         public static class Events
         {
             public const string LevelStart = "levelStart";        // levelNumber, shapeIndex, enemies, attempt
@@ -33,82 +22,30 @@ namespace DrawRush.Analytics
             public const string ShopPurchase = "shopPurchase";    // itemId, price, coinsLeft
         }
 
-        private static bool _ready, _collecting, _starting;
+        /// <summary>Log events to the console in development builds and the editor.</summary>
+        public static bool LogToConsole = Debug.isDebugBuild;
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-        private static void Boot()
-        {
-            AdConsent.Changed -= OnConsentChanged;
-            AdConsent.Changed += OnConsentChanged;
-            _ = StartAsync();
-        }
-
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetStatics()
-        {
-            _ready = _collecting = _starting = false;
-        }
-
-        // The editor never sends: play-testing would flood the live dashboard with fake players.
-#if UNITY_EDITOR
-        private static bool MayCollect => false;
-#else
-        private static bool MayCollect => AdConsent.HasAnswer ? AdConsent.Granted : !AdConsent.InConsentRegion();
-#endif
-
-        private static async Awaitable StartAsync()
-        {
-            if (_ready || _starting) return;
-            _starting = true;
-            try
-            {
-                if (UnityServices.State == ServicesInitializationState.Uninitialized)
-                    await UnityServices.InitializeAsync();
-                _ready = true;
-                SyncCollection();
-            }
-            catch (Exception e)
-            {
-                Debug.LogWarning($"[Telemetry] Unity Services init failed, analytics off this session: {e.Message}");
-            }
-            finally { _starting = false; }
-        }
-
-        private static void OnConsentChanged()
-        {
-            if (_ready) SyncCollection();
-            else _ = StartAsync();
-        }
-
-        private static void SyncCollection()
-        {
-            bool want = MayCollect;
-            if (want == _collecting) return;
-            _collecting = want;
-            if (want) AnalyticsService.Instance.StartDataCollection();
-            else AnalyticsService.Instance.StopDataCollection();
-        }
-
-        /// <summary>Record one event with optional parameters (int, float, bool or string values).</summary>
+        /// <summary>Record one event with optional parameters. No backend yet: logs only.</summary>
         public static void Record(string name, params (string key, object value)[] parameters)
         {
-            if (!_ready || !_collecting) return;
-            try
-            {
-                var e = new CustomEvent(name);
-                foreach (var (key, value) in parameters) e.Add(key, value);
-                AnalyticsService.Instance.RecordEvent(e);
-            }
-            catch (Exception ex)
-            {
-                Debug.LogWarning($"[Telemetry] {name} not recorded: {ex.Message}");
-            }
+            if (!LogToConsole) return;
+            var parts = new List<string>(parameters.Length);
+            foreach (var (key, value) in parameters) parts.Add($"{key}={value}");
+            Debug.Log($"[Telemetry] {name} {string.Join(" ", parts)}");
         }
 
         // ---- Level bookkeeping shared by start / complete / fail ----
 
         private static float _levelStartTime;
         private static int _levelIndex = -1, _attempt;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics()
+        {
+            _levelIndex = -1;
+            _attempt = 0;
+            LogToConsole = Debug.isDebugBuild;
+        }
 
         /// <summary>A level just went live (after its activation, before the 3-2-1).</summary>
         public static void LevelStarted(int shapeIndex, bool tutorial)
@@ -126,7 +63,7 @@ namespace DrawRush.Analytics
         {
             var list = new List<(string, object)>
             {
-                ("levelNumber", PlayerProgressLevel()),
+                ("levelNumber", Mathf.Max(1, Core.PlayerProgress.LevelsPlayed)),
                 ("shapeIndex", _levelIndex),
                 ("enemies", Core.PlayerProgress.LastLevelEnemies),
                 ("attempt", _attempt),
@@ -134,7 +71,5 @@ namespace DrawRush.Analytics
             list.AddRange(extra);
             return list.ToArray();
         }
-
-        private static int PlayerProgressLevel() => Mathf.Max(1, Core.PlayerProgress.LevelsPlayed);
     }
 }
