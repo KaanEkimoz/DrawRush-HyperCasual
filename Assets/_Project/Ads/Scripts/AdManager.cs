@@ -51,6 +51,21 @@ namespace DrawRush.Ads
 
             LevelPlay.OnInitSuccess += OnInitSuccess;
             LevelPlay.OnInitFailed += OnInitFailed;
+
+            // GDPR region, first launch: ask before the SDK starts, so no ad request goes out
+            // without an answer. With no settings menu to ask through, start non-personalised.
+            if (AdConsent.NeedsAsk)
+            {
+                var prompt = FindFirstObjectByType<DrawRush.UI.SettingsMenu>(FindObjectsInactive.Include);
+                if (prompt != null) { prompt.AskConsent(granted => { AdConsent.Set(granted); InitSdk(); }); return; }
+                AdConsent.Set(false);
+            }
+            InitSdk();
+        }
+
+        private void InitSdk()
+        {
+            AdConsent.Apply();
             LevelPlay.Init(config.AndroidAppKey);
         }
 
