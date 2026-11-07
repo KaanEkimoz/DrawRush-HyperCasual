@@ -97,7 +97,6 @@ namespace DrawRush.Hazards
             public GameObject Root;
             public Transform Moving;   // spikes group / saw blade
             public Transform Shadow;   // saw: the dark disc under the blade
-            public List<SpriteRenderer> Holes;   // spikes: the holes they come out of
             public float Clock;
             public int Blocker;        // 0 = not blocking
             public bool Retired;
@@ -204,7 +203,9 @@ namespace DrawRush.Hazards
                     : KindFor(level, _traps.Count, sawFrom, rollerFrom, Random.value);
                 if (kind == Kind.Roller && e.IsArc) kind = Kind.Spikes;   // it rolls straight
                 float keepOff = kind == Kind.Saw ? sawRadius : kind == Kind.Roller ? 0.3f : radius;
-                for (int attempt = 0; attempt < 12; attempt++)
+                // The test level crowds every kind onto one shape, so it packs them closer.
+                float apart = TrapTest.Active ? 2.2f : 3.5f;
+                for (int attempt = 0; attempt < (TrapTest.Active ? 30 : 12); attempt++)
                 {
                     Vector3 at = e.PointAt(Random.Range(0.25f, 0.75f));
                     at.y = 0f;
@@ -213,7 +214,7 @@ namespace DrawRush.Hazards
                     foreach (Vector3 d in drops) if (Flat(at - d) < keepOff + 0.45f) { onDrop = true; break; }
                     if (onDrop) continue;
                     bool crowded = false;
-                    foreach (Trap t in _traps) if (Flat(at - t.At) < 3.5f) { crowded = true; break; }
+                    foreach (Trap t in _traps) if (Flat(at - t.At) < apart) { crowded = true; break; }
                     if (crowded) continue;
                     _traps.Add(kind == Kind.Saw ? BuildSaw(e, at, network.transform)
                         : kind == Kind.Roller ? BuildRoller(e, at, network.transform)
@@ -261,7 +262,6 @@ namespace DrawRush.Hazards
             var spots = new List<Vector2> { Vector2.zero };
             for (int i = 0; i < 6; i++) spots.Add(Ring(i, 6, radius * 0.45f, 0f));
             for (int i = 0; i < 8; i++) spots.Add(Ring(i, 8, radius * 0.82f, 0.4f));
-            var holes = new List<SpriteRenderer>();
             foreach (Vector2 s in spots)
             {
                 float h = height * (s == Vector2.zero ? 1f : s.magnitude < radius * 0.6f ? 0.9f : 0.75f);
@@ -281,14 +281,12 @@ namespace DrawRush.Hazards
                 hole.transform.localPosition = new Vector3(s.x, 0.035f, s.y);
                 hole.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
                 hole.transform.localScale = Vector3.one * HoleSize;
-                holes.Add(hole);
             }
             // They grow out of the holes (height scales from the ground up), never sit below it:
             // the paper does not hide what is under it.
             spikes.localScale = new Vector3(1f, 0.001f, 1f);
             spikes.gameObject.SetActive(false);
             trap.Moving = spikes;
-            trap.Holes = holes;
             trap.Clock = Random.Range(0f, downSeconds);   // traps do not all rise together
             return trap;
         }
@@ -450,7 +448,6 @@ namespace DrawRush.Hazards
         {
             float cycle = downSeconds + warnSeconds + upSeconds;
             float rise;   // 0 = sunk, 1 = up
-            float warn = 0f;   // 0-1 through the warning, the holes darken and swell
             if (t.Retired) rise = Mathf.MoveTowards(Rise(t), 0f, Time.deltaTime / moveSeconds);
             else
             {
@@ -461,11 +458,7 @@ namespace DrawRush.Hazards
                     float k = Mathf.Clamp01(c / moveSeconds);
                     rise = 1f - k * k;   // sinking back in at the start, slow then quick
                 }
-                else if (c < downSeconds + warnSeconds)
-                {
-                    rise = 0f;
-                    warn = (c - downSeconds) / warnSeconds;
-                }
+                else if (c < downSeconds + warnSeconds) rise = 0f;   // still down, no tell
                 else
                 {
                     // Out with a small overshoot, so the pop reads.
@@ -475,12 +468,6 @@ namespace DrawRush.Hazards
                 }
             }
             t.Moving.localScale = new Vector3(1f, Mathf.Max(0.001f, rise), 1f);
-            float pulse = warn > 0f ? 0.5f + 0.5f * Mathf.Sin(warn * Mathf.PI * 4f - Mathf.PI * 0.5f) : 0f;
-            foreach (SpriteRenderer h in t.Holes)
-            {
-                h.color = Color.Lerp(HoleColor, HoleWarn, pulse);
-                h.transform.localScale = Vector3.one * HoleSize * (1f + 0.25f * pulse);
-            }
             bool show = rise > 0.01f;
             if (t.Moving.gameObject.activeSelf != show) t.Moving.gameObject.SetActive(show);
 
@@ -494,7 +481,6 @@ namespace DrawRush.Hazards
 
         private const float HoleSize = 0.19f;
         private static readonly Color HoleColor = new Color(0.16f, 0.17f, 0.22f, 0.8f);
-        private static readonly Color HoleWarn = new Color(0.05f, 0.05f, 0.08f, 1f);
 
         private void UpdateSaw(Trap t, Vector3 hero)
         {
