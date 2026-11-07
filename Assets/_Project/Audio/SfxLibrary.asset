@@ -59,7 +59,7 @@ MonoBehaviour:
     volume: 0.28
   sawLoop:
     clip: {fileID: 8300000, guid: de80ab934f7e5492b949be23a1088e21, type: 3}
-    volume: 0.07
+    volume: 0.056
   enemyVoices:
   - clip: {fileID: 8300000, guid: 41d8ca4f0789c40589f45423a6444fdd, type: 3}
     volume: 0.45
