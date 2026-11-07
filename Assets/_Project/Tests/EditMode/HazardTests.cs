@@ -12,14 +12,33 @@ namespace DrawRush.Tests.EditMode
         [TearDown] public void TearDown() => PaintBlockers.Clear();
 
         [Test]
-        public void StapleTraps_JoinGradually()
+        public void GroundTraps_JoinGradually()
         {
-            Assert.AreEqual(0, StapleTraps.TrapCount(5, 6, 14, 26));
-            Assert.AreEqual(1, StapleTraps.TrapCount(6, 6, 14, 26));
-            Assert.AreEqual(1, StapleTraps.TrapCount(13, 6, 14, 26));
-            Assert.AreEqual(2, StapleTraps.TrapCount(14, 6, 14, 26));
-            Assert.AreEqual(3, StapleTraps.TrapCount(26, 6, 14, 26));
-            Assert.AreEqual(3, StapleTraps.TrapCount(200, 6, 14, 26));
+            Assert.AreEqual(0, GroundTraps.TrapCount(5, 6, 14, 26));
+            Assert.AreEqual(1, GroundTraps.TrapCount(6, 6, 14, 26));
+            Assert.AreEqual(1, GroundTraps.TrapCount(13, 6, 14, 26));
+            Assert.AreEqual(2, GroundTraps.TrapCount(14, 6, 14, 26));
+            Assert.AreEqual(3, GroundTraps.TrapCount(26, 6, 14, 26));
+            Assert.AreEqual(3, GroundTraps.TrapCount(200, 6, 14, 26));
+        }
+
+        [Test]
+        public void Saws_JoinAfterSpikes_AndDebutFirst()
+        {
+            Assert.AreEqual(GroundTraps.Kind.Spikes, GroundTraps.KindFor(9, 0, 10, 0f));
+            Assert.AreEqual(GroundTraps.Kind.Saw, GroundTraps.KindFor(10, 0, 10, 0.9f));
+            Assert.AreEqual(GroundTraps.Kind.Spikes, GroundTraps.KindFor(10, 1, 10, 0f));
+            Assert.AreEqual(GroundTraps.Kind.Saw, GroundTraps.KindFor(30, 2, 10, 0.2f));
+            Assert.AreEqual(GroundTraps.Kind.Spikes, GroundTraps.KindFor(30, 2, 10, 0.8f));
+        }
+
+        [Test]
+        public void PaintBlockers_MoveWithTheirSource()
+        {
+            int id = PaintBlockers.Add(Vector3.zero, 0.5f);
+            PaintBlockers.Move(id, new Vector3(3f, 0f, 0f));
+            Assert.IsFalse(PaintBlockers.Blocks(Vector3.zero));
+            Assert.IsTrue(PaintBlockers.Blocks(new Vector3(3.2f, 0f, 0f)));
         }
 
         [Test]

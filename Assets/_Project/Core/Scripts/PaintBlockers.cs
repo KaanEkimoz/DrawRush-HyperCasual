@@ -26,6 +26,12 @@ namespace DrawRush.Core
 
         public static void Remove(int id) => Discs.Remove(id);
 
+        /// <summary>Move a disc (a sliding saw).</summary>
+        public static void Move(int id, Vector3 center)
+        {
+            if (Discs.TryGetValue(id, out Disc d)) { d.Center = center; Discs[id] = d; }
+        }
+
         public static int Count => Discs.Count;
 
         /// <summary>True when <paramref name="point"/> lies on any blocking disc (ground distance).</summary>
