@@ -7,37 +7,21 @@ using UnityEngine;
 namespace DrawRush.Enemy
 {
     /// <summary>
-    /// Brings in new enemy types over the campaign, one at a time (research: introduce a threat
-    /// alone, in an easier level, then mix it with the known ones):
-    ///   • the plain stapler from the 4th (levels 1-3 have no enemies), then one new type every
-    ///     few levels: scissors (sprinter) 9, hole punch (tank) 13, flanker 17, sharpener (sucks
-    ///     the pencil in) 21, putty (throws chunks) 25, glue 29, pushpin (lunges) 33;
-    ///   • until level 50 no level fields more than two enemies, after it never more than three.
-    /// Each type's first level fields it alone. Once the campaign has been played through, every
-    /// further lap is a harder tier: one more variant of each kind and slightly faster enemies.
-    /// Every tenth level is a boss level, alone on the page: the Giant Eraser (10, 30, 50...) and
-    /// the Giant Stapler (20, 40...). A boss or debut level the curve left empty gets an enemy.
-    /// After two losses in a row on the same level the enemies quietly slow down a little
-    /// (silent DDA, never announced).
+    /// Dresses each level's enemies for the campaign. WHICH kind comes WHEN is not decided here but
+    /// in <see cref="Campaign"/>, the one rule book for enemies, traps and desk accidents: one new
+    /// kind at a time on an easy level, alone, then rotated back in so every kind keeps coming.
+    /// Every tenth level is a boss duel: the Giant Eraser (10, 30, 50...) and the Giant Stapler
+    /// (20, 40...). Once the campaign has been played through, every further lap is a harder tier
+    /// with slightly faster enemies. After two losses in a row on the same level the enemies quietly
+    /// slow down a little (silent DDA, never announced).
     /// </summary>
     public sealed class EnemyTierDirector : MonoBehaviour
     {
         [SerializeField] private FreeDrawPainter painter;
         [SerializeField] private PlayerHealth health;
-
-        [Header("Introduction (campaign level number, 1-based)")]
-        [Tooltip("The first enemy of all, the plain stapler (levels before it have none).")]
-        [SerializeField] private int normalFrom = 4;
-        [SerializeField] private int sprinterFrom = 9;
-        [SerializeField] private int tankFrom = 13;
-        [SerializeField] private int flankerFrom = 17;
-        [SerializeField] private int eaterFrom = 21;
-        [SerializeField] private int orbiterFrom = 25;
-        [SerializeField] private int glueFrom = 29;
-        [SerializeField] private int dasherFrom = 33;
-        [SerializeField] private int doubleFrom = 36;
-        [Tooltip("Levels in one lap of the campaign (the tutorial excluded). Past it, each lap is a harder tier.")]
-        [SerializeField] private int campaignLength = 34;
+        [Tooltip("Levels in one lap of the campaign (the tutorial excluded), when no LevelManager is " +
+                 "around to count them. Past a lap, each lap is a harder tier.")]
+        [SerializeField] private int campaignLength = 54;
         [Tooltip("Speed added per hard-tier lap, capped by maxTierSpeed.")]
         [SerializeField] private float tierSpeedStep = 0.08f;
         [SerializeField] private float maxTierSpeed = 1.25f;
@@ -65,8 +49,6 @@ namespace DrawRush.Enemy
         [SerializeField] private float glueSpeed = 0.92f;
 
         [Header("Boss: Giant Eraser")]
-        [Tooltip("Every Nth campaign level is a boss level.")]
-        [SerializeField] private int bossEvery = 10;
         [SerializeField] private float bossSpeed = 0.675f;
         [SerializeField] private float bossScale = 1.8f;
 
@@ -113,7 +95,8 @@ namespace DrawRush.Enemy
             int number = PlayerProgress.LevelsPlayed;
             bool stapler = IsStaplerBossLevel(number);
             EnemyFollow boss = IsBossLevel(number) ? FieldBoss(network, enemies, needsEraserLook: !stapler) : null;
-            Plan(number, out int sprinters, out int tanks, out int eaters, out int dashers, out int flankers, out int orbiters, out int glues, out bool intro);
+            Novelty debut = Campaign.DebutAt(number);
+            bool intro = Campaign.IsEnemy(debut);
             // A debut must actually happen: a level the curve left empty gets one enemy for it.
             if (intro && enemies.Count == 0) FieldOne(network, enemies);
             if (enemies.Count == 0) return;
@@ -141,38 +124,36 @@ namespace DrawRush.Enemy
             {
                 for (int i = 1; i < enemies.Count; i++) enemies[i].gameObject.SetActive(false);   // the new type, alone
                 enemies.RemoveRange(1, enemies.Count - 1);
-                if (hud != null) IntroToast(hud, number);
+                if (hud != null) IntroToast(hud, debut);
             }
 
-            int k = 0;
-            k = Dress(enemies, k, tanks, EnemyVariant.Tank, tankSpeed * speed, tankScale, true, tankColor);
-            k = Dress(enemies, k, dashers, EnemyVariant.Dasher, speed, 1f, false, dasherColor);
-            k = Dress(enemies, k, eaters, EnemyVariant.Eater, speed, 1f, false, eaterColor);
-            k = Dress(enemies, k, flankers, EnemyVariant.Flanker, flankerSpeed * speed, 1f, false, null);
-            k = Dress(enemies, k, orbiters, EnemyVariant.Orbiter, orbiterSpeed * speed, orbiterScale, false, null);
-            k = Dress(enemies, k, glues, EnemyVariant.Glue, glueSpeed * speed, 1f, false, null);
-            k = Dress(enemies, k, sprinters, EnemyVariant.Sprinter, sprinterSpeed * speed, sprinterScale, false, sprinterColor);
-            if (!Mathf.Approximately(speed, 1f))
-                for (; k < enemies.Count; k++)
-                    if (enemies[k].isActiveAndEnabled) enemies[k].ApplyVariant(EnemyVariant.Normal, speed, 1f, false, null);
+            // Each slot wears the kind the campaign rotates in for it.
+            for (int i = 0; i < enemies.Count; i++)
+                if (enemies[i].isActiveAndEnabled) Dress(enemies[i], Campaign.EnemyKind(number, i), speed);
         }
 
-        private static int Dress(List<EnemyFollow> enemies, int k, int count, EnemyVariant v, float speed, float scale, bool heavy, Color? tint)
+        private void Dress(EnemyFollow e, Novelty kind, float speed)
         {
-            for (; k < enemies.Count && count > 0; k++)
+            switch (kind)
             {
-                if (!enemies[k].isActiveAndEnabled) continue;
-                enemies[k].ApplyVariant(v, speed, scale, heavy, tint);
-                count--;
+                case Novelty.Scissors: e.ApplyVariant(EnemyVariant.Sprinter, sprinterSpeed * speed, sprinterScale, false, sprinterColor); break;
+                case Novelty.HolePunch: e.ApplyVariant(EnemyVariant.Tank, tankSpeed * speed, tankScale, true, tankColor); break;
+                case Novelty.Eraser: e.ApplyVariant(EnemyVariant.Flanker, flankerSpeed * speed, 1f, false, null); break;
+                case Novelty.Sharpener: e.ApplyVariant(EnemyVariant.Eater, speed, 1f, false, eaterColor); break;
+                case Novelty.Putty: e.ApplyVariant(EnemyVariant.Orbiter, orbiterSpeed * speed, orbiterScale, false, null); break;
+                case Novelty.Glue: e.ApplyVariant(EnemyVariant.Glue, glueSpeed * speed, 1f, false, null); break;
+                case Novelty.Pushpin: e.ApplyVariant(EnemyVariant.Dasher, speed, 1f, false, dasherColor); break;
+                default:
+                    if (!Mathf.Approximately(speed, 1f)) e.ApplyVariant(EnemyVariant.Normal, speed, 1f, false, null);
+                    break;
             }
-            return k;
         }
 
         /// <summary>True for a boss level (0-based count of levels played).</summary>
-        public bool IsBossLevel(int levelNumber) => bossEvery > 0 && levelNumber > 0 && levelNumber % bossEvery == 0;
+        public bool IsBossLevel(int levelNumber) => Campaign.IsBoss(levelNumber);
 
         /// <summary>Boss levels alternate: the Giant Eraser on the 10th, 30th..., the Giant Stapler on the 20th, 40th...</summary>
-        public bool IsStaplerBossLevel(int levelNumber) => IsBossLevel(levelNumber) && (levelNumber / bossEvery) % 2 == 0;
+        public bool IsStaplerBossLevel(int levelNumber) => Campaign.IsStaplerBoss(levelNumber);
 
         // The level's one enemy that can play the boss, switched on if the budget left it off. The
         // eraser needs its own visual; the stapler boss is any enemy (the stapler is the default look).
@@ -207,61 +188,37 @@ namespace DrawRush.Enemy
             return level.GetComponentsInChildren<EnemyFollow>(true);
         }
 
-        private void IntroToast(DrawRush.Boosters.BoosterHud hud, int n)
+        private static void IntroToast(DrawRush.Boosters.BoosterHud hud, Novelty kind)
         {
             var c = new Color(0.25f, 0.45f, 0.95f);
-            if (n == normalFrom) hud.Toast("STAPLER!", "It chases you. Keep drawing, keep moving", c);
-            else if (n == sprinterFrom) hud.Toast("NEW: SCISSORS", "Small and fast", c);
-            else if (n == tankFrom) hud.Toast("NEW: HOLE PUNCH", "Slow, but nothing pushes it", c);
-            else if (n == flankerFrom) hud.Toast("NEW: ERASER", "It runs to where you're going", c);
-            else if (n == eaterFrom) hud.Toast("NEW: SHARPENER", "It sucks you in: run away!", c);
-            else if (n == orbiterFrom) hud.Toast("NEW: PUTTY", "Leave the red ring before the chunk lands", c);
-            else if (n == glueFrom) hud.Toast("NEW: GLUE", "Its puddles slow you down", c);
-            else if (n == dasherFrom) hud.Toast("NEW: PUSHPIN", "It flashes, then leaps: sidestep", c);
+            switch (kind)
+            {
+                case Novelty.Stapler: hud.Toast("STAPLER!", "It chases you. Keep drawing, keep moving", c); break;
+                case Novelty.Scissors: hud.Toast("NEW: SCISSORS", "Small and fast", c); break;
+                case Novelty.HolePunch: hud.Toast("NEW: HOLE PUNCH", "Slow, but nothing pushes it", c); break;
+                case Novelty.Eraser: hud.Toast("NEW: ERASER", "It runs to where you're going", c); break;
+                case Novelty.Sharpener: hud.Toast("NEW: SHARPENER", "It sucks you in: run away!", c); break;
+                case Novelty.Putty: hud.Toast("NEW: PUTTY", "Leave the red ring before the chunk lands", c); break;
+                case Novelty.Glue: hud.Toast("NEW: GLUE", "Its puddles slow you down", c); break;
+                case Novelty.Pushpin: hud.Toast("NEW: PUSHPIN", "It flashes, then leaps: sidestep", c); break;
+            }
         }
 
         /// <summary>Hard-tier lap for a campaign level number: 0 on the first play-through.</summary>
-        public int Lap(int levelNumber) => campaignLength > 0 ? Mathf.Max(0, (levelNumber - 1) / campaignLength) : 0;
+        public int Lap(int levelNumber)
+        {
+            int length = CampaignLength();
+            return length > 0 ? Mathf.Max(0, (levelNumber - 1) / length) : 0;
+        }
+
+        // One lap = every drawable shape once (the tutorial excluded).
+        private int CampaignLength()
+        {
+            var lm = FindFirstObjectByType<LevelManager>();
+            return lm != null && lm.LevelCount > 1 ? lm.LevelCount - 1 : campaignLength;
+        }
 
         private float TierSpeed(int levelNumber) => Mathf.Min(maxTierSpeed, 1f + tierSpeedStep * Lap(levelNumber));
-
-        /// <summary>How many of each variant a campaign level fields, and whether it introduces one.</summary>
-        public void Plan(int levelNumber, out int sprinters, out int tanks, out int eaters, out int dashers, out bool intro)
-            => Plan(levelNumber, out sprinters, out tanks, out eaters, out dashers, out _, out _, out _, out intro);
-
-        /// <summary>The plan with the flankers and orbiters (glue left out).</summary>
-        public void Plan(int levelNumber, out int sprinters, out int tanks, out int eaters, out int dashers,
-                         out int flankers, out int orbiters, out bool intro)
-            => Plan(levelNumber, out sprinters, out tanks, out eaters, out dashers, out flankers, out orbiters, out _, out intro);
-
-        /// <summary>The full plan, every type.</summary>
-        public void Plan(int levelNumber, out int sprinters, out int tanks, out int eaters, out int dashers,
-                         out int flankers, out int orbiters, out int glues, out bool intro)
-        {
-            int lap = Lap(levelNumber);
-            int n = lap > 0 ? campaignLength : levelNumber;   // later laps keep the full roster unlocked
-            sprinters = n >= sprinterFrom ? (n >= doubleFrom ? 2 : 1) : 0;
-            tanks = n >= tankFrom ? (n >= doubleFrom + 6 ? 2 : 1) : 0;
-            eaters = n >= eaterFrom ? 1 : 0;
-            dashers = n >= dasherFrom ? 1 : 0;
-            flankers = n >= flankerFrom ? (n >= doubleFrom + 8 ? 2 : 1) : 0;
-            orbiters = n >= orbiterFrom ? 1 : 0;
-            glues = n >= glueFrom ? 1 : 0;
-            if (lap > 0) { sprinters++; tanks++; eaters++; dashers++; flankers++; orbiters++; glues++; }   // the hard tier: one more of each
-
-            intro = lap == 0 && (levelNumber == normalFrom || levelNumber == sprinterFrom || levelNumber == tankFrom || levelNumber == eaterFrom
-                                 || levelNumber == dasherFrom || levelNumber == flankerFrom || levelNumber == orbiterFrom
-                                 || levelNumber == glueFrom);
-            if (!intro) return;
-            // An introduction fields only the new type.
-            sprinters = levelNumber == sprinterFrom ? 1 : 0;
-            tanks = levelNumber == tankFrom ? 1 : 0;
-            eaters = levelNumber == eaterFrom ? 1 : 0;
-            dashers = levelNumber == dasherFrom ? 1 : 0;
-            flankers = levelNumber == flankerFrom ? 1 : 0;
-            orbiters = levelNumber == orbiterFrom ? 1 : 0;
-            glues = levelNumber == glueFrom ? 1 : 0;
-        }
 
         private static int CurrentIndex()
         {

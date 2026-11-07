@@ -24,71 +24,12 @@ namespace DrawRush.Tests.EditMode
         [TearDown]
         public void TearDown() => Object.DestroyImmediate(_go);
 
-        private (int s, int t, int e, int d, bool intro) Plan(int level)
-        {
-            _director.Plan(level, out int s, out int t, out int e, out int d, out bool intro);
-            return (s, t, e, d, intro);
-        }
-
         [Test]
-        public void EarlyLevels_FieldOnlyPlainEnemies()
+        public void SecondLap_StartsAfterEveryShapeOnce()
         {
-            for (int level = 1; level <= 3; level++)
-                Assert.AreEqual((0, 0, 0, 0, false), Plan(level), $"level {level}");
-        }
-
-        [Test]
-        public void EachNewType_DebutsAlone()
-        {
-            Assert.AreEqual((0, 0, 0, 0, true), Plan(4), "the plain stapler, the first enemy of all");
-            Assert.AreEqual((1, 0, 0, 0, true), Plan(9));
-            Assert.AreEqual((0, 1, 0, 0, true), Plan(13));
-            Assert.AreEqual((0, 0, 1, 0, true), Plan(21));
-            Assert.AreEqual((0, 0, 0, 1, true), Plan(33));
-        }
-
-        [Test]
-        public void AfterADebut_TheTypeStaysInTheMix()
-        {
-            Assert.AreEqual((0, 0, 0, 0, false), Plan(7));
-            Assert.AreEqual((1, 0, 0, 0, false), Plan(10));
-            Assert.AreEqual((1, 1, 0, 0, false), Plan(14));
-            Assert.AreEqual((1, 1, 1, 0, false), Plan(22));
-            Assert.AreEqual((1, 1, 1, 1, false), Plan(34));
-        }
-
-        [Test]
-        public void SecondLap_IsAHarderTierWithNoIntroductions()
-        {
-            Assert.AreEqual(0, _director.Lap(34));
-            Assert.AreEqual(1, _director.Lap(35));
-            var plan = Plan(40);
-            Assert.IsFalse(plan.intro);
-            Assert.AreEqual((2, 2, 2, 2), (plan.s, plan.t, plan.e, plan.d));
-        }
-
-        [Test]
-        public void FlankerAndOrbiter_DebutAloneThenJoinTheMix()
-        {
-            _director.Plan(17, out int s, out int t, out int e, out int d, out int f, out int o, out bool intro);
-            Assert.AreEqual((0, 0, 0, 0, 1, 0, true), (s, t, e, d, f, o, intro));
-            _director.Plan(25, out s, out t, out e, out d, out f, out o, out intro);
-            Assert.AreEqual((0, 0, 0, 0, 0, 1, true), (s, t, e, d, f, o, intro));
-            _director.Plan(26, out s, out t, out e, out d, out f, out o, out intro);
-            Assert.AreEqual((1, 1, 1, 0, 1, 1, false), (s, t, e, d, f, o, intro));
-            _director.Plan(40, out _, out _, out _, out _, out f, out o, out intro);
-            Assert.AreEqual((2, 2, false), (f, o, intro));
-        }
-
-        [Test]
-        public void Glue_DebutsAloneAtLevel29ThenStays()
-        {
-            _director.Plan(29, out int s, out int t, out int e, out int d, out int f, out int o, out int g, out bool intro);
-            Assert.AreEqual((0, 0, 0, 0, 0, 0, 1, true), (s, t, e, d, f, o, g, intro));
-            _director.Plan(30, out _, out _, out _, out _, out _, out _, out g, out intro);
-            Assert.AreEqual((1, false), (g, intro));
-            _director.Plan(28, out _, out _, out _, out _, out _, out _, out g, out _);
-            Assert.AreEqual(0, g);
+            // No LevelManager in a test: the serialized lap length (54 shapes) is used.
+            Assert.AreEqual(0, _director.Lap(54));
+            Assert.AreEqual(1, _director.Lap(55));
         }
 
         [Test]

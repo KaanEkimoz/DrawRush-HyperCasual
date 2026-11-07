@@ -34,16 +34,9 @@ namespace DrawRush.Enemy
         [SerializeField] private BoosterHud hud;
         [SerializeField] private PlayerKnockback knockback;
 
-        [Header("Timing")]
-        [Tooltip("First campaign level (1-based) with hazards.")]
-        [SerializeField] private int fromLevel = 8;
+        [Header("Timing (which levels get accidents, and which kinds: see Campaign)")]
         [SerializeField] private float firstDelay = 7f;
         [SerializeField] private Vector2 interval = new(6.5f, 10f);
-
-        [Header("Roster (first campaign level of each)")]
-        [SerializeField] private int inkFrom = 12;
-        [SerializeField] private int gustFrom = 16;
-        [SerializeField] private int rulerFrom = 20;
 
         [Header("Coffee cup")]
         [SerializeField] private Sprite cupSprite;
@@ -131,7 +124,7 @@ namespace DrawRush.Enemy
             Watch();
             CallOff();
             _called = false;
-            _loop = PlayerProgress.LevelsPlayed >= fromLevel && !DrawRush.Hazards.TrapTest.Active ? StartCoroutine(Loop()) : null;
+            _loop = Campaign.EventsOn(PlayerProgress.LevelsPlayed) && !DrawRush.Hazards.TrapTest.Active ? StartCoroutine(Loop()) : null;
         }
 
         // The services are registered after this component wakes, so they are picked up per level.
@@ -210,14 +203,24 @@ namespace DrawRush.Enemy
         public enum Hazard { None, Cup, Bump, Ink, Gust, Ruler }
 
         /// <summary>The hazards a campaign level can roll, each with its weight (0 = not yet).</summary>
-        public static float Weight(Hazard h, int level, bool enemies, int inkFrom, int gustFrom, int rulerFrom) => h switch
+        public static float Weight(Hazard h, int level, bool enemies) => h switch
         {
-            Hazard.Cup => 1f,
-            Hazard.Bump => enemies ? 0.7f : 0f,
-            Hazard.Ink => level >= inkFrom ? 0.9f : 0f,
-            Hazard.Gust => level >= gustFrom ? 0.7f : 0f,
-            Hazard.Ruler => level >= rulerFrom ? 0.7f : 0f,
+            Hazard.Cup => Campaign.EventAllowed(Novelty.Cup, level) ? 1f : 0f,
+            Hazard.Bump => enemies && Campaign.EventAllowed(Novelty.Cup, level) ? 0.7f : 0f,
+            Hazard.Ink => Campaign.EventAllowed(Novelty.Ink, level) ? 0.9f : 0f,
+            Hazard.Gust => Campaign.EventAllowed(Novelty.Gust, level) ? 0.7f : 0f,
+            Hazard.Ruler => Campaign.EventAllowed(Novelty.Ruler, level) ? 0.7f : 0f,
             _ => 0f,
+        };
+
+        /// <summary>On an accident's debut level, the first accident is the new one.</summary>
+        public static Hazard DebutHazard(int level) => Campaign.DebutAt(level) switch
+        {
+            Novelty.Cup => Hazard.Cup,
+            Novelty.Ink => Hazard.Ink,
+            Novelty.Gust => Hazard.Gust,
+            Novelty.Ruler => Hazard.Ruler,
+            _ => Hazard.None,
         };
 
         private static readonly Hazard[] Roster = { Hazard.Cup, Hazard.Bump, Hazard.Ink, Hazard.Gust, Hazard.Ruler };
@@ -229,7 +232,7 @@ namespace DrawRush.Enemy
             var w = new float[Roster.Length];
             for (int i = 0; i < Roster.Length; i++)
             {
-                w[i] = Weight(Roster[i], level, enemies, inkFrom, gustFrom, rulerFrom) * (Roster[i] == _last ? 0.25f : 1f);
+                w[i] = Weight(Roster[i], level, enemies) * (Roster[i] == _last ? 0.25f : 1f);
                 total += w[i];
             }
             float roll = Random.value * total;
@@ -244,10 +247,12 @@ namespace DrawRush.Enemy
         private IEnumerator Loop()
         {
             yield return new WaitForSeconds(firstDelay);
+            Hazard debut = DebutHazard(PlayerProgress.LevelsPlayed);
             while (true)
             {
                 var enemies = FindObjectsByType<EnemyFollow>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
-                Hazard h = Pick(PlayerProgress.LevelsPlayed, enemies.Length > 0);
+                Hazard h = debut != Hazard.None ? debut : Pick(PlayerProgress.LevelsPlayed, enemies.Length > 0);
+                debut = Hazard.None;
                 if (h == Hazard.Ink && !InkTarget(out _)) h = Hazard.Cup;
                 _last = h;
                 switch (h)

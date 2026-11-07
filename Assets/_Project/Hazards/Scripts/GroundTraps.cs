@@ -59,16 +59,7 @@ namespace DrawRush.Hazards
         [SerializeField] private Material rollerBody;
         [SerializeField] private Material rollerCap;
 
-        [Header("Campaign")]
-        [Tooltip("First campaign level (1-based) with a trap (spikes).")]
-        [SerializeField] private int fromLevel = 6;
-        [Tooltip("First level that can place a saw.")]
-        [SerializeField] private int sawFrom = 10;
-        [Tooltip("First level that can place a roller.")]
-        [SerializeField] private int rollerFrom = 18;
-        [Tooltip("Levels from which a second and a third trap are placed.")]
-        [SerializeField] private int twoFrom = 14;
-        [SerializeField] private int threeFrom = 26;
+        [Header("Placement (which traps a level gets: see Campaign)")]
         [Tooltip("Edges shorter than this (m) never get a trap: no room to go around it.")]
         [SerializeField] private float minEdgeMeters = 3f;
         [Tooltip("No trap starts closer than this (m) to the hero.")]
@@ -127,19 +118,8 @@ namespace DrawRush.Hazards
             public int Phase = -1;     // spikes: 0 down, 1 coming, 2 up (sounds fire on a change)
         }
 
-        /// <summary>How many traps a campaign level places (before the edge limit).</summary>
-        public static int TrapCount(int level, int from, int two, int three)
-            => level < from ? 0 : level < two ? 1 : level < three ? 2 : 3;
-
-        /// <summary>Which trap goes in slot <paramref name="slot"/> of a level: spikes first, each
-        /// new kind fills the first slot of its debut level, later levels mix the kinds unlocked.</summary>
-        public static Kind KindFor(int level, int slot, int sawFrom, int rollerFrom, float roll)
-        {
-            if (level == rollerFrom && slot == 0) return Kind.Roller;
-            if (level == sawFrom && slot == 0) return Kind.Saw;
-            int kinds = level >= rollerFrom ? 3 : level > sawFrom ? 2 : 1;
-            return (Kind)Mathf.Min(kinds - 1, Mathf.FloorToInt(roll * kinds));
-        }
+        /// <summary>The trap kind for a campaign kind (the schedule lives in <see cref="Campaign"/>).</summary>
+        public static Kind KindOf(Novelty n) => n == Novelty.Saw ? Kind.Saw : n == Novelty.Roller ? Kind.Roller : Kind.Spikes;
 
         private void Awake()
         {
@@ -194,14 +174,17 @@ namespace DrawRush.Hazards
                 if (hud != null) hud.Toast("TRAP TEST", "Spikes, saw, roller", new Color(0.45f, 0.5f, 0.6f));
                 return;
             }
-            int count = TrapCount(level, fromLevel, twoFrom, threeFrom);
+            int count = Campaign.TrapCount(level);
             if (count <= 0) return;
             Place(network, count, level);
             if (hud == null || _traps.Count == 0) return;
             var c = new Color(0.45f, 0.5f, 0.6f);
-            if (level == fromLevel) hud.Toast("NEW: SPIKE TRAP", "Spikes rise and sink: time your run", c);
-            else if (level == sawFrom) hud.Toast("NEW: SAW", "It slides back and forth: pass behind it", c);
-            else if (level == rollerFrom) hud.Toast("NEW: ROLLER", "It rolls along the line: draw behind it", c);
+            switch (Campaign.DebutAt(level))
+            {
+                case Novelty.Spikes: hud.Toast("NEW: SPIKE TRAP", "Spikes rise and sink: time your run", c); break;
+                case Novelty.Saw: hud.Toast("NEW: SAW", "It slides back and forth: pass behind it", c); break;
+                case Novelty.Roller: hud.Toast("NEW: ROLLER", "It rolls along the line: draw behind it", c); break;
+            }
         }
 
         private void Place(EdgeNetwork network, int count, int level)
@@ -224,7 +207,7 @@ namespace DrawRush.Hazards
             {
                 if (_traps.Count >= count) break;
                 Kind kind = TrapTest.Active ? TestKinds[_traps.Count % TestKinds.Length]
-                    : KindFor(level, _traps.Count, sawFrom, rollerFrom, Random.value);
+                    : KindOf(Campaign.TrapKind(level, _traps.Count));
                 if (kind == Kind.Roller && e.IsArc) kind = Kind.Spikes;   // it rolls straight
                 float keepOff = kind == Kind.Saw ? sawRadius : kind == Kind.Roller ? 0.3f : radius;
                 // The test level crowds every kind onto one shape, so it packs them closer.

@@ -29,8 +29,6 @@ namespace DrawRush.Core
         [SerializeField] private AdManager ads;
 
         [Header("Difficulty Curve")]
-        [Tooltip("Levels after the tutorial that field no enemies.")]
-        [SerializeField] private int enemyFreeLevels = 3;
         [Tooltip("Difficulty target for the very first level after the tutorial. Low enough that " +
                  "the bag picks the simplest shape and the enemy budget works out to zero.")]
         [SerializeField] private float minTarget = 3f;
@@ -63,6 +61,8 @@ namespace DrawRush.Core
             if (ads == null) ads = FindFirstObjectByType<AdManager>();
             _bag.CandidatePool = Mathf.Max(1, candidatePool);
             _bag.Deserialize(PlayerProgress.LevelBag);
+            // Shapes added in an update join the saved bag, so they are not held back a whole cycle.
+            if (levelManager != null) _bag.AddNewLevels(levelManager.LevelCount, levelManager.TutorialIndex);
         }
 
         public void StartTheGame()
@@ -102,8 +102,7 @@ namespace DrawRush.Core
             // count (and so no enemy gets an Awake it shouldn't have had). Same budget the draw
             // ranked on, so the level delivers the difficulty it was chosen for.
             Transform level = levelManager.GetLevel(next);
-            int enemies = LevelDifficulty.OpeningBudget(played, enemyFreeLevels, LevelDifficulty.EnemyBudget(
-                target, LevelDifficulty.ShapeScore(level), LevelDifficulty.AvailableEnemies(level)));
+            int enemies = EnemiesFor(played + 1, target, level);
             LevelDifficulty.ApplyEnemyBudget(level, enemies);
 
             PlayerProgress.WonLevelPendingAdvance = -1;
@@ -127,10 +126,11 @@ namespace DrawRush.Core
             if (levelManager == null) return;
             Transform level = levelManager.GetLevel(index);
             if (level == null) return;
-            int played = PlayerProgress.LevelsPlayed;
-            float target = LevelDifficulty.SawtoothTarget(played, sawPeriod, minTarget, maxTarget, rampLevels);
-            int enemies = LevelDifficulty.OpeningBudget(played, enemyFreeLevels, LevelDifficulty.EnemyBudget(
-                target, LevelDifficulty.ShapeScore(level), LevelDifficulty.AvailableEnemies(level)));
+            // The level on screen is number LevelsPlayed; NextLevel aimed it at the curve one step
+            // back (the count before it was bumped), so the same target is used here.
+            int number = Mathf.Max(1, PlayerProgress.LevelsPlayed);
+            float target = LevelDifficulty.SawtoothTarget(number - 1, sawPeriod, minTarget, maxTarget, rampLevels);
+            int enemies = EnemiesFor(number, target, level);
             LevelDifficulty.ApplyEnemyBudget(level, enemies);
             PlayerProgress.LastLevelEnemies = enemies;   // persist so a relaunch restores this count
         }
@@ -148,12 +148,35 @@ namespace DrawRush.Core
         // target, which is the whole point of enemies being the dial.
         private float AttainableScore(int index, float target)
         {
-            Transform level = levelManager.GetLevel(index);
-            float shape = LevelDifficulty.ShapeScore(level);
-            int enemies = LevelDifficulty.OpeningBudget(PlayerProgress.LevelsPlayed, enemyFreeLevels,
-                LevelDifficulty.EnemyBudget(target, shape, LevelDifficulty.AvailableEnemies(level)));
-            return shape + enemies * LevelDifficulty.EnemyWeight;
+            int number = PlayerProgress.LevelsPlayed + 1;
+            return RankScore(number, target, LevelDifficulty.ShapeScore(levelManager.GetLevel(index)),
+                LevelDifficulty.AvailableEnemies(levelManager.GetLevel(index)));
         }
+
+        /// <summary>What a level is worth when served as campaign level <paramref name="number"/>:
+        /// its shape, the traps and accidents the campaign puts on that level, and the enemies the
+        /// budget adds on top.</summary>
+        public static float Attainable(int number, float target, float shape, int available) =>
+            shape + Campaign.FixedCost(number) + Enemies(number, target, shape, available) * LevelDifficulty.EnemyWeight;
+
+        /// <summary>Enemies for campaign level <paramref name="number"/>: whatever closes the gap
+        /// to the target once the shape, traps and accidents are counted, within the campaign's cap
+        /// for that level (none on breathers and under trap / accident debuts, one for a debut).</summary>
+        public static int Enemies(int number, float target, float shape, int available) =>
+            Mathf.Min(Mathf.Min(Campaign.EnemyCap(number), available), Mathf.Max(Campaign.EnemyFloor(number),
+                LevelDifficulty.EnemyBudget(target - Campaign.FixedCost(number), shape, available)));
+
+        /// <summary>The bag's ranking score: what the level is worth, with debut levels steered to
+        /// simple shapes (a new thing is learnt on an easy page).</summary>
+        public static float RankScore(int number, float target, float shape, int available)
+        {
+            float score = Attainable(number, target, shape, available);
+            if (Campaign.DebutAt(number) != Novelty.None) score += Mathf.Max(0f, shape - Campaign.DebutShapeMax) * 2f;
+            return score;
+        }
+
+        private static int EnemiesFor(int number, float target, Transform level) =>
+            Enemies(number, target, LevelDifficulty.ShapeScore(level), LevelDifficulty.AvailableEnemies(level));
 
         // Everything the bag may hand out: all level groups except the tutorial, which is gated by
         // its own completed-flag and must never come round again as "the next level".

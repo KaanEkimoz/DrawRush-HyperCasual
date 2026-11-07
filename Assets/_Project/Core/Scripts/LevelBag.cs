@@ -19,6 +19,11 @@ namespace DrawRush.Core
     public sealed class LevelBag
     {
         private readonly List<int> _remaining = new();
+        private readonly List<int> _recent = new();   // last drawn, newest last
+        private int _known = -1;                      // level count the bag was built for (-1 = unknown)
+
+        /// <summary>Levels drawn most recently are not drawn again right after a refill.</summary>
+        public const int RecentWindow = 8;
         private readonly Random _rng;
 
         /// <summary>Candidates considered per draw: the N nearest to the target, picked between
@@ -49,7 +54,12 @@ namespace DrawRush.Core
 
             // Rank what's left by how close it sits to the target, then pick among the closest few.
             // Ties break on index so a pool of 1 gives the same fixed campaign order every time.
-            var ranked = new List<int>(_remaining);
+            // Straight after a refill the bag holds the shapes just played too: leave those out
+            // while anything else is left, so the end of one cycle never repeats at the start of
+            // the next.
+            var ranked = new List<int>();
+            foreach (int i in _remaining) if (!_recent.Contains(i)) ranked.Add(i);
+            if (ranked.Count == 0) ranked.AddRange(_remaining);
             ranked.Sort((a, b) =>
             {
                 int byGap = Math.Abs(difficultyOf(a) - target).CompareTo(Math.Abs(difficultyOf(b) - target));
@@ -59,20 +69,47 @@ namespace DrawRush.Core
             int pool = Math.Max(1, Math.Min(CandidatePool, ranked.Count));
             int chosen = ranked[_rng.Next(pool)];
             _remaining.Remove(chosen);
+            _recent.Remove(chosen);
+            _recent.Add(chosen);
+            while (_recent.Count > RecentWindow) _recent.RemoveAt(0);
             return chosen;
         }
 
-        /// <summary>Comma-separated remaining indices, for PlayerPrefs.</summary>
-        public string Serialize() => string.Join(",", _remaining);
+        /// <summary>For PlayerPrefs: "remaining|recent|levelCount", each list comma-separated.</summary>
+        public string Serialize() => string.Join(",", _remaining) + "|" + string.Join(",", _recent) + "|" + _known;
+
+        /// <summary>Levels added since the bag was saved (indices from the old count up) join the
+        /// cycle in progress. A bag from before this was tracked counts as built for 35 levels.</summary>
+        public void AddNewLevels(int levelCount, int tutorialIndex)
+        {
+            if (_known < 0) _known = _remaining.Count == 0 ? levelCount : LegacyLevelCount;
+            for (int i = _known; i < levelCount; i++)
+                if (i != tutorialIndex && !_remaining.Contains(i)) _remaining.Add(i);
+            _known = levelCount;
+        }
+
+        /// <summary>Level groups in the scene when saved bags did not record the count (1.5.0 and older).</summary>
+        public const int LegacyLevelCount = 35;
 
         /// <summary>Restore a bag mid-cycle. Unparsable or empty input leaves the bag empty,
         /// which simply means the next Draw refills — never a hard failure.</summary>
         public void Deserialize(string data)
         {
             _remaining.Clear();
+            _recent.Clear();
+            _known = -1;
             if (string.IsNullOrEmpty(data)) return;
-            foreach (string part in data.Split(','))
-                if (int.TryParse(part, out int v)) _remaining.Add(v);
+            string[] parts = data.Split('|');   // older saves: just the remaining list
+            Parse(parts[0], _remaining);
+            if (parts.Length > 1) Parse(parts[1], _recent);
+            if (parts.Length > 2 && int.TryParse(parts[2], out int known)) _known = known;
+        }
+
+        private static void Parse(string list, List<int> into)
+        {
+            if (string.IsNullOrEmpty(list)) return;
+            foreach (string part in list.Split(','))
+                if (int.TryParse(part, out int v)) into.Add(v);
         }
     }
 }
