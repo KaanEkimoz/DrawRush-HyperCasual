@@ -97,7 +97,9 @@ namespace DrawRush.Hazards
         [SerializeField] private float rollerRadius = 0.28f;
         [SerializeField] private float rollerLength = 1.7f;
         [Tooltip("Seconds for one trip there and back.")]
-        [SerializeField] private float rollerPeriod = 3.2f;
+        [SerializeField] private float rollerPeriod = 3.2f;   // rolling time for a there-and-back
+        [Tooltip("Seconds it rests at each end before rolling back (and goes quiet).")]
+        [SerializeField] private float rollerHold = 0.6f;
 
         [SerializeField] private float knockbackForce = 7f;
 
@@ -383,7 +385,7 @@ namespace DrawRush.Hazards
             Part(body, PrimitiveType.Cube, new Vector3(rollerLength * 0.25f, rollerRadius * 1.02f, 0f), Quaternion.identity,
                 new Vector3(rollerLength * 0.32f, 0.06f, 0.1f), rollerCap);
             trap.Moving = body;
-            trap.Clock = Random.Range(0f, rollerPeriod);
+            trap.Clock = Random.Range(0f, rollerPeriod + 2f * rollerHold);
             trap.Blocker = PaintBlockers.Add(at, rollerRadius + 0.3f);
             return trap;
         }
@@ -400,10 +402,23 @@ namespace DrawRush.Hazards
             r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         }
 
+        // Where the roller is (-1..1 along its stretch) and how fast it is going (0-1): it eases
+        // from one end to the other, then rests there for rollerHold before rolling back.
+        private float RollerAt(float clock, out float speed)
+        {
+            float move = rollerPeriod * 0.5f;
+            float leg = move + rollerHold;
+            float c = Mathf.Repeat(clock, leg * 2f);
+            float dir = c < leg ? 1f : -1f;
+            float k = Mathf.Clamp01((c < leg ? c : c - leg) / move);
+            speed = Mathf.Sin(k * Mathf.PI);
+            return -dir + 2f * dir * (0.5f - 0.5f * Mathf.Cos(k * Mathf.PI));
+        }
+
         private void UpdateRoller(Trap t, Vector3 hero)
         {
             if (!t.Retired) t.Clock += Time.deltaTime;
-            float s = Mathf.Sin(t.Clock / rollerPeriod * Mathf.PI * 2f) * t.Half;
+            float s = RollerAt(t.Clock, out float speed) * t.Half;
             if (t.Retired) t.Sink = Mathf.MoveTowards(t.Sink, 1f, Time.deltaTime * 2f);
             // Retired, it shrinks away (a highlighter cannot sink into the page).
             t.Moving.localScale = Vector3.one * (1f - t.Sink);
@@ -415,8 +430,7 @@ namespace DrawRush.Hazards
 
             Vector3 ground = t.At + t.Along * s;
             if (t.Blocker != 0) PaintBlockers.Move(t.Blocker, ground);
-            float speed = Mathf.Abs(Mathf.Cos(t.Clock / rollerPeriod * Mathf.PI * 2f));
-            float level = Nearness(ground) * Mathf.Lerp(0.1f, 1f, speed);
+            float level = Nearness(ground) * speed;   // silent while it rests at an end
             if (level > RollerLevel) { RollerLevel = level; RollerSpeed = speed; }
             if (combat == null || combat.IsInvulnerable) return;
             Vector3 d = hero - ground; d.y = 0f;
