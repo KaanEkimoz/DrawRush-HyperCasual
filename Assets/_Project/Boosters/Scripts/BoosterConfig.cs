@@ -52,7 +52,7 @@ namespace DrawRush.Boosters
         [Tooltip("Seconds after a level starts before the first pickup (most levels last 6-16 s).")]
         [SerializeField] private float _firstSpawnDelay = 2.5f;
         [Tooltip("Seconds between a pickup going (taken or expired) and the next one.")]
-        [SerializeField] private Vector2 _spawnInterval = new(5f, 8f);
+        [SerializeField] private Vector2 _spawnInterval = new(13f, 16f);   // Kaan: pickups came too often (was 5-8 s)
 
         [Header("Placement")]
         [Tooltip("Preferred distance (m) from the player: ahead on the drawing, not on top of them.")]

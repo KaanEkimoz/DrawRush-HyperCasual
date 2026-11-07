@@ -12,7 +12,7 @@ namespace DrawRush.Boosters
     /// Places one booster pickup at a time on the field: beside an unpainted stretch of the shape,
     /// ahead of the player, defensive ones near danger, never on top of an enemy or the player.
     /// In a level with no enemies only speed comes up. The first one comes a
-    /// few seconds into a level; after one is taken or expires, the next follows 8-12 s later.
+    /// few seconds into a level; after one is taken or expires, the next follows 13-16 s later (BoosterConfig).
     /// After a recent hit, shield and freeze are likelier (quiet pity, never announced).
     /// </summary>
     public sealed class BoosterSpawner : MonoBehaviour

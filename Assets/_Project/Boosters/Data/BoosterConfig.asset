@@ -58,7 +58,7 @@ MonoBehaviour:
   _shockwavePush: 3.5
   _shieldBreakGrace: 1
   _firstSpawnDelay: 2.5
-  _spawnInterval: {x: 5, y: 8}
+  _spawnInterval: {x: 13, y: 16}
   _preferredPlayerDistance: {x: 4, y: 10}
   _sideOffset: 1.2
   _dangerRadius: 5
