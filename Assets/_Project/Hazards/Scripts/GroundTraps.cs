@@ -18,13 +18,15 @@ namespace DrawRush.Hazards
     /// <item>Saw: a spinning blade lying just above the paper (the camera looks down, so a
     /// standing blade would read as a line), sliding back and forth along a slot across the
     /// line. Pass behind it.</item>
+    /// <item>Roller: a giant highlighter lying across the line, rolling back and forth along it
+    /// between two stoppers. Follow it and draw behind it.</item>
     /// </list>
     /// When the edge under a trap is finished the trap sinks for good (the wall rises there).
     /// Placed fresh each level from a set level on, more of them later in the campaign.
     /// </summary>
     public sealed class GroundTraps : MonoBehaviour
     {
-        public enum Kind { Spikes, Saw }
+        public enum Kind { Spikes, Saw, Roller }
 
         [SerializeField] private FreeDrawPainter painter;
         [SerializeField] private PlayerCombat combat;
@@ -32,12 +34,17 @@ namespace DrawRush.Hazards
         [SerializeField] private BoosterHud hud;
         [Tooltip("Trap steel. A direct reference keeps the shader in the build.")]
         [SerializeField] private Material metal;
+        [Tooltip("Highlighter body and cap.")]
+        [SerializeField] private Material rollerBody;
+        [SerializeField] private Material rollerCap;
 
         [Header("Campaign")]
         [Tooltip("First campaign level (1-based) with a trap (spikes).")]
         [SerializeField] private int fromLevel = 6;
         [Tooltip("First level that can place a saw.")]
         [SerializeField] private int sawFrom = 10;
+        [Tooltip("First level that can place a roller.")]
+        [SerializeField] private int rollerFrom = 18;
         [Tooltip("Levels from which a second and a third trap are placed.")]
         [SerializeField] private int twoFrom = 14;
         [SerializeField] private int threeFrom = 26;
@@ -63,6 +70,14 @@ namespace DrawRush.Hazards
         [SerializeField] private float sawPeriod = 3.4f;
         [SerializeField] private float sawSpin = 720f;
 
+        [Header("Roller")]
+        [Tooltip("Length (m) of the stretch of line it rolls along.")]
+        [SerializeField] private float rollerSpan = 3.2f;
+        [SerializeField] private float rollerRadius = 0.28f;
+        [SerializeField] private float rollerLength = 1.7f;
+        [Tooltip("Seconds for one trip there and back.")]
+        [SerializeField] private float rollerPeriod = 3.2f;
+
         [SerializeField] private float knockbackForce = 7f;
 
         private readonly List<Trap> _traps = new();
@@ -76,6 +91,8 @@ namespace DrawRush.Hazards
             public DrawEdge Edge;
             public Vector3 At;
             public Vector3 Across;     // saw track direction (ground)
+            public Vector3 Along;      // roller track direction (ground)
+            public float Half;         // roller: half its stretch (m)
             public GameObject Root;
             public Transform Moving;   // spikes group / saw blade
             public Transform Shadow;   // saw: the dark disc under the blade
@@ -89,13 +106,14 @@ namespace DrawRush.Hazards
         public static int TrapCount(int level, int from, int two, int three)
             => level < from ? 0 : level < two ? 1 : level < three ? 2 : 3;
 
-        /// <summary>Which trap goes in slot <paramref name="slot"/> of a level: spikes until saws
-        /// join, the saw's debut level places one first, later levels mix them.</summary>
-        public static Kind KindFor(int level, int slot, int sawFrom, float roll)
+        /// <summary>Which trap goes in slot <paramref name="slot"/> of a level: spikes first, each
+        /// new kind fills the first slot of its debut level, later levels mix the kinds unlocked.</summary>
+        public static Kind KindFor(int level, int slot, int sawFrom, int rollerFrom, float roll)
         {
-            if (level < sawFrom) return Kind.Spikes;
-            if (level == sawFrom) return slot == 0 ? Kind.Saw : Kind.Spikes;
-            return roll < 0.5f ? Kind.Saw : Kind.Spikes;
+            if (level == rollerFrom && slot == 0) return Kind.Roller;
+            if (level == sawFrom && slot == 0) return Kind.Saw;
+            int kinds = level >= rollerFrom ? 3 : level > sawFrom ? 2 : 1;
+            return (Kind)Mathf.Min(kinds - 1, Mathf.FloorToInt(roll * kinds));
         }
 
         private void Awake()
@@ -127,6 +145,15 @@ namespace DrawRush.Hazards
             _pending = null;
             if (network == null || !network.isActiveAndEnabled) return;
             int level = PlayerProgress.LevelsPlayed;
+            if (TrapTest.Active)
+            {
+                // Every kind on this shape and nothing else on the page.
+                Transform levelRoot = network.transform.parent != null ? network.transform.parent : network.transform;
+                LevelDifficulty.ApplyEnemyBudget(levelRoot, 0);
+                Place(network, 4, level);
+                if (hud != null) hud.Toast("TRAP TEST", "Spikes, saw, roller", new Color(0.45f, 0.5f, 0.6f));
+                return;
+            }
             int count = TrapCount(level, fromLevel, twoFrom, threeFrom);
             if (count <= 0) return;
             Place(network, count, level);
@@ -134,6 +161,7 @@ namespace DrawRush.Hazards
             var c = new Color(0.45f, 0.5f, 0.6f);
             if (level == fromLevel) hud.Toast("NEW: SPIKE TRAP", "Spikes rise and sink: time your run", c);
             else if (level == sawFrom) hud.Toast("NEW: SAW", "It slides back and forth: pass behind it", c);
+            else if (level == rollerFrom) hud.Toast("NEW: ROLLER", "It rolls along the line: draw behind it", c);
         }
 
         private void Place(EdgeNetwork network, int count, int level)
@@ -155,8 +183,10 @@ namespace DrawRush.Hazards
             foreach (DrawEdge e in edges)
             {
                 if (_traps.Count >= count) break;
-                Kind kind = KindFor(level, _traps.Count, sawFrom, Random.value);
-                float keepOff = kind == Kind.Saw ? sawRadius : radius;
+                Kind kind = TrapTest.Active ? TestKinds[_traps.Count % TestKinds.Length]
+                    : KindFor(level, _traps.Count, sawFrom, rollerFrom, Random.value);
+                if (kind == Kind.Roller && e.IsArc) kind = Kind.Spikes;   // it rolls straight
+                float keepOff = kind == Kind.Saw ? sawRadius : kind == Kind.Roller ? 0.3f : radius;
                 for (int attempt = 0; attempt < 12; attempt++)
                 {
                     Vector3 at = e.PointAt(Random.Range(0.25f, 0.75f));
@@ -168,11 +198,15 @@ namespace DrawRush.Hazards
                     bool crowded = false;
                     foreach (Trap t in _traps) if (Flat(at - t.At) < 3.5f) { crowded = true; break; }
                     if (crowded) continue;
-                    _traps.Add(kind == Kind.Saw ? BuildSaw(e, at, network.transform) : BuildSpikes(e, at, network.transform));
+                    _traps.Add(kind == Kind.Saw ? BuildSaw(e, at, network.transform)
+                        : kind == Kind.Roller ? BuildRoller(e, at, network.transform)
+                        : BuildSpikes(e, at, network.transform));
                     break;
                 }
             }
         }
+
+        private static readonly Kind[] TestKinds = { Kind.Roller, Kind.Saw, Kind.Spikes, Kind.Spikes };
 
         private static float Flat(Vector3 v) { v.y = 0f; return v.magnitude; }
 
@@ -187,7 +221,7 @@ namespace DrawRush.Hazards
 
         private Trap NewTrap(Kind kind, DrawEdge edge, Vector3 at, Transform parent, out GameObject root, out Vector3 along)
         {
-            root = new GameObject(kind == Kind.Saw ? "SawTrap" : "SpikeTrap");
+            root = new GameObject(kind + "Trap");
             root.transform.SetParent(parent, true);
             root.transform.SetPositionAndRotation(at, Facing(edge, at, out along));
             var trap = new Trap { Kind = kind, Edge = edge, At = at, Root = root };
@@ -273,6 +307,76 @@ namespace DrawRush.Hazards
             return trap;
         }
 
+        private Trap BuildRoller(DrawEdge edge, Vector3 at, Transform parent)
+        {
+            Trap trap = NewTrap(Kind.Roller, edge, at, parent, out GameObject root, out Vector3 along);
+            trap.Along = along;
+            trap.Half = Mathf.Min(rollerSpan, edge.Length * 0.55f) * 0.5f;
+
+            // Two stoppers across the line mark the stretch it rolls along.
+            for (int end = -1; end <= 1; end += 2)
+            {
+                var stop = new GameObject("Stopper").AddComponent<SpriteRenderer>();
+                stop.sprite = Square();
+                stop.color = new Color(0.16f, 0.17f, 0.22f, 0.85f);
+                stop.transform.SetParent(root.transform, false);
+                stop.transform.localPosition = new Vector3(0f, 0.035f, end * (trap.Half + rollerRadius + 0.08f));
+                stop.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+                stop.transform.localScale = new Vector3(rollerLength * 0.8f, 0.1f, 1f);
+            }
+
+            // The highlighter: body, a cap at one end and a clip that shows it turning.
+            var body = new GameObject("Roller").transform;
+            body.SetParent(root.transform, false);
+            Part(body, PrimitiveType.Cylinder, Vector3.zero, Quaternion.Euler(0f, 0f, 90f),
+                new Vector3(rollerRadius * 2f, rollerLength * 0.5f, rollerRadius * 2f), rollerBody);
+            Part(body, PrimitiveType.Cylinder, new Vector3(rollerLength * 0.42f, 0f, 0f), Quaternion.Euler(0f, 0f, 90f),
+                new Vector3(rollerRadius * 2.12f, rollerLength * 0.1f, rollerRadius * 2.12f), rollerCap);
+            Part(body, PrimitiveType.Cube, new Vector3(rollerLength * 0.25f, rollerRadius * 1.02f, 0f), Quaternion.identity,
+                new Vector3(rollerLength * 0.32f, 0.06f, 0.1f), rollerCap);
+            trap.Moving = body;
+            trap.Clock = Random.Range(0f, rollerPeriod);
+            trap.Blocker = PaintBlockers.Add(at, rollerRadius + 0.3f);
+            return trap;
+        }
+
+        private static void Part(Transform parent, PrimitiveType type, Vector3 pos, Quaternion rot, Vector3 scale, Material mat)
+        {
+            var go = GameObject.CreatePrimitive(type);
+            Destroy(go.GetComponent<Collider>());
+            go.transform.SetParent(parent, false);
+            go.transform.SetLocalPositionAndRotation(pos, rot);
+            go.transform.localScale = scale;
+            var r = go.GetComponent<MeshRenderer>();
+            if (mat != null) r.sharedMaterial = mat;
+            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        }
+
+        private void UpdateRoller(Trap t, Vector3 hero)
+        {
+            if (!t.Retired) t.Clock += Time.deltaTime;
+            float s = Mathf.Sin(t.Clock / rollerPeriod * Mathf.PI * 2f) * t.Half;
+            if (t.Retired) t.Sink = Mathf.MoveTowards(t.Sink, 1f, Time.deltaTime * 2f);
+            // Retired, it shrinks away (a highlighter cannot sink into the page).
+            t.Moving.localScale = Vector3.one * (1f - t.Sink);
+            t.Moving.localPosition = new Vector3(0f, rollerRadius * (1f - t.Sink), s);
+            // Rolls without slipping: turned by the distance travelled over its radius.
+            t.Moving.localRotation = Quaternion.AngleAxis(s / rollerRadius * Mathf.Rad2Deg, Vector3.right);
+            if (t.Sink >= 1f && t.Moving.gameObject.activeSelf) t.Moving.gameObject.SetActive(false);
+            if (t.Retired) return;
+
+            Vector3 ground = t.At + t.Along * s;
+            if (t.Blocker != 0) PaintBlockers.Move(t.Blocker, ground);
+            if (combat == null || combat.IsInvulnerable) return;
+            Vector3 d = hero - ground; d.y = 0f;
+            float a = Vector3.Dot(d, t.Along);
+            float across = Vector3.Dot(d, Vector3.Cross(Vector3.up, t.Along));
+            if (Mathf.Abs(a) >= rollerRadius + 0.25f || Mathf.Abs(across) >= rollerLength * 0.5f + 0.15f) return;
+            combat.TakeDamage(1);
+            if (knockback != null) knockback.ApplyKnockback(Mathf.Abs(a) > 0.01f ? t.Along * Mathf.Sign(a) : t.Along, knockbackForce);
+            Haptics.Medium();
+        }
+
         private void Retire(Trap trap)
         {
             trap.Retired = true;
@@ -309,6 +413,7 @@ namespace DrawRush.Hazards
                 if (t.Root == null) continue;
                 if (over && !t.Retired) Retire(t);
                 if (t.Kind == Kind.Saw) UpdateSaw(t, hero);
+                else if (t.Kind == Kind.Roller) UpdateRoller(t, hero);
                 else UpdateSpikes(t, hero);
             }
         }

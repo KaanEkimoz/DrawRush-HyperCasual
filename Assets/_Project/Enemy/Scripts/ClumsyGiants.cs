@@ -131,7 +131,7 @@ namespace DrawRush.Enemy
             Watch();
             CallOff();
             _called = false;
-            _loop = PlayerProgress.LevelsPlayed >= fromLevel ? StartCoroutine(Loop()) : null;
+            _loop = PlayerProgress.LevelsPlayed >= fromLevel && !DrawRush.Hazards.TrapTest.Active ? StartCoroutine(Loop()) : null;
         }
 
         // The services are registered after this component wakes, so they are picked up per level.

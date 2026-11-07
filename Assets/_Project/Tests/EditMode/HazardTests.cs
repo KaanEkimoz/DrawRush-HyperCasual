@@ -23,13 +23,18 @@ namespace DrawRush.Tests.EditMode
         }
 
         [Test]
-        public void Saws_JoinAfterSpikes_AndDebutFirst()
+        public void TrapKinds_JoinOneByOne_AndDebutFirst()
         {
-            Assert.AreEqual(GroundTraps.Kind.Spikes, GroundTraps.KindFor(9, 0, 10, 0f));
-            Assert.AreEqual(GroundTraps.Kind.Saw, GroundTraps.KindFor(10, 0, 10, 0.9f));
-            Assert.AreEqual(GroundTraps.Kind.Spikes, GroundTraps.KindFor(10, 1, 10, 0f));
-            Assert.AreEqual(GroundTraps.Kind.Saw, GroundTraps.KindFor(30, 2, 10, 0.2f));
-            Assert.AreEqual(GroundTraps.Kind.Spikes, GroundTraps.KindFor(30, 2, 10, 0.8f));
+            GroundTraps.Kind K(int level, int slot, float roll) => GroundTraps.KindFor(level, slot, 10, 18, roll);
+            Assert.AreEqual(GroundTraps.Kind.Spikes, K(9, 0, 0.99f));
+            Assert.AreEqual(GroundTraps.Kind.Saw, K(10, 0, 0f));
+            Assert.AreEqual(GroundTraps.Kind.Spikes, K(10, 1, 0.99f), "only the debut slot is a saw");
+            Assert.AreEqual(GroundTraps.Kind.Saw, K(12, 1, 0.99f));
+            Assert.AreNotEqual(GroundTraps.Kind.Roller, K(17, 0, 0.99f));
+            Assert.AreEqual(GroundTraps.Kind.Roller, K(18, 0, 0f));
+            Assert.AreEqual(GroundTraps.Kind.Spikes, K(30, 1, 0.1f));
+            Assert.AreEqual(GroundTraps.Kind.Saw, K(30, 1, 0.5f));
+            Assert.AreEqual(GroundTraps.Kind.Roller, K(30, 1, 0.9f));
         }
 
         [Test]
