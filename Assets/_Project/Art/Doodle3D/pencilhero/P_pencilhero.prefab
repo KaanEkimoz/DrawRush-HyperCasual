@@ -620,7 +620,7 @@ SkinnedMeshRenderer:
   m_Quality: 0
   m_UpdateWhenOffscreen: 1
   m_SkinnedMotionVectors: 1
-  m_Mesh: {fileID: 4300000, guid: 70c932fb22fb4402dbe7cef28ef2a0ea, type: 2}
+  m_Mesh: {fileID: 4300000, guid: ccdd69d4ad4fb4b0583093cf2f074ed5, type: 2}
   m_Bones:
   - {fileID: 5457294541009512733}
   - {fileID: 6582238427763072294}
@@ -984,8 +984,14 @@ MonoBehaviour:
   lean: 10
   waddle: 5
   faceCamera: 0
+  sideOn: 0
+  legTilt: 0
+  armTilt: 0
   limbs: {fileID: 4247221038457619505}
   limbSpeed: 1.2
+  swingLimbs: []
+  swingAngle: 34
+  slideLean: 26
 --- !u!1 &7441939042561386727
 GameObject:
   m_ObjectHideFlags: 0
