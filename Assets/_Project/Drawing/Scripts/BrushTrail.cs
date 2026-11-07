@@ -25,9 +25,6 @@ namespace DrawRush.Drawing
         [SerializeField] private Texture2D pencilStroke;
         [Tooltip("Seconds a stretch of trail stays on the page.")]
         [SerializeField] private float fadeSeconds = 2.5f;
-        [Tooltip("World height of the trail: on the page, just under the painted line, wherever the " +
-                 "player's pivot is.")]
-        [SerializeField] private float groundY = 0.015f;
         [Tooltip("Ground speed (m/s) below which no new trail is laid.")]
         [SerializeField] private float minSpeed = 0.2f;
 
@@ -68,7 +65,9 @@ namespace DrawRush.Drawing
             _trail.widthMultiplier = width;
             _trail.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             _trail.receiveShadows = false;
-            _trail.material = new Material(Shader.Find("Sprites/Default")) { name = "Auto_BrushTrail", mainTexture = pencilStroke };
+            _trail.material = GroundLayers.Owned(new Material(Shader.Find("Sprites/Default")) { name = "Auto_BrushTrail", mainTexture = pencilStroke });
+            // Under the shape, its fills and its dots, whatever the camera distance (GroundLayers).
+            GroundLayers.Apply(_trail, GroundLayers.TrailOrder);
             _paintColor = color;
             ApplyLook();
             _trail.emitting = false;
@@ -93,8 +92,9 @@ namespace DrawRush.Drawing
             Destroy(quad.GetComponent<Collider>());
             quad.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
             quad.transform.localScale = Vector3.one * glowSize;
-            _glowMaterial = new Material(Shader.Find("Sprites/Default")) { name = "Auto_BrushGlow", mainTexture = tex };
+            _glowMaterial = GroundLayers.Owned(new Material(Shader.Find("Sprites/Default")) { name = "Auto_BrushGlow", mainTexture = tex });
             var mr = quad.GetComponent<MeshRenderer>();
+            GroundLayers.Apply(mr, GroundLayers.GlowOrder);
             mr.sharedMaterial = _glowMaterial;
             mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             mr.receiveShadows = false;
@@ -160,7 +160,7 @@ namespace DrawRush.Drawing
             bool show = _glowAlpha > 0.01f;
             if (_glow.gameObject.activeSelf != show) _glow.gameObject.SetActive(show);
             if (!show) return;
-            _glow.position = OnGround(p) + Vector3.down * 0.005f;
+            _glow.position = new Vector3(p.x, GroundLayers.GlowY, p.z);
             float pulse = 0.85f + 0.15f * Mathf.Sin(Time.time * glowPulse * 2f * Mathf.PI);
             _glow.localScale = Vector3.one * glowSize * pulse;
             Color c = Color.Lerp(_paintColor, Color.white, 0.35f);
@@ -168,7 +168,7 @@ namespace DrawRush.Drawing
             _glowMaterial.color = c;
         }
 
-        private Vector3 OnGround(Vector3 p) => new(p.x, groundY, p.z);
+        private static Vector3 OnGround(Vector3 p) => new(p.x, GroundLayers.TrailY, p.z);
 
         private void SetColor(Color c)
         {

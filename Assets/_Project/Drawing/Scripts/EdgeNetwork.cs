@@ -55,8 +55,6 @@ namespace DrawRush.Drawing
         [SerializeField, Range(0f, 1f)] private float fillAlpha = 0.7f;
         [Tooltip("Seconds the fill takes to fade in.")]
         [SerializeField] private float fillFadeSeconds = 0.5f;
-        [Tooltip("Fill height: above the ground, under the ghost and the paint.")]
-        [SerializeField] private float fillY = 0.006f;
         [Tooltip("Post height (world units).")]
         [SerializeField] private float cornerHeight = 1.0f;
         [Tooltip("Post thickness (world units, X/Z).")]
@@ -494,7 +492,7 @@ namespace DrawRush.Drawing
             foreach (Fill f in _fills)
             {
                 if (f.Age >= 0f || !AllEdgesComplete(f.Loop.Edges)) continue;
-                Mesh mesh = ShapeFill.BuildMesh(f.Loop.Points, fillY, Color.white);
+                Mesh mesh = ShapeFill.BuildMesh(f.Loop.Points, GroundLayers.FillY, Color.white);
                 f.Age = 0f;
                 if (mesh == null) continue;
                 var go = new GameObject("ShapeFill", typeof(MeshFilter), typeof(MeshRenderer));
@@ -502,18 +500,16 @@ namespace DrawRush.Drawing
                 // ClearFills removes it when the level goes away.
                 go.GetComponent<MeshFilter>().sharedMesh = mesh;
                 f.Renderer = go.GetComponent<MeshRenderer>();
-                if (_fillMaterial == null) _fillMaterial = new Material(Shader.Find("Sprites/Default")) { name = "Auto_ShapeFill" };
+                if (_fillMaterial == null) _fillMaterial = GroundLayers.Owned(new Material(Shader.Find("Sprites/Default")) { name = "Auto_ShapeFill" });
                 f.Renderer.sharedMaterial = _fillMaterial;
                 f.Renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 f.Renderer.receiveShadows = false;
                 // Under every line, and small over big whatever was finished first: an emoji's
                 // face must not cover the eyes and mouth inside it.
-                f.Renderer.sortingOrder = FillSortBase + Mathf.Clamp(FillSizeRank(f), 0, 99);
+                GroundLayers.Apply(f.Renderer, GroundLayers.FillOrder + Mathf.Clamp(FillSizeRank(f), 0, GroundLayers.FillOrderRange));
                 SetFillAlpha(f, 0f);
             }
         }
-
-        private const int FillSortBase = -200;
 
         private int FillSizeRank(Fill fill)
         {
@@ -599,6 +595,7 @@ namespace DrawRush.Drawing
                 lr.SetPosition(1, corner);
                 lr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 lr.sharedMaterial = view.LineMaterial;
+                GroundLayers.Apply(lr, GroundLayers.LineOrder);
                 lr.startWidth = lr.endWidth = view.FinishedWidth;
                 lr.startColor = lr.endColor = view.FinishedColor;
             }

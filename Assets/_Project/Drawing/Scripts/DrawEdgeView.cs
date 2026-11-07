@@ -16,8 +16,6 @@ namespace DrawRush.Drawing
         [SerializeField] private Material lineMaterial;
         [Tooltip("Line width. When <= 0, falls back to GameConfig.lineWidth.")]
         [SerializeField] private float width = 0f;
-        [Tooltip("World Y height of the painted line (kept just above the ground).")]
-        [SerializeField] private float lineY = 0.02f;
         [Tooltip("Segments used to draw a curved (arc) span; straight spans use 1.")]
         [SerializeField] private int arcSegments = 24;
         [SerializeField] private Color color = new Color(0.1f, 1f, 0.8f, 1f);
@@ -32,10 +30,6 @@ namespace DrawRush.Drawing
         [Tooltip("Ghost opacity. It wears the edge's own colour at this alpha — a plain white ghost " +
                  "vanished entirely on the pale grounds (the tutorial's is nearly white).")]
         [SerializeField, Range(0.1f, 1f)] private float ghostAlpha = 0.4f;
-        [Tooltip("Ghost Y. Just under the painted line so the two never z-fight at the boundary. " +
-                 "Dash density lives in GhostPath.mat's tiling, not here — LineTextureMode.Tile " +
-                 "already repeats by world length.")]
-        [SerializeField] private float ghostY = 0.012f;
         [Tooltip("Dash scroll speed (texture repeats per second): the \"marching ants\" that make the " +
                  "ghost read as a path still to walk, not as scenery.")]
         [SerializeField] private float ghostScroll = 0.6f;
@@ -242,6 +236,10 @@ namespace DrawRush.Drawing
             lr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             lr.receiveShadows = false;
             lr.material = ResolveGhostMaterial();
+            // The dots of what is still to draw sit on top of everything else on the page: the
+            // pencil trail, fills and finished lines (an emoji's unfinished eye must show through
+            // its finished face). Order, not height, decides it — see GroundLayers.
+            GroundLayers.Apply(lr, GroundLayers.GhostOrder);
             lr.enabled = false;
             if (ghostShadowAlpha > 0f) CreateGhostShadow(lr, w);
             if (_ghostBlock != null || color != default)
@@ -268,13 +266,14 @@ namespace DrawRush.Drawing
             sh.startWidth = sh.endWidth = ghostWidth * ghostShadowWidthScale;
             sh.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             sh.receiveShadows = false;
-            if (_shadowMaterial == null) _shadowMaterial = new Material(Shader.Find("Sprites/Default")) { name = "Auto_GhostShadow" };
+            if (_shadowMaterial == null) _shadowMaterial = GroundLayers.Owned(new Material(Shader.Find("Sprites/Default")) { name = "Auto_GhostShadow" });
             sh.sharedMaterial = _shadowMaterial;
+            GroundLayers.Apply(sh, GroundLayers.GhostShadowOrder);
             sh.startColor = sh.endColor = new Color(0f, 0f, 0f, ghostShadowAlpha);
             sh.enabled = false;
         }
 
-        // The shadow follows its ghost: same points, a hair lower, shown exactly when it is.
+        // The shadow follows its ghost: same points, on its own layer just under it, shown exactly when it is.
         private static void SyncShadow(LineRenderer ghost)
         {
             if (ghost.transform.childCount == 0) return;
@@ -283,7 +282,12 @@ namespace DrawRush.Drawing
             sh.enabled = ghost.enabled;
             if (!ghost.enabled) return;
             sh.positionCount = ghost.positionCount;
-            for (int i = 0; i < ghost.positionCount; i++) sh.SetPosition(i, ghost.GetPosition(i) + Vector3.down * 0.004f);
+            for (int i = 0; i < ghost.positionCount; i++)
+            {
+                Vector3 p = ghost.GetPosition(i);
+                p.y = GroundLayers.GhostShadowY;
+                sh.SetPosition(i, p);
+            }
         }
 
         private Material ResolveGhostMaterial()
@@ -307,7 +311,7 @@ namespace DrawRush.Drawing
                                "assign GhostPath.mat in the Inspector.", this);
                 return null;
             }
-            return new Material(s) { name = "Auto_GhostPath" };
+            return GroundLayers.Owned(new Material(s) { name = "Auto_GhostPath" });
         }
 
         private LineRenderer CreateSpan(string spanName)
@@ -327,9 +331,11 @@ namespace DrawRush.Drawing
             if (lineMaterial == null)
             {
                 Shader shader = Shader.Find("Sprites/Default");
-                if (shader != null) lineMaterial = new Material(shader) { name = "Auto_EdgeFillMat" };
+                if (shader != null) lineMaterial = GroundLayers.Owned(new Material(shader) { name = "Auto_EdgeFillMat" });
             }
             lr.material = lineMaterial;
+            // Painted and finished lines: over the fills and the pencil trail, under the ghost dots.
+            GroundLayers.Apply(lr, GroundLayers.LineOrder);
             lr.textureMode = LineTextureMode.Tile;   // the crayon grain repeats by world length
             lr.startColor = color;
             lr.endColor = color;
@@ -367,7 +373,7 @@ namespace DrawRush.Drawing
             for (int i = 0; i <= segs; i++)
             {
                 Vector3 p = _edge.PointAt(Mathf.Lerp(t0, t1, (float)i / segs));
-                p.y = ghostY;
+                p.y = GroundLayers.GhostY;
                 ghost.SetPosition(i, p);
             }
             ghost.enabled = true;
@@ -385,14 +391,14 @@ namespace DrawRush.Drawing
             for (int i = 0; i <= segs; i++)
             {
                 Vector3 p = _edge.PointAt(Mathf.Lerp(t0, t1, (float)i / segs));
-                p.y = lineY;
+                p.y = GroundLayers.LineY;
                 lr.SetPosition(i, p);
             }
             lr.enabled = true;
         }
 
         /// <summary>World Y of the painted line.</summary>
-        public float LineY => lineY;
+        public float LineY => GroundLayers.LineY;
         /// <summary>Material the painted spans use.</summary>
         public Material LineMaterial => _spans.Count > 0 ? _spans[0].sharedMaterial : lineMaterial;
         /// <summary>Width and colour a finished edge settles at (corner joints match it).</summary>

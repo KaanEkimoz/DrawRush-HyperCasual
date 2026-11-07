@@ -10,7 +10,6 @@ namespace DrawRush.Drawing
     {
         [SerializeField] private Color color = new(0.11f, 0.13f, 0.38f, 0.28f);
         [SerializeField] private float lineWidth = 0.06f;
-        [SerializeField] private float groundY = 0.012f;
 
         private void Awake()
         {
@@ -40,7 +39,9 @@ namespace DrawRush.Drawing
             line.alignment = LineAlignment.TransformZ;
             line.widthMultiplier = lineWidth;
             line.startColor = line.endColor = color;
-            line.material = new Material(Shader.Find("Sprites/Default")) { name = "Auto_ArenaOutline" };
+            line.material = GroundLayers.Owned(new Material(Shader.Find("Sprites/Default")) { name = "Auto_ArenaOutline" });
+            GroundLayers.Apply(line, GroundLayers.ArenaOrder);
+            const float groundY = GroundLayers.ArenaY;
             line.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             line.receiveShadows = false;
             line.positionCount = 4;
