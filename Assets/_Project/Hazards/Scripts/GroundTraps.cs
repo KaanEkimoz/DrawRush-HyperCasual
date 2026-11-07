@@ -428,6 +428,29 @@ namespace DrawRush.Hazards
             Unblock(trap);
         }
 
+        // Trap test panel: one big switch per trap kind, to look at and listen to each alone.
+        private readonly bool[] _testOn = { true, true, true };
+        private GUIStyle _testButton;
+
+        private void OnGUI()
+        {
+            if (!TrapTest.Active) return;
+            float u = Screen.height / 1280f;   // the game view is portrait; size the panel to it
+            if (_testButton == null) _testButton = new GUIStyle(GUI.skin.button);
+            _testButton.fontSize = Mathf.RoundToInt(30 * u);
+            _testButton.fontStyle = FontStyle.Bold;
+            string[] names = { "Spikes", "Saw", "Roller" };
+            float w = 230 * u, h = 70 * u, x = Screen.width - w - 16 * u, y = 170 * u;
+            for (int i = 0; i < 3; i++)
+            {
+                var r = new Rect(x, y + i * (h + 10 * u), w, h);
+                GUI.color = _testOn[i] ? new Color(0.2f, 0.62f, 0.3f) : new Color(0.75f, 0.2f, 0.2f);
+                GUI.DrawTexture(r, Texture2D.whiteTexture);   // solid, so ON / OFF reads at a glance
+                GUI.color = Color.white;
+                if (GUI.Button(r, names[i] + (_testOn[i] ? ": ON" : ": OFF"), _testButton)) _testOn[i] = !_testOn[i];
+            }
+        }
+
         private void Unblock(Trap trap)
         {
             if (trap.Blocker == 0) return;
@@ -460,6 +483,10 @@ namespace DrawRush.Hazards
             {
                 if (t.Root == null) continue;
                 if (over && !t.Retired) Retire(t);
+                // Trap test: a kind switched off on the panel vanishes (and stops blocking, hurting, sounding).
+                bool on = !TrapTest.Active || _testOn[(int)t.Kind];
+                if (t.Root.activeSelf != on) t.Root.SetActive(on);
+                if (!on) { Unblock(t); t.Phase = -1; t.Heading = 0f; continue; }
                 if (t.Kind == Kind.Saw) UpdateSaw(t, hero);
                 else if (t.Kind == Kind.Roller) UpdateRoller(t, hero);
                 else UpdateSpikes(t, hero);
