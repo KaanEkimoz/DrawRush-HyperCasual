@@ -13,6 +13,7 @@ namespace DrawRush.Hazards
     public static class TrapTest
     {
         private const string Key = "DrawRush.TrapTest";
+        private const string ResumeKey = "DrawRush.TrapTest.LastLevel";   // the save it may move
 
 #if UNITY_EDITOR
         public static bool Active => SessionState.GetBool(Key, false);
@@ -27,6 +28,7 @@ namespace DrawRush.Hazards
                 if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
                 EditorSceneManager.OpenScene(scene);
             }
+            SessionState.SetInt(ResumeKey, DrawRush.Core.PlayerProgress.LastLevelIndex);
             SessionState.SetBool(Key, true);
             EditorApplication.EnterPlaymode();
         }
@@ -40,7 +42,10 @@ namespace DrawRush.Hazards
 
         private static void OnPlayMode(PlayModeStateChange change)
         {
-            if (change == PlayModeStateChange.EnteredEditMode) SessionState.SetBool(Key, false);
+            if (change != PlayModeStateChange.EnteredEditMode || !Active) return;
+            // Looking for a shape with a straight edge moves the resume point: put it back.
+            DrawRush.Core.PlayerProgress.LastLevelIndex = SessionState.GetInt(ResumeKey, DrawRush.Core.PlayerProgress.LastLevelIndex);
+            SessionState.SetBool(Key, false);
         }
 #else
         public static bool Active => false;

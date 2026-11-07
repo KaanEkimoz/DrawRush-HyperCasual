@@ -81,6 +81,7 @@ namespace DrawRush.Hazards
         [SerializeField] private float knockbackForce = 7f;
 
         private readonly List<Trap> _traps = new();
+        private int _testHops;          // trap test: shapes skipped looking for a straight edge
         private EdgeNetwork _pending;   // bound, not placed yet: waits for the countdown to end
         private Sprite _dot, _square;
         private static Mesh _spikeMesh, _bladeMesh;
@@ -147,6 +148,21 @@ namespace DrawRush.Hazards
             int level = PlayerProgress.LevelsPlayed;
             if (TrapTest.Active)
             {
+                // The roller only rolls straight: on an all-curves shape, move on to the next
+                // shape that has a straight edge (each switch binds again and lands back here).
+                if (!HasStraightEdge(network) && _testHops < 64)
+                {
+                    var levels = FindFirstObjectByType<LevelManager>();
+                    if (levels != null && levels.LevelCount > 1)
+                    {
+                        _testHops++;
+                        int next = levels.CurrentIndex;
+                        do next = (next + 1) % levels.LevelCount; while (next == levels.TutorialIndex);
+                        levels.ActivateLevel(next);
+                        return;
+                    }
+                }
+                _testHops = 0;
                 // Every kind on this shape and nothing else on the page.
                 Transform levelRoot = network.transform.parent != null ? network.transform.parent : network.transform;
                 LevelDifficulty.ApplyEnemyBudget(levelRoot, 0);
@@ -204,6 +220,12 @@ namespace DrawRush.Hazards
                     break;
                 }
             }
+        }
+
+        private bool HasStraightEdge(EdgeNetwork network)
+        {
+            foreach (DrawEdge e in network.Edges) if (!e.IsArc && e.Length >= minEdgeMeters) return true;
+            return false;
         }
 
         private static readonly Kind[] TestKinds = { Kind.Roller, Kind.Saw, Kind.Spikes, Kind.Spikes };
