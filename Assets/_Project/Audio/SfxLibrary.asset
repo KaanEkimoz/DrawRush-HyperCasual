@@ -50,13 +50,10 @@ MonoBehaviour:
     volume: 0.175
   spikeUp:
     clip: {fileID: 8300000, guid: 4a8442daf51ca4089adf6ba22c0a71bd, type: 3}
-    volume: 0.5
+    volume: 0.4
   spikeDown:
     clip: {fileID: 8300000, guid: b1afdd0c27c724e9eb097a186d2fe39c, type: 3}
     volume: 0.3
-  sawHit:
-    clip: {fileID: 8300000, guid: 6ec40a8c897554846bc2689547d946ce, type: 3}
-    volume: 0.4
   sawLoop:
     clip: {fileID: 8300000, guid: de80ab934f7e5492b949be23a1088e21, type: 3}
     volume: 0.07
