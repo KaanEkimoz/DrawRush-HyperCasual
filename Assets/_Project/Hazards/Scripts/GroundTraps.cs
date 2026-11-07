@@ -29,7 +29,7 @@ namespace DrawRush.Hazards
         public enum Kind { Spikes, Saw, Roller }
 
         /// <summary>A spike trap came up / went down (its centre). For sound, which lives elsewhere.</summary>
-        public static event System.Action<Vector3> SpikesRose, SpikesSank;
+        public static event System.Action<Vector3> SpikesRose, SpikesSank, SawHit;
         /// <summary>0-1: how close the nearest working saw is to the hero (0 = no saw).</summary>
         public static float SawLevel { get; private set; }
         private static Vector3 _hero;
@@ -43,7 +43,7 @@ namespace DrawRush.Hazards
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetStatics() { SpikesRose = null; SpikesSank = null; SawLevel = 0f; }
+        private static void ResetStatics() { SpikesRose = null; SpikesSank = null; SawHit = null; SawLevel = 0f; }
 
         [SerializeField] private FreeDrawPainter painter;
         [SerializeField] private PlayerCombat combat;
@@ -119,6 +119,7 @@ namespace DrawRush.Hazards
             public bool Retired;
             public float Sink;         // 0-1 of the way down, once retired
             public int Phase = -1;     // spikes: 0 down, 1 coming, 2 up (sounds fire on a change)
+            public float Heading;      // saw: which way it was sliding (+1 / -1), to hear it turn
         }
 
         /// <summary>How many traps a campaign level places (before the edge limit).</summary>
@@ -532,6 +533,10 @@ namespace DrawRush.Hazards
             Vector3 ground = t.At + t.Across * s;
             if (t.Blocker != 0) PaintBlockers.Move(t.Blocker, ground);
             SawLevel = Mathf.Max(SawLevel, Nearness(ground));
+            // It turns at the ends of its slot: that is where it bangs.
+            float heading = Mathf.Sign(Mathf.Cos(t.Clock / sawPeriod * Mathf.PI * 2f));
+            if (t.Heading != 0f && heading != t.Heading) SawHit?.Invoke(ground);
+            t.Heading = heading;
             Hurt(hero, ground, sawRadius);
         }
 

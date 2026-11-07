@@ -102,6 +102,7 @@ namespace DrawRush.Audio
             if (painter != null) painter.PaintLost += OnPaintLost;
             DrawRush.Hazards.GroundTraps.SpikesRose += OnSpikesRose;
             DrawRush.Hazards.GroundTraps.SpikesSank += OnSpikesSank;
+            DrawRush.Hazards.GroundTraps.SawHit += OnSawHit;
         }
 
         private void OnDisable()
@@ -124,6 +125,7 @@ namespace DrawRush.Audio
             if (painter != null) painter.PaintLost -= OnPaintLost;
             DrawRush.Hazards.GroundTraps.SpikesRose -= OnSpikesRose;
             DrawRush.Hazards.GroundTraps.SpikesSank -= OnSpikesSank;
+            DrawRush.Hazards.GroundTraps.SawHit -= OnSawHit;
         }
 
         // The pencil scratch follows the brush: it runs only while paint is actually going down.
@@ -184,6 +186,16 @@ namespace DrawRush.Audio
         private float _lastSpike = -1f;
         private void OnSpikesRose(Vector3 at) => PlaySpike(library != null ? library.spikeUp : null, at);
         private void OnSpikesSank(Vector3 at) => PlaySpike(library != null ? library.spikeDown : null, at);
+        private float _lastSawHit = -1f;
+        private void OnSawHit(Vector3 at)
+        {
+            SfxLibrary.Cue cue = library != null ? library.sawHit : null;
+            if (cue == null || cue.clip == null || _source == null) return;
+            if (Time.unscaledTime - _lastSawHit < 0.08f) return;
+            _lastSawHit = Time.unscaledTime;
+            _source.PlayOneShot(cue.clip, cue.volume * DrawRush.Hazards.GroundTraps.Nearness(at));
+        }
+
         private void PlaySpike(SfxLibrary.Cue cue, Vector3 at)
         {
             if (cue == null || cue.clip == null || _source == null) return;
