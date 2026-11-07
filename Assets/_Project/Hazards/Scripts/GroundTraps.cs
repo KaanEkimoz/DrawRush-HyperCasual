@@ -32,6 +32,10 @@ namespace DrawRush.Hazards
         public static event System.Action<Vector3> SpikesRose, SpikesSank;
         /// <summary>0-1: how close the nearest working saw is to the hero (0 = no saw).</summary>
         public static float SawLevel { get; private set; }
+        /// <summary>0-1: the nearest working roller's loudness (closeness × how fast it is rolling).</summary>
+        public static float RollerLevel { get; private set; }
+        /// <summary>0-1: how fast that roller is rolling (it slows to a stop at each end).</summary>
+        public static float RollerSpeed { get; private set; }
         private static Vector3 _hero;
 
         /// <summary>Loudness share for a trap sound at <paramref name="at"/>: full beside the
@@ -43,7 +47,7 @@ namespace DrawRush.Hazards
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetStatics() { SpikesRose = null; SpikesSank = null; SawLevel = 0f; }
+        private static void ResetStatics() { SpikesRose = null; SpikesSank = null; SawLevel = 0f; RollerLevel = 0f; RollerSpeed = 0f; }
 
         [SerializeField] private FreeDrawPainter painter;
         [SerializeField] private PlayerCombat combat;
@@ -411,6 +415,9 @@ namespace DrawRush.Hazards
 
             Vector3 ground = t.At + t.Along * s;
             if (t.Blocker != 0) PaintBlockers.Move(t.Blocker, ground);
+            float speed = Mathf.Abs(Mathf.Cos(t.Clock / rollerPeriod * Mathf.PI * 2f));
+            float level = Nearness(ground) * Mathf.Lerp(0.1f, 1f, speed);
+            if (level > RollerLevel) { RollerLevel = level; RollerSpeed = speed; }
             if (combat == null || combat.IsInvulnerable) return;
             Vector3 d = hero - ground; d.y = 0f;
             float a = Vector3.Dot(d, t.Along);
@@ -461,6 +468,7 @@ namespace DrawRush.Hazards
         {
             _pending = null;
             SawLevel = 0f;
+            RollerLevel = 0f;
             foreach (Trap t in _traps)
             {
                 Unblock(t);
@@ -474,6 +482,7 @@ namespace DrawRush.Hazards
             if (_pending != null && Time.timeScale > 0f) PlacePending();
             _hero = transform.position;
             SawLevel = 0f;
+            RollerLevel = 0f;
             if (_traps.Count == 0) return;
             var state = GameServices.State;
             bool over = state != null && (state.IsGameWon || state.IsFinishing);

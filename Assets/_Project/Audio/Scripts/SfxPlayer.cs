@@ -50,7 +50,7 @@ namespace DrawRush.Audio
         [Tooltip("At most one enemy noise this often (seconds): a crowd must not turn into a racket.")]
         [SerializeField] private float voiceGap = 0.4f;
 
-        private AudioSource _source, _drawSource, _sawSource;
+        private AudioSource _source, _drawSource, _sawSource, _rollerSource;
         private float _lastVoice = -1f;
         private float _lastPainting = float.NegativeInfinity;
         private GameState _boundState;
@@ -68,12 +68,8 @@ namespace DrawRush.Audio
             _drawSource.spatialBlend = 0f;
             _drawSource.volume = 0f;
             _drawSource.outputAudioMixerGroup = _source.outputAudioMixerGroup;
-            _sawSource = gameObject.AddComponent<AudioSource>();
-            _sawSource.playOnAwake = false;
-            _sawSource.loop = true;
-            _sawSource.spatialBlend = 0f;
-            _sawSource.volume = 0f;
-            _sawSource.outputAudioMixerGroup = _source.outputAudioMixerGroup;
+            _sawSource = AddLoopSource();
+            _rollerSource = AddLoopSource();
         }
 
         private void OnEnable()
@@ -162,21 +158,40 @@ namespace DrawRush.Audio
             _drawSource.pitch = Mathf.Lerp(drawPitch.x, drawPitch.y, _speedLevel);
         }
 
-        // The saws whirr on one looped source, as loud as the nearest saw is close to the hero.
+        private AudioSource AddLoopSource()
+        {
+            var s = gameObject.AddComponent<AudioSource>();
+            s.playOnAwake = false;
+            s.loop = true;
+            s.spatialBlend = 0f;
+            s.volume = 0f;
+            s.outputAudioMixerGroup = _source.outputAudioMixerGroup;
+            return s;
+        }
+
+        // Trap loops: one looped source each, as loud as the nearest trap of that kind is close
+        // to the hero (the roller also by how fast it is rolling, and pitched by it).
         private void UpdateSaw()
         {
-            SfxLibrary.Cue cue = library != null ? library.sawLoop : null;
-            if (cue == null || cue.clip == null) return;
-            if (_sawSource.clip != cue.clip)
+            TrapLoop(_sawSource, library != null ? library.sawLoop : null, DrawRush.Hazards.GroundTraps.SawLevel);
+            if (TrapLoop(_rollerSource, library != null ? library.rollerLoop : null, DrawRush.Hazards.GroundTraps.RollerLevel))
+                _rollerSource.pitch = Mathf.Lerp(0.85f, 1.1f, DrawRush.Hazards.GroundTraps.RollerSpeed);
+        }
+
+        private bool TrapLoop(AudioSource source, SfxLibrary.Cue cue, float level)
+        {
+            if (cue == null || cue.clip == null) return false;
+            if (source.clip != cue.clip)
             {
-                _sawSource.clip = cue.clip;
-                _sawSource.volume = 0f;
-                _sawSource.Play();
+                source.clip = cue.clip;
+                source.volume = 0f;
+                source.Play();
             }
-            _sawSource.mute = SoundChannels.SfxMuted;
-            float target = Time.timeScale > 0f ? Mathf.Clamp01(cue.volume) * DrawRush.Hazards.GroundTraps.SawLevel : 0f;
-            _sawSource.volume = Mathf.Lerp(_sawSource.volume, target, 1f - Mathf.Exp(-Time.unscaledDeltaTime / 0.12f));
-            if (target <= 0f && _sawSource.volume < 0.0005f) _sawSource.volume = 0f;
+            source.mute = SoundChannels.SfxMuted;
+            float target = Time.timeScale > 0f ? Mathf.Clamp01(cue.volume) * level : 0f;
+            source.volume = Mathf.Lerp(source.volume, target, 1f - Mathf.Exp(-Time.unscaledDeltaTime / 0.12f));
+            if (target <= 0f && source.volume < 0.0005f) source.volume = 0f;
+            return true;
         }
 
         // Spike traps: full level beside the hero, softer across the page, and never a pile-up

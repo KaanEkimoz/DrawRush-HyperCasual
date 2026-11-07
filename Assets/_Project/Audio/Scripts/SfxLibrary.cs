@@ -46,6 +46,8 @@ namespace DrawRush.Audio
         public Cue spikeUp = new();
         [Tooltip("Spike trap sinks back into its holes.")]
         public Cue spikeDown = new();
+        [Tooltip("Looping roll of the highlighter trap; follows its speed and the hero's distance.")]
+        public Cue rollerLoop = new();
         [Tooltip("Looping whirr of a saw trap; louder the closer the hero is.")]
         public Cue sawLoop = new();
         [Tooltip("Enemy noises, by EnemyVariant: Normal, Sprinter, Tank, Eater, Dasher, Boss.")]
