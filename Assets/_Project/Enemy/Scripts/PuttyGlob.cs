@@ -15,6 +15,7 @@ namespace DrawRush.Enemy
         private EnemyCombat _owner;
         private Vector3 _from, _to;
         private float _time, _duration, _height, _radius;
+        private bool _held;
         private LineRenderer _ring;
         private static Material _ringMaterial;
         private static Mesh _globMesh;
@@ -34,8 +35,51 @@ namespace DrawRush.Enemy
             return _globMesh;
         }
 
+        /// <summary>Tear a chunk off: it appears at <paramref name="at"/> and stays in the thrower's
+        /// hand (the owner moves it with <see cref="HoldAt"/>) until <see cref="Throw"/>. It copies
+        /// <paramref name="look"/>'s colour now, so take it before any wind-up flash starts.</summary>
+        public static PuttyGlob Grab(EnemyCombat owner, Renderer look, Vector3 at)
+        {
+            PuttyGlob glob = Create(owner, look);
+            glob._held = true;
+            glob.transform.position = at;
+            glob.transform.localScale = Vector3.one * (GlobSize * 0.1f);
+            return glob;
+        }
+
+        /// <summary>Keep the held chunk at <paramref name="at"/>, grown to <paramref name="grown"/> (0..1) of full size.</summary>
+        public void HoldAt(Vector3 at, float grown)
+        {
+            if (!_held) return;
+            transform.position = at;
+            transform.localScale = Vector3.one * (GlobSize * Mathf.Lerp(0.1f, 1f, Mathf.SmoothStep(0f, 1f, grown)));
+            transform.Rotate(0f, 90f * Time.deltaTime, 0f, Space.Self);
+        }
+
+        /// <summary>Let go of the held chunk: it flies from where it is to <paramref name="to"/>.</summary>
+        public void Throw(Vector3 to, float duration, float height, float radius)
+        {
+            if (!_held) return;
+            _held = false;
+            transform.localScale = Vector3.one * GlobSize;
+            _from = transform.position;
+            _to = to;
+            _duration = Mathf.Max(0.1f, duration);
+            _height = height;
+            _radius = radius;
+            _ring = MakeRing(to, radius);
+        }
+
         /// <summary>Throw a glob from <paramref name="from"/> to <paramref name="to"/>, looking like <paramref name="look"/>.</summary>
         public static void Launch(EnemyCombat owner, Renderer look, Vector3 from, Vector3 to, float duration, float height, float radius)
+        {
+            PuttyGlob glob = Create(owner, look);
+            glob._held = true;
+            glob.transform.position = from;
+            glob.Throw(to, duration, height, radius);
+        }
+
+        private static PuttyGlob Create(EnemyCombat owner, Renderer look)
         {
             GameObject go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
             go.name = "PuttyGlob";
@@ -54,13 +98,7 @@ namespace DrawRush.Enemy
             r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             var glob = go.AddComponent<PuttyGlob>();
             glob._owner = owner;
-            glob._from = from;
-            glob._to = to;
-            glob._duration = Mathf.Max(0.1f, duration);
-            glob._height = height;
-            glob._radius = radius;
-            glob._ring = MakeRing(to, radius);
-            go.transform.position = from;
+            return glob;
         }
 
         // The target ring is its own object (it stays flat on the page while the glob arcs), so a
@@ -93,6 +131,7 @@ namespace DrawRush.Enemy
         private void Update()
         {
             if (_owner == null || !_owner.isActiveAndEnabled) { Finish(false); return; }
+            if (_held) return;   // the thrower moves it until it lets go
             _time += Time.deltaTime;
             float k = Mathf.Clamp01(_time / _duration);
             Vector3 p = Vector3.Lerp(_from, _to, k);

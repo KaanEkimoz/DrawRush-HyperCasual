@@ -22,6 +22,9 @@ namespace DrawRush.Enemy
         /// <summary>The table was bumped; carries the ground direction everything slides.</summary>
         public static event Action<Vector3> TableBumped;
 
+        /// <summary>Shake the desk without a bump (camera shake and thud only): the Giant Stapler's landing.</summary>
+        public static void Thud(Vector3 direction) => TableBumped?.Invoke(direction);
+
         [SerializeField] private FreeDrawPainter painter;
         [SerializeField] private PlayerCombat combat;
         [SerializeField] private ThirdPersonMovement movement;

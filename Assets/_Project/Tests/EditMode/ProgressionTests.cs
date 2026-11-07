@@ -40,19 +40,21 @@ namespace DrawRush.Tests.EditMode
         [Test]
         public void EachNewType_DebutsAlone()
         {
-            Assert.AreEqual((1, 0, 0, 0, true), Plan(6));
-            Assert.AreEqual((0, 1, 0, 0, true), Plan(12));
-            Assert.AreEqual((0, 0, 1, 0, true), Plan(18));
-            Assert.AreEqual((0, 0, 0, 1, true), Plan(25));
+            Assert.AreEqual((0, 0, 0, 0, true), Plan(6), "the plain stapler, the first enemy of all");
+            Assert.AreEqual((1, 0, 0, 0, true), Plan(9));
+            Assert.AreEqual((0, 1, 0, 0, true), Plan(13));
+            Assert.AreEqual((0, 0, 1, 0, true), Plan(21));
+            Assert.AreEqual((0, 0, 0, 1, true), Plan(33));
         }
 
         [Test]
         public void AfterADebut_TheTypeStaysInTheMix()
         {
-            Assert.AreEqual((1, 0, 0, 0, false), Plan(7));
-            Assert.AreEqual((1, 1, 0, 0, false), Plan(13));
-            Assert.AreEqual((2, 1, 1, 0, false), Plan(20));
-            Assert.AreEqual((2, 2, 1, 1, false), Plan(26));
+            Assert.AreEqual((0, 0, 0, 0, false), Plan(7));
+            Assert.AreEqual((1, 0, 0, 0, false), Plan(10));
+            Assert.AreEqual((1, 1, 0, 0, false), Plan(14));
+            Assert.AreEqual((1, 1, 1, 0, false), Plan(22));
+            Assert.AreEqual((1, 1, 1, 1, false), Plan(34));
         }
 
         [Test]
@@ -62,31 +64,42 @@ namespace DrawRush.Tests.EditMode
             Assert.AreEqual(1, _director.Lap(35));
             var plan = Plan(40);
             Assert.IsFalse(plan.intro);
-            Assert.AreEqual((3, 3, 2, 2), (plan.s, plan.t, plan.e, plan.d));
+            Assert.AreEqual((2, 2, 2, 2), (plan.s, plan.t, plan.e, plan.d));
         }
 
         [Test]
         public void FlankerAndOrbiter_DebutAloneThenJoinTheMix()
         {
-            _director.Plan(9, out int s, out int t, out int e, out int d, out int f, out int o, out bool intro);
+            _director.Plan(17, out int s, out int t, out int e, out int d, out int f, out int o, out bool intro);
             Assert.AreEqual((0, 0, 0, 0, 1, 0, true), (s, t, e, d, f, o, intro));
-            _director.Plan(15, out s, out t, out e, out d, out f, out o, out intro);
+            _director.Plan(25, out s, out t, out e, out d, out f, out o, out intro);
             Assert.AreEqual((0, 0, 0, 0, 0, 1, true), (s, t, e, d, f, o, intro));
-            _director.Plan(16, out s, out t, out e, out d, out f, out o, out intro);
-            Assert.AreEqual((1, 1, 0, 0, 1, 1, false), (s, t, e, d, f, o, intro));
+            _director.Plan(26, out s, out t, out e, out d, out f, out o, out intro);
+            Assert.AreEqual((1, 1, 1, 0, 1, 1, false), (s, t, e, d, f, o, intro));
             _director.Plan(40, out _, out _, out _, out _, out f, out o, out intro);
-            Assert.AreEqual((3, 2, false), (f, o, intro));
+            Assert.AreEqual((2, 2, false), (f, o, intro));
         }
 
         [Test]
-        public void Glue_DebutsAloneAtLevel22ThenStays()
+        public void Glue_DebutsAloneAtLevel29ThenStays()
         {
-            _director.Plan(22, out int s, out int t, out int e, out int d, out int f, out int o, out int g, out bool intro);
+            _director.Plan(29, out int s, out int t, out int e, out int d, out int f, out int o, out int g, out bool intro);
             Assert.AreEqual((0, 0, 0, 0, 0, 0, 1, true), (s, t, e, d, f, o, g, intro));
-            _director.Plan(23, out _, out _, out _, out _, out _, out _, out g, out intro);
+            _director.Plan(30, out _, out _, out _, out _, out _, out _, out g, out intro);
             Assert.AreEqual((1, false), (g, intro));
-            _director.Plan(21, out _, out _, out _, out _, out _, out _, out g, out _);
+            _director.Plan(28, out _, out _, out _, out _, out _, out _, out g, out _);
             Assert.AreEqual(0, g);
+        }
+
+        [Test]
+        public void BossLevels_AlternateEraserAndStapler()
+        {
+            Assert.IsTrue(_director.IsBossLevel(10));
+            Assert.IsFalse(_director.IsStaplerBossLevel(10), "10: Giant Eraser");
+            Assert.IsTrue(_director.IsStaplerBossLevel(20), "20: Giant Stapler");
+            Assert.IsFalse(_director.IsStaplerBossLevel(30));
+            Assert.IsTrue(_director.IsStaplerBossLevel(40));
+            Assert.IsFalse(_director.IsStaplerBossLevel(21));
         }
 
         [Test]

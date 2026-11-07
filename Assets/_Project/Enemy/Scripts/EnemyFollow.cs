@@ -10,12 +10,13 @@ namespace DrawRush.Enemy
         Normal = 0,
         Sprinter = 1,   // fast and small
         Tank = 2,       // slow, big, cannot be pushed
-        Eater = 3,      // eats paint that is not kept for good yet
+        Eater = 3,      // the sharpener: spins up and sucks the pencil in
         Dasher = 4,     // moves only by lunges: crouch and flash, leap, land, again
         Boss = 5,       // the Giant Eraser: huge, unpushable, wipes fresh paint in a wide circle
         Flanker = 6,    // runs to where the player is heading, not where they are
         Orbiter = 7,    // circles the player and throws chunks of itself
         Glue = 8,       // slow, leaves glue puddles that slow the player
+        BossStapler = 9, // the Giant Stapler: leaps onto a marked spot and slams the page
     }
 
     /// <summary>
@@ -107,6 +108,8 @@ namespace DrawRush.Enemy
         private Vector3 _playerLast, _playerVelocity;
         private float _orbitTimer, _orbitSide = 1f, _burst = 1f;
         private int _orbitPhase;   // 0 circling, 1 winding up a throw
+        private float _throwWindUp, _sizeBeforeThrow = 1f;
+        private PuttyGlob _heldGlob;
         private Vector3 _lastPuddle;
         [Tooltip("Enemies closer than this (m) to the player make their noise.")]
         [SerializeField] private float voiceRange = 8f;
@@ -117,6 +120,8 @@ namespace DrawRush.Enemy
 
         /// <summary>Raised when a nearby enemy makes its noise (stapler chomp, scissors snip...).</summary>
         public static event System.Action<EnemyVariant> Voiced;
+
+        public static bool IsBoss(EnemyVariant v) => v == EnemyVariant.Boss || v == EnemyVariant.BossStapler;
 
         public bool CanBeBoss => variantVisuals != null && variantVisuals.Length > (int)EnemyVariant.Boss && variantVisuals[(int)EnemyVariant.Boss] != null;
 
@@ -203,7 +208,7 @@ namespace DrawRush.Enemy
             transform.localScale = _authoredScale * scale;
             Unpushable = unpushable;
             _tierColor = tint;
-            _agent.angularSpeed = _authoredTurn * (variant == EnemyVariant.Boss ? bossTurnScale : 1f);
+            _agent.angularSpeed = _authoredTurn * (IsBoss(variant) ? bossTurnScale : 1f);
             ApplySkin(variant);
             ApplySpeed();
             ApplyTint();
@@ -401,7 +406,237 @@ namespace DrawRush.Enemy
             transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(dir), 1f - Mathf.Exp(-sharpness * Time.deltaTime));
         }
 
-        // Eater: wipes the paint of any unfinished edge in its range.
+        // Sharpener (Eater): instead of wiping paint, it sucks the pencil in. Close enough and rested,
+        // it plants itself and spins its blade up (a rattling, flashing warning), then pulls the hero
+        // toward its mouth for a while: the hero escapes by running away, or gets sharpened (a
+        // normal close-range attack). Returns true while the suction owns this enemy's movement.
+        private bool UpdateSuction(Transform player)
+        {
+            Vector3 toHero = player.position - transform.position;
+            toHero.y = 0f;
+            float dist = toHero.magnitude;
+            _suckTimer -= Time.deltaTime;
+            switch (_suck)
+            {
+                case 0:   // chasing; starts when the hero is in range and the cooldown is over
+                    if (_suckTimer > 0f || dist > suckRange) return false;
+                    _suck = 1;
+                    _suckTimer = suckWindUp;
+                    if (_agent.isOnNavMesh) _agent.ResetPath();
+                    if (_hop != null) _hop.PlayAttack(HopAnimator.AttackStyle.Grind);
+                    ShowSuctionRing(true);
+                    return true;
+                case 1:   // spinning up: plants, faces the hero, rattles and flashes
+                    Face(toHero, 12f);
+                    SetColor(Mathf.Repeat(_suckTimer * 8f, 1f) < 0.5f ? windUpColor : (_tierColor ?? fastColor));
+                    UpdateSuctionRing(1f - Mathf.Clamp01(_suckTimer / Mathf.Max(0.01f, suckWindUp)), false);
+                    if (_suckTimer > 0f) return true;
+                    _suck = 2;
+                    _suckTimer = suckSeconds;
+                    ApplyTint();
+                    return true;
+                default:  // sucking: drags the hero in, stronger the closer it is
+                    Face(toHero, 12f);
+                    if (_hop != null) _hop.ExtraLean = Mathf.Sin(Time.time * 40f) * 3f;   // the blade's buzz
+                    if (dist > 0.05f && dist < suckRange * 1.25f)
+                    {
+                        float closeness = 1f - Mathf.Clamp01(dist / (suckRange * 1.25f));
+                        PullZones.Add(-toHero / dist * (suckPull * Mathf.Lerp(0.45f, 1f, closeness)));
+                    }
+                    UpdateSuctionRing(1f, true);
+                    if (_suckTimer > 0f) return true;
+                    _suck = 0;
+                    _suckTimer = suckCooldown;
+                    if (_hop != null) _hop.ExtraLean = 0f;
+                    ShowSuctionRing(false);
+                    _retargetTimer = 0f;
+                    return false;
+            }
+        }
+
+        // The pull zone on the page: a ring that tightens while it spins up and swirls while it sucks.
+        private void ShowSuctionRing(bool on)
+        {
+            if (on && _suckRing == null)
+            {
+                if (_suckMaterial == null) _suckMaterial = new Material(Shader.Find("Sprites/Default")) { name = "Auto_SuctionRing" };
+                _suckRing = new GameObject("SuctionRing").AddComponent<LineRenderer>();
+                _suckRing.sharedMaterial = _suckMaterial;
+                _suckRing.loop = true;
+                _suckRing.useWorldSpace = true;
+                _suckRing.positionCount = 40;
+                _suckRing.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            }
+            if (_suckRing != null) _suckRing.gameObject.SetActive(on);
+        }
+
+        private void UpdateSuctionRing(float k, bool sucking)
+        {
+            if (_suckRing == null) return;
+            float radius = suckRange * (sucking ? 1.25f - Mathf.Repeat(Time.time * 1.6f, 1f) * 0.9f : Mathf.Lerp(1.25f, 1f, k));
+            Color c = new Color(0.55f, 0.35f, 0.9f, sucking ? 0.75f : Mathf.Lerp(0.2f, 0.6f, k));
+            _suckRing.startColor = _suckRing.endColor = c;
+            _suckRing.widthMultiplier = sucking ? 0.09f : 0.06f;
+            Vector3 c0 = transform.position;
+            float spin = Time.time * (sucking ? -5f : -1.5f);
+            int n = _suckRing.positionCount;
+            for (int i = 0; i < n; i++)
+            {
+                float a = i / (float)n * Mathf.PI * 2f + spin;
+                float wobble = sucking ? 1f + 0.06f * Mathf.Sin(a * 6f) : 1f;   // a little swirl
+                _suckRing.SetPosition(i, new Vector3(c0.x + Mathf.Cos(a) * radius * wobble, 0.05f, c0.z + Mathf.Sin(a) * radius * wobble));
+            }
+        }
+
+        // Giant Stapler: walks after the hero, and every few seconds crouches, marks where the hero
+        // stands with a red ring, leaps there in a high arc and slams down: a hit inside the ring,
+        // a desk-shaking thud for everyone. Returns true while the leap owns this enemy's movement.
+        private bool UpdateSlam(Transform player)
+        {
+            _slamTimer -= Time.deltaTime;
+            Vector3 toHero = player.position - transform.position;
+            toHero.y = 0f;
+            switch (_slam)
+            {
+                case 0:   // walking; leaps when rested and the hero is within reach
+                    if (_slamTimer > 0f || toHero.magnitude > slamRange) return false;
+                    _slam = 1;
+                    _slamTimer = slamWindUp;
+                    if (_agent.isOnNavMesh) _agent.ResetPath();
+                    _slamTo = player.position;
+                    _slamTo.y = transform.position.y;
+                    ShowSlamRing(true, _slamTo);
+                    return true;
+                case 1:   // crouching, tracking the hero a little until the last moment
+                {
+                    float k = 1f - Mathf.Clamp01(_slamTimer / Mathf.Max(0.01f, slamWindUp));
+                    if (k < 0.7f)
+                    {
+                        Vector3 aim = player.position;
+                        aim.y = transform.position.y;
+                        _slamTo = Vector3.Lerp(_slamTo, aim, 1f - Mathf.Exp(-4f * Time.deltaTime));
+                    }
+                    Face(_slamTo - transform.position, 10f);
+                    Pose(-10f * k, 1f - 0.35f * k);   // squashes down, ready to spring
+                    UpdateSlamRing(_slamTo, k);
+                    if (_slamTimer > 0f) return true;
+                    _slam = 2;
+                    _slamTimer = slamAir;
+                    _slamFrom = transform.position;
+                    if (NavMesh.SamplePosition(_slamTo, out NavMeshHit hit, 2f, NavMesh.AllAreas)) _slamTo = hit.position;
+                    return true;
+                }
+                case 2:   // in the air: a high arc onto the ring
+                {
+                    float k = 1f - Mathf.Clamp01(_slamTimer / Mathf.Max(0.01f, slamAir));
+                    Vector3 want = Vector3.Lerp(_slamFrom, _slamTo, k);
+                    Vector3 step = want - transform.position;
+                    step.y = 0f;
+                    _agent.Move(step);
+                    if (_hop != null) _hop.ExtraLift = Mathf.Sin(k * Mathf.PI) * slamHeight / Mathf.Max(0.01f, transform.lossyScale.y);
+                    Pose(8f * Mathf.Sin(k * Mathf.PI), 1f + 0.25f * Mathf.Sin(k * Mathf.PI));
+                    UpdateSlamRing(_slamTo, 1f);
+                    if (_slamTimer > 0f) return true;
+                    Land(player);
+                    _slam = 3;
+                    _slamTimer = slamRest;
+                    return true;
+                }
+                default:  // landed: a beat of recovery, squashed flat
+                {
+                    float k = 1f - Mathf.Clamp01(_slamTimer / Mathf.Max(0.01f, slamRest));
+                    Pose(0f, Mathf.Lerp(0.6f, 1f, k));
+                    if (_slamTimer > 0f) return true;
+                    _slam = 0;
+                    _slamTimer = slamEvery;
+                    Pose(0f, 1f);
+                    _retargetTimer = 0f;
+                    return false;
+                }
+            }
+        }
+
+        private void Land(Transform player)
+        {
+            if (_hop != null) _hop.ExtraLift = 0f;
+            ShowSlamRing(false, _slamTo);
+            Vector3 d = player.position - _slamTo;
+            d.y = 0f;
+            var combat = GetComponent<EnemyCombat>();
+            if (combat != null && d.magnitude <= slamRadius) combat.HitPlayer(player, _slamTo);
+            if (attackFx != null && attackFx.Length > 2 && attackFx[2] != null)
+                AttackFx.Spawn(attackFx[2], new Vector3(_slamTo.x, 0.05f, _slamTo.z), slamRadius * 2.2f, true);
+            ClumsyGiants.Thud((player.position - _slamTo).normalized);
+            Haptics.Medium();
+        }
+
+        private void ShowSlamRing(bool on, Vector3 at)
+        {
+            if (on && _slamRing == null)
+            {
+                if (_suckMaterial == null) _suckMaterial = new Material(Shader.Find("Sprites/Default")) { name = "Auto_SuctionRing" };
+                _slamRing = new GameObject("SlamRing").AddComponent<LineRenderer>();
+                _slamRing.sharedMaterial = _suckMaterial;
+                _slamRing.loop = true;
+                _slamRing.useWorldSpace = true;
+                _slamRing.positionCount = 40;
+                _slamRing.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            }
+            if (_slamRing != null) _slamRing.gameObject.SetActive(on);
+        }
+
+        private void UpdateSlamRing(Vector3 at, float k)
+        {
+            if (_slamRing == null) return;
+            _slamRing.startColor = _slamRing.endColor = new Color(0.9f, 0.15f, 0.2f, Mathf.Lerp(0.35f, 0.9f, k));
+            _slamRing.widthMultiplier = Mathf.Lerp(0.05f, 0.12f, k);
+            float radius = slamRadius * Mathf.Lerp(1.3f, 1f, k);
+            int n = _slamRing.positionCount;
+            for (int i = 0; i < n; i++)
+            {
+                float a = i / (float)n * Mathf.PI * 2f;
+                _slamRing.SetPosition(i, new Vector3(at.x + Mathf.Cos(a) * radius, 0.05f, at.z + Mathf.Sin(a) * radius));
+            }
+        }
+
+        [Header("Boss: Giant Stapler")]
+        [Tooltip("Seconds of walking between leaps.")]
+        [SerializeField] private float slamEvery = 3.2f;
+        [Tooltip("Seconds it crouches with the target ring showing (the warning).")]
+        [SerializeField] private float slamWindUp = 0.85f;
+        [Tooltip("Seconds in the air.")]
+        [SerializeField] private float slamAir = 0.6f;
+        [SerializeField] private float slamHeight = 2.2f;
+        [Tooltip("Seconds it sits squashed after landing (the opening to slip past).")]
+        [SerializeField] private float slamRest = 0.55f;
+        [Tooltip("Radius (m) of the slam: the hero is hit inside it.")]
+        [SerializeField] private float slamRadius = 1.7f;
+        [Tooltip("Only leaps at a hero this close (m).")]
+        [SerializeField] private float slamRange = 9f;
+
+        private int _slam;   // 0 walking, 1 crouching, 2 airborne, 3 recovering
+        private float _slamTimer;
+        private Vector3 _slamFrom, _slamTo;
+        private LineRenderer _slamRing;
+
+        [Header("Sharpener (Eater) suction")]
+        [Tooltip("Starts sucking when the hero is this close (m).")]
+        [SerializeField] private float suckRange = 3.2f;
+        [Tooltip("Seconds it spins its blade up (the warning) before pulling.")]
+        [SerializeField] private float suckWindUp = 0.8f;
+        [Tooltip("Seconds it pulls.")]
+        [SerializeField] private float suckSeconds = 1.6f;
+        [Tooltip("Pull speed (m/s) at its mouth; weaker at the edge. Below the hero's run speed, so running away escapes.")]
+        [SerializeField] private float suckPull = 2.4f;
+        [Tooltip("Seconds after a suction before it can start another.")]
+        [SerializeField] private float suckCooldown = 3f;
+
+        private int _suck;            // 0 chasing, 1 spinning up, 2 sucking
+        private float _suckTimer;
+        private LineRenderer _suckRing;
+        private static Material _suckMaterial;
+
+        // Boss: wipes the paint of any unfinished edge in its range.
         private void EatPaint(Transform player)
         {
             var painter = player.GetComponent<DrawRush.Drawing.FreeDrawPainter>();
@@ -455,8 +690,16 @@ namespace DrawRush.Enemy
             if (_anim != null) _anim.speed = 1f;
             _dash = DashPhase.Idle;
             _dashTimer = lungeRest;
+            _suck = 0;
+            _suckTimer = 1.5f;
+            ShowSuctionRing(false);
+            if (_hop != null) _hop.ExtraLift = 0f;
+            _slam = 0;
+            _slamTimer = slamEvery;
+            if (_slamRing != null) _slamRing.gameObject.SetActive(false);
             _orbitPhase = 0;
             _orbitTimer = throwEvery;
+            if (_heldGlob != null) { Destroy(_heldGlob.gameObject); _heldGlob = null; }
             _lastPuddle = transform.position;
             _orbitSide = Random.value < 0.5f ? -1f : 1f;
             _burst = 1f;
@@ -522,6 +765,30 @@ namespace DrawRush.Enemy
         private void OnDisable()
         {
             if (_state != null) _state.GameWonChanged -= OnGameWonChanged;
+            ShowSuctionRing(false);
+        }
+
+        private void OnDestroy()
+        {
+            if (_suckRing != null) Destroy(_suckRing.gameObject);
+            if (_slamRing != null) Destroy(_slamRing.gameObject);
+        }
+
+        // A frozen, halted or sleeping sharpener stops sucking at once and drops its ring.
+        private void LateUpdate()
+        {
+            if (_slam != 0 && !CanAttack)
+            {
+                if (_hop != null) _hop.ExtraLift = 0f;
+                _slam = 0;
+                _slamTimer = slamEvery;
+                if (_slamRing != null) _slamRing.gameObject.SetActive(false);
+            }
+            if (_suck == 0 || CanAttack) return;
+            _suck = 0;
+            _suckTimer = suckCooldown;
+            if (_hop != null) _hop.ExtraLean = 0f;
+            ShowSuctionRing(false);
         }
 
         private void Update()
@@ -561,7 +828,9 @@ namespace DrawRush.Enemy
                 _voiceIn = Random.Range(voiceInterval.x, voiceInterval.y);
                 if ((player.position - transform.position).sqrMagnitude < voiceRange * voiceRange) Voiced?.Invoke(Variant);
             }
-            if (Variant == EnemyVariant.Eater || Variant == EnemyVariant.Boss) EatPaint(player);
+            if (Variant == EnemyVariant.Boss) EatPaint(player);
+            if (Variant == EnemyVariant.BossStapler && UpdateSlam(player)) { SetAnimSpeed(0f); return; }
+            if (Variant == EnemyVariant.Eater && UpdateSuction(player)) { SetAnimSpeed(0f); return; }
             if (Variant == EnemyVariant.Dasher && UpdateDash(player)) { SetAnimSpeed(_agent.velocity.magnitude); return; }
 
             TrackPlayer(player);
@@ -627,10 +896,16 @@ namespace DrawRush.Enemy
             if (_hop != null) _hop.SizeFactor = Mathf.MoveTowards(_hop.SizeFactor, 1f, Time.deltaTime * 0.08f);
             if (_orbitPhase == 1)
             {
-                SetColor(Mathf.Repeat(_orbitTimer * 10f, 1f) < 0.5f ? windUpColor : fastColor);
+                float k = 1f - Mathf.Clamp01(_orbitTimer / Mathf.Max(0.01f, _throwWindUp));
+                // A slow warning pulse in the last third only, so the tear-off reads first.
+                if (k > 0.6f) SetColor(Mathf.Repeat(_orbitTimer * 6f, 1f) < 0.5f ? windUpColor : (_tierColor ?? fastColor));
                 Vector3 look = player.position - transform.position;
                 look.y = 0f;
-                if (look.sqrMagnitude > 0.001f) transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(look), 1f - Mathf.Exp(-14f * Time.deltaTime));
+                if (look.sqrMagnitude > 0.001f) transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(look), 1f - Mathf.Exp(-10f * Time.deltaTime));
+                // Tear (0-0.3): the chunk swells at its belly while the body gives up a little size;
+                // hoist (0.3-0.55): up over its head; rear back (0.55-1): behind, ready to hurl.
+                if (_hop != null) _hop.SizeFactor = Mathf.Lerp(_sizeBeforeThrow, Mathf.Max(throwShrink, _sizeBeforeThrow * throwShrink), Mathf.Clamp01(k / 0.3f));
+                if (_heldGlob != null) _heldGlob.HoldAt(HandPoint(k), Mathf.Clamp01(k / 0.3f));
                 if (_orbitTimer > 0f) return transform.position;   // stands still while winding up
                 ThrowChunk(player);
                 _orbitPhase = 0;
@@ -641,7 +916,13 @@ namespace DrawRush.Enemy
             if (_orbitTimer <= 0f)
             {
                 _orbitPhase = 1;
-                _orbitTimer = throwWarn;
+                _throwWindUp = _hop != null ? HopAnimator.StrikeSeconds(HopAnimator.AttackStyle.Throw) : throwWarn;
+                _orbitTimer = _throwWindUp;
+                ApplyTint();   // the chunk takes its colour now, before any flash
+                _sizeBeforeThrow = _hop != null ? _hop.SizeFactor : 1f;
+                var combat = GetComponent<EnemyCombat>();
+                Renderer skin = _hop != null ? _hop.GetComponentInChildren<Renderer>() : null;
+                if (combat != null) _heldGlob = PuttyGlob.Grab(combat, skin, HandPoint(0f));
                 if (_hop != null) _hop.PlayAttack(HopAnimator.AttackStyle.Throw);
                 return transform.position;
             }
@@ -653,16 +934,29 @@ namespace DrawRush.Enemy
             return NavMesh.SamplePosition(spot, out NavMeshHit hit, 2f, NavMesh.AllAreas) ? hit.position : player.position;
         }
 
+        // Where the held chunk sits along the wind-up (k 0..1): at the belly as it tears off, then
+        // up over the head, then back behind it for the hurl.
+        private Vector3 HandPoint(float k)
+        {
+            float s = transform.lossyScale.y;
+            Vector3 belly = transform.position + transform.forward * (0.55f * s) + Vector3.up * (0.55f * s);
+            Vector3 over = transform.position + Vector3.up * (1.55f * s);
+            Vector3 back = transform.position - transform.forward * (0.6f * s) + Vector3.up * (1.4f * s);
+            if (k < 0.3f) return belly;
+            if (k < 0.55f) return Vector3.Lerp(belly, over, Mathf.SmoothStep(0f, 1f, (k - 0.3f) / 0.25f));
+            return Vector3.Lerp(over, back, Mathf.SmoothStep(0f, 1f, (k - 0.55f) / 0.45f));
+        }
+
         private void ThrowChunk(Transform player)
         {
+            Vector3 at = player.position;
+            at.y = 0f;
+            if (_heldGlob != null) { _heldGlob.Throw(at, throwFlight, throwArc, throwRadius); _heldGlob = null; return; }
             var combat = GetComponent<EnemyCombat>();
             if (combat == null) return;
             Renderer look = _hop != null ? _hop.GetComponentInChildren<Renderer>() : null;
             Vector3 hand = transform.position + Vector3.up * (1.2f * transform.lossyScale.y);
-            Vector3 at = player.position;
-            at.y = 0f;
             PuttyGlob.Launch(combat, look, hand, at, throwFlight, throwArc, throwRadius);
-            if (_hop != null) _hop.SizeFactor = Mathf.Max(throwShrink, _hop.SizeFactor * throwShrink);
         }
 
         // Glue: a puddle every glueSpacing metres it walks.
@@ -714,8 +1008,9 @@ namespace DrawRush.Enemy
                 EnemyVariant.Tank => HopAnimator.AttackStyle.Slam,
                 EnemyVariant.Eater => HopAnimator.AttackStyle.Grind,
                 EnemyVariant.Dasher => HopAnimator.AttackStyle.Stab,
-                EnemyVariant.Orbiter => HopAnimator.AttackStyle.Throw,
+                EnemyVariant.Orbiter => HopAnimator.AttackStyle.Bash,   // the throw move is for throws only
                 EnemyVariant.Boss => HopAnimator.AttackStyle.Slam,
+                EnemyVariant.BossStapler => HopAnimator.AttackStyle.Chomp,
                 EnemyVariant.Glue => HopAnimator.AttackStyle.Squirt,
                 _ => HopAnimator.AttackStyle.Bash,
             });

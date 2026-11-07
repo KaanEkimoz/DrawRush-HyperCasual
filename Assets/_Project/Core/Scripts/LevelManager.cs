@@ -226,6 +226,7 @@ namespace DrawRush.Core
         public static void ClearLeftoverEffects()
         {
             SlowZones.Clear();
+            PullZones.Clear();
             foreach (var glob in FindObjectsByType<DrawRush.Enemy.PuttyGlob>(FindObjectsSortMode.None)) Destroy(glob.gameObject);
             foreach (var puddle in FindObjectsByType<DrawRush.Enemy.GluePuddle>(FindObjectsSortMode.None)) Destroy(puddle.gameObject);
             foreach (ParticleSystem p in FindObjectsByType<ParticleSystem>(FindObjectsInactive.Exclude, FindObjectsSortMode.None)) p.Clear(false);

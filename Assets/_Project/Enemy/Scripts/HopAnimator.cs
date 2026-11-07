@@ -66,6 +66,9 @@ namespace DrawRush.Enemy
         /// <summary>Whole-body size multiple (the putty shrinks as it throws bits of itself).</summary>
         public float SizeFactor { get; set; } = 1f;
 
+        /// <summary>Extra height (parent units) on top of the hop: the Giant Stapler's leap.</summary>
+        public float ExtraLift { get; set; }
+
         /// <summary>How an enemy's attack looks; each stationery character hits in its own way.</summary>
         public enum AttackStyle { Bash, Chomp, Snip, Slam, Grind, Stab, Throw, Squirt, Recoil }
 
@@ -178,11 +181,16 @@ namespace DrawRush.Enemy
                 new Key(0.40f, 19.2f, 0.0f, 0.92f, 0.05f, 1.22f, 1.80f, -30.0f),
                 new Key(0.56f, 16.8f, 0.0f, 0.86f, 0.00f, 1.12f, 1.48f, -25.0f),
                 Rest(1f)),
-            // Throw: rears back with the arm behind, then hurls.
-            new(0.55f, 0.46f, Rest(0f),
-                new Key(0.36f, -24.0f, -10.0f, -0.31f, 0.00f, 1.12f, 0.92f, -95.0f),
-                new Key(0.46f, 12.0f, 12.0f, 0.25f, 0.04f, 0.85f, 1.29f, 85.0f),
-                new Key(0.60f, 7.2f, 6.0f, 0.20f, 0.00f, 1.03f, 1.08f, 50.0f),
+            // Throw: hunches and tears a chunk off itself, hoists it overhead, rears back with the
+            // arm far behind (a long, readable wind-up), then hurls and follows through.
+            new(1.15f, 0.84f, Rest(0f),
+                new Key(0.14f, 10.0f, 0.0f, 0.04f, 0.00f, 0.78f, 1.10f, 45.0f),
+                new Key(0.28f, 14.0f, 8.0f, 0.06f, 0.00f, 0.72f, 1.16f, 55.0f),
+                new Key(0.46f, -6.0f, -4.0f, -0.06f, 0.02f, 1.10f, 0.96f, -60.0f),
+                new Key(0.70f, -22.0f, -14.0f, -0.28f, 0.00f, 1.16f, 0.90f, -100.0f),
+                new Key(0.78f, -26.0f, -16.0f, -0.33f, 0.00f, 1.14f, 0.88f, -110.0f),
+                new Key(0.84f, 14.0f, 14.0f, 0.30f, 0.05f, 0.84f, 1.34f, 90.0f),
+                new Key(0.93f, 9.0f, 8.0f, 0.22f, 0.00f, 1.04f, 1.10f, 60.0f),
                 Rest(1f)),
             // Squirt: squeezes flat, then shoots up and forward.
             new(0.55f, 0.42f, Rest(0f),
@@ -224,6 +232,14 @@ namespace DrawRush.Enemy
         }
 
         public bool IsAttacking => _attackTime >= 0f;
+
+        /// <summary>Seconds from the start of a move to its strike, so gameplay can release a
+        /// projectile on the very frame the animation hurls it.</summary>
+        public static float StrikeSeconds(AttackStyle style)
+        {
+            Move m = Moves[(int)style];
+            return m.Seconds * m.StrikeAt;
+        }
 
         /// <summary>0..1 while an attack gathers itself before the strike, else 0 (the warning).</summary>
         public float AttackGather
@@ -348,7 +364,7 @@ namespace DrawRush.Enemy
                                         * Quaternion.AngleAxis(angle * limb.direction, limb.axis);
             }
 
-            transform.localPosition = _basePos + Vector3.up * (y + aLift) + Vector3.forward * aForward;
+            transform.localPosition = _basePos + Vector3.up * (y + aLift + ExtraLift) + Vector3.forward * aForward;
 
             float stretch = ExtraStretch * aHeight * height;
             float widen = 1f / Mathf.Sqrt(Mathf.Max(0.2f, stretch));   // keep the volume

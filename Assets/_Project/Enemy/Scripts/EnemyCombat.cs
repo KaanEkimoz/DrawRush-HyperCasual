@@ -70,7 +70,7 @@ namespace DrawRush.Enemy
                                && (GameServices.Health == null || GameServices.Health.Current > 0);
 
         private float Reach => reachPerScale * transform.lossyScale.x
-                               * (_follow != null && _follow.Variant == EnemyVariant.Boss ? bossReachScale : 1f);
+                               * (_follow != null && EnemyFollow.IsBoss(_follow.Variant) ? bossReachScale : 1f);
 
         /// <summary>True when <paramref name="target"/> is within <paramref name="reach"/> m of
         /// <paramref name="origin"/> and no more than <paramref name="halfAngle"/> degrees off

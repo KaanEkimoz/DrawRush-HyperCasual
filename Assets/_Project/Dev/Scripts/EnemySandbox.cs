@@ -29,12 +29,13 @@ namespace DrawRush.Dev
             new() { Name = "Zımba", Variant = EnemyVariant.Normal, Speed = 1f, Scale = 1f },
             new() { Name = "Makas · hızlı", Variant = EnemyVariant.Sprinter, Speed = 1.5f, Scale = 0.8f },
             new() { Name = "Delgeç · ağır", Variant = EnemyVariant.Tank, Speed = 0.7f, Scale = 1.35f, Heavy = true },
-            new() { Name = "Kalemtıraş · boya yer", Variant = EnemyVariant.Eater, Speed = 1f, Scale = 1f },
+            new() { Name = "Kalemtıraş · içine çeker", Variant = EnemyVariant.Eater, Speed = 1f, Scale = 1f },
             new() { Name = "Raptiye · atılır", Variant = EnemyVariant.Dasher, Speed = 1f, Scale = 1f },
             new() { Name = "Silgi · önünü keser", Variant = EnemyVariant.Flanker, Speed = 1.1f, Scale = 1f },
             new() { Name = "Hamur silgi · parça atar", Variant = EnemyVariant.Orbiter, Speed = 1.25f, Scale = 0.8f },
             new() { Name = "Dev silgi · boss", Variant = EnemyVariant.Boss, Speed = 0.675f, Scale = 1.8f, Heavy = true },
             new() { Name = "Yapıştırıcı · yavaşlatır", Variant = EnemyVariant.Glue, Speed = 0.92f, Scale = 1f },
+            new() { Name = "Dev zımba · boss", Variant = EnemyVariant.BossStapler, Speed = 0.75f, Scale = 2.1f, Heavy = true },
         };
 
         // Palette order on every enemy look: teal, orange, green, purple (the eraser has no purple).
@@ -93,6 +94,9 @@ namespace DrawRush.Dev
 
         private void Walk()
         {
+            // The sharpener's suction drags the test pencil too, keys or not.
+            Vector3 pull = DrawRush.Core.PullZones.Velocity;
+            if (pull.sqrMagnitude > 0f) player.position += pull * Time.deltaTime;
             Keyboard k = Keyboard.current;
             if (k == null) return;
             Vector3 move = Vector3.zero;

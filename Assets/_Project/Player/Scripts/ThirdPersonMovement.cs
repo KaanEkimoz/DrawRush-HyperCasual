@@ -147,7 +147,9 @@ namespace DrawRush.Player
             bool stopping = target.sqrMagnitude < 0.0001f;
             float rampTime = Mathf.Max(0.001f, stopping ? ResolveDecelerationTime() : ResolveAccelerationTime());
             _planarVelocity = Vector3.MoveTowards(_planarVelocity, target, speed / rampTime * Time.deltaTime);
-            if (_planarVelocity.sqrMagnitude > 0f) _characterController.Move(_planarVelocity * Time.deltaTime);
+            Vector3 pull = DrawRush.Core.PullZones.Velocity;   // a sharpener sucking the hero in
+            Vector3 step = _planarVelocity + pull;
+            if (step.sqrMagnitude > 0f) _characterController.Move(step * Time.deltaTime);
         }
 
         private float SpeedFactor(float movingSeconds)

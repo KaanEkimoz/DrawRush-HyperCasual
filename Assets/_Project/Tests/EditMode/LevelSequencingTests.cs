@@ -121,7 +121,9 @@ namespace DrawRush.Tests.EditMode
         public void TheOpeningLevels_NeverFieldEnemies()
         {
             Assert.AreEqual(0, LevelDifficulty.OpeningBudget(played: 4, enemyFreeLevels: 5, budget: 3));
-            Assert.AreEqual(3, LevelDifficulty.OpeningBudget(played: 5, enemyFreeLevels: 5, budget: 3));
+            Assert.AreEqual(2, LevelDifficulty.OpeningBudget(played: 5, enemyFreeLevels: 5, budget: 3), "no trio before level 50");
+            Assert.AreEqual(2, LevelDifficulty.OpeningBudget(played: 49, enemyFreeLevels: 5, budget: 3), "level 50 still two");
+            Assert.AreEqual(3, LevelDifficulty.OpeningBudget(played: 50, enemyFreeLevels: 5, budget: 3), "level 51 may field three");
         }
 
         [Test]

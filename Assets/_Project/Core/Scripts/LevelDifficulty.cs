@@ -45,6 +45,11 @@ namespace DrawRush.Core
         /// offers. Kaan: more than three turns the page into a crowd.</summary>
         public const int MaxEnemies = 3;
 
+        /// <summary>Until this level (1-based) a level fields at most <see cref="EarlyMaxEnemies"/>.
+        /// Kaan: no trio of enemies before level 50.</summary>
+        public const int EarlyLevels = 50;
+        public const int EarlyMaxEnemies = 2;
+
         /// <summary>Enemies this level should field to land on <paramref name="target"/>, capped by
         /// how many were actually authored. A shape already past the target fields none — that is
         /// the "take the enemies away" lever that keeps low points reachable late in the bag.</summary>
@@ -57,7 +62,7 @@ namespace DrawRush.Core
         /// <summary>The opening levels are for learning to draw: no enemies at all, whatever the
         /// curve asks for. Kaan: the first five levels stay enemy-free.</summary>
         public static int OpeningBudget(int played, int enemyFreeLevels, int budget) =>
-            played < enemyFreeLevels ? 0 : budget;
+            played < enemyFreeLevels ? 0 : played + 1 <= EarlyLevels ? Mathf.Min(budget, EarlyMaxEnemies) : budget;
 
         /// <summary>Where a beginner's first tooth tops out, as a fraction of the min..max range.
         /// The teeth get taller from here; they never get shorter.</summary>
