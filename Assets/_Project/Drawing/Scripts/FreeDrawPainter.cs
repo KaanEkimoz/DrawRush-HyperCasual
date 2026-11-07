@@ -164,6 +164,10 @@ namespace DrawRush.Drawing
                 float t = e.ClosestT(p, out float dist);
                 float limit = CurrentBand * (e.IsArc ? arcBandScale : 1f);
                 if (dist > limit) { _lastT.Remove(e); continue; }
+                // A trap that is up or a wet ink blot: no paint here, and the next step starts
+                // fresh so walking through it does not bridge the stretch underneath.
+                if (PaintBlockers.Count > 0 && (PaintBlockers.Blocks(p) || PaintBlockers.Blocks(e.PointAt(t))))
+                { _lastT.Remove(e); continue; }
 
                 float from = _lastT.TryGetValue(e, out float last) && Mathf.Abs(t - last) * len <= maxStepMeters ? last : t;
                 // A single step still lays a little paint so standing on the line shows a mark.
