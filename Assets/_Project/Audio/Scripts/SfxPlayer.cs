@@ -50,7 +50,7 @@ namespace DrawRush.Audio
         [Tooltip("At most one enemy noise this often (seconds): a crowd must not turn into a racket.")]
         [SerializeField] private float voiceGap = 0.4f;
 
-        private AudioSource _source, _drawSource;
+        private AudioSource _source, _drawSource, _sawSource;
         private float _lastVoice = -1f;
         private float _lastPainting = float.NegativeInfinity;
         private GameState _boundState;
@@ -68,6 +68,12 @@ namespace DrawRush.Audio
             _drawSource.spatialBlend = 0f;
             _drawSource.volume = 0f;
             _drawSource.outputAudioMixerGroup = _source.outputAudioMixerGroup;
+            _sawSource = gameObject.AddComponent<AudioSource>();
+            _sawSource.playOnAwake = false;
+            _sawSource.loop = true;
+            _sawSource.spatialBlend = 0f;
+            _sawSource.volume = 0f;
+            _sawSource.outputAudioMixerGroup = _source.outputAudioMixerGroup;
         }
 
         private void OnEnable()
@@ -94,6 +100,8 @@ namespace DrawRush.Audio
             if (boosts != null) boosts.Granted += OnBooster;
             if (combat != null) combat.ShieldBroken += OnShieldBroken;
             if (painter != null) painter.PaintLost += OnPaintLost;
+            DrawRush.Hazards.GroundTraps.SpikesRose += OnSpikesRose;
+            DrawRush.Hazards.GroundTraps.SpikesSank += OnSpikesSank;
         }
 
         private void OnDisable()
@@ -114,11 +122,14 @@ namespace DrawRush.Audio
             if (boosts != null) boosts.Granted -= OnBooster;
             if (combat != null) combat.ShieldBroken -= OnShieldBroken;
             if (painter != null) painter.PaintLost -= OnPaintLost;
+            DrawRush.Hazards.GroundTraps.SpikesRose -= OnSpikesRose;
+            DrawRush.Hazards.GroundTraps.SpikesSank -= OnSpikesSank;
         }
 
         // The pencil scratch follows the brush: it runs only while paint is actually going down.
         private void Update()
         {
+            UpdateSaw();
             if (library == null || library.drawLoop == null || library.drawLoop.clip == null) return;
             // One source, one clip, looped: started once and only ever faded, never re-Played or
             // stacked with PlayOneShot, so the scratch cannot pile up on itself.
@@ -149,6 +160,36 @@ namespace DrawRush.Audio
             _drawSource.volume = Mathf.Lerp(_drawSource.volume, target, 1f - Mathf.Exp(-Time.unscaledDeltaTime / tau));
             if (target <= 0f && _drawSource.volume < 0.0005f) _drawSource.volume = 0f;
             _drawSource.pitch = Mathf.Lerp(drawPitch.x, drawPitch.y, _speedLevel);
+        }
+
+        // The saws whirr on one looped source, as loud as the nearest saw is close to the hero.
+        private void UpdateSaw()
+        {
+            SfxLibrary.Cue cue = library != null ? library.sawLoop : null;
+            if (cue == null || cue.clip == null) return;
+            if (_sawSource.clip != cue.clip)
+            {
+                _sawSource.clip = cue.clip;
+                _sawSource.volume = 0f;
+                _sawSource.Play();
+            }
+            _sawSource.mute = SoundChannels.SfxMuted;
+            float target = Time.timeScale > 0f ? Mathf.Clamp01(cue.volume) * DrawRush.Hazards.GroundTraps.SawLevel : 0f;
+            _sawSource.volume = Mathf.Lerp(_sawSource.volume, target, 1f - Mathf.Exp(-Time.unscaledDeltaTime / 0.12f));
+            if (target <= 0f && _sawSource.volume < 0.0005f) _sawSource.volume = 0f;
+        }
+
+        // Spike traps: full level beside the hero, softer across the page, and never a pile-up
+        // when two traps move on the same beat.
+        private float _lastSpike = -1f;
+        private void OnSpikesRose(Vector3 at) => PlaySpike(library != null ? library.spikeUp : null, at);
+        private void OnSpikesSank(Vector3 at) => PlaySpike(library != null ? library.spikeDown : null, at);
+        private void PlaySpike(SfxLibrary.Cue cue, Vector3 at)
+        {
+            if (cue == null || cue.clip == null || _source == null) return;
+            if (Time.unscaledTime - _lastSpike < 0.08f) return;
+            _lastSpike = Time.unscaledTime;
+            _source.PlayOneShot(cue.clip, cue.volume * DrawRush.Hazards.GroundTraps.Nearness(at));
         }
 
         private void OnEnemyVoiced(DrawRush.Enemy.EnemyVariant variant)

@@ -28,6 +28,23 @@ namespace DrawRush.Hazards
     {
         public enum Kind { Spikes, Saw, Roller }
 
+        /// <summary>A spike trap came up / went down (its centre). For sound, which lives elsewhere.</summary>
+        public static event System.Action<Vector3> SpikesRose, SpikesSank;
+        /// <summary>0-1: how close the nearest working saw is to the hero (0 = no saw).</summary>
+        public static float SawLevel { get; private set; }
+        private static Vector3 _hero;
+
+        /// <summary>Loudness share for a trap sound at <paramref name="at"/>: full beside the
+        /// hero, a quarter across the page.</summary>
+        public static float Nearness(Vector3 at)
+        {
+            at.y = 0f; Vector3 h = _hero; h.y = 0f;
+            return Mathf.Lerp(1f, 0.25f, Mathf.InverseLerp(1.5f, 9f, Vector3.Distance(at, h)));
+        }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics() { SpikesRose = null; SpikesSank = null; SawLevel = 0f; }
+
         [SerializeField] private FreeDrawPainter painter;
         [SerializeField] private PlayerCombat combat;
         [SerializeField] private PlayerKnockback knockback;
@@ -101,6 +118,7 @@ namespace DrawRush.Hazards
             public int Blocker;        // 0 = not blocking
             public bool Retired;
             public float Sink;         // 0-1 of the way down, once retired
+            public int Phase = -1;     // spikes: 0 down, 1 coming, 2 up (sounds fire on a change)
         }
 
         /// <summary>How many traps a campaign level places (before the edge limit).</summary>
@@ -419,6 +437,7 @@ namespace DrawRush.Hazards
         private void Clear()
         {
             _pending = null;
+            SawLevel = 0f;
             foreach (Trap t in _traps)
             {
                 Unblock(t);
@@ -430,6 +449,8 @@ namespace DrawRush.Hazards
         private void Update()
         {
             if (_pending != null && Time.timeScale > 0f) PlacePending();
+            _hero = transform.position;
+            SawLevel = 0f;
             if (_traps.Count == 0) return;
             var state = GameServices.State;
             bool over = state != null && (state.IsGameWon || state.IsFinishing);
@@ -448,11 +469,17 @@ namespace DrawRush.Hazards
         {
             float cycle = downSeconds + warnSeconds + upSeconds;
             float rise;   // 0 = sunk, 1 = up
-            if (t.Retired) rise = Mathf.MoveTowards(Rise(t), 0f, Time.deltaTime / moveSeconds);
+            int phase;
+            if (t.Retired)
+            {
+                rise = Mathf.MoveTowards(Rise(t), 0f, Time.deltaTime / moveSeconds);
+                phase = 0;
+            }
             else
             {
                 t.Clock = (t.Clock + Time.deltaTime) % cycle;
                 float c = t.Clock;
+                phase = c < downSeconds ? 0 : c < downSeconds + warnSeconds ? 1 : 2;
                 if (c < downSeconds)
                 {
                     float k = Mathf.Clamp01(c / moveSeconds);
@@ -468,6 +495,12 @@ namespace DrawRush.Hazards
                 }
             }
             t.Moving.localScale = new Vector3(1f, Mathf.Max(0.001f, rise), 1f);
+            if (phase != t.Phase)
+            {
+                if (phase == 2) SpikesRose?.Invoke(t.At);
+                else if (phase == 0 && t.Phase == 2) SpikesSank?.Invoke(t.At);
+                t.Phase = phase;
+            }
             bool show = rise > 0.01f;
             if (t.Moving.gameObject.activeSelf != show) t.Moving.gameObject.SetActive(show);
 
@@ -498,6 +531,7 @@ namespace DrawRush.Hazards
 
             Vector3 ground = t.At + t.Across * s;
             if (t.Blocker != 0) PaintBlockers.Move(t.Blocker, ground);
+            SawLevel = Mathf.Max(SawLevel, Nearness(ground));
             Hurt(hero, ground, sawRadius);
         }
 

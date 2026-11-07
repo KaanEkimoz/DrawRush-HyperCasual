@@ -42,6 +42,12 @@ namespace DrawRush.Audio
         public Cue paintLost = new();
         [Tooltip("Looping pencil scratch while the player is painting the shape.")]
         public Cue drawLoop = new();
+        [Tooltip("Spike trap shoots up out of its holes.")]
+        public Cue spikeUp = new();
+        [Tooltip("Spike trap sinks back into its holes.")]
+        public Cue spikeDown = new();
+        [Tooltip("Looping whirr of a saw trap; louder the closer the hero is.")]
+        public Cue sawLoop = new();
         [Tooltip("Enemy noises, by EnemyVariant: Normal, Sprinter, Tank, Eater, Dasher, Boss.")]
         public Cue[] enemyVoices = new Cue[0];
     }
