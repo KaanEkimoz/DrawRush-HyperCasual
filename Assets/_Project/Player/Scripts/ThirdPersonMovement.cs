@@ -60,6 +60,17 @@ namespace DrawRush.Player
         /// <summary>Slow from the ground underfoot (a coffee spill), on top of boosters.</summary>
         public float HazardMultiplier { get; set; } = 1f;
 
+        /// <summary>How fast the hero is moving now, 0..1 of its full run speed (glue slowing it
+        /// counts as slower). The drawing sound follows it.</summary>
+        public float SpeedRatio
+        {
+            get
+            {
+                float full = ResolveSpeed() * SpeedMultiplier * StatSpeedMultiplier * HeightSpeedMultiplier * HazardMultiplier;
+                return full > 0.01f ? Mathf.Clamp01(_planarVelocity.magnitude / full) : 0f;
+            }
+        }
+
 
         private void Awake()
         {

@@ -33,6 +33,18 @@ namespace DrawRush.Audio
                  "that lays no paint (a frame with two fixed steps, a hop over a corner) does not " +
                  "chop the loop into a stutter.")]
         [SerializeField] private float drawHold = 0.12f;
+        [Tooltip("Drawing-sound level at a crawl, as a share of its full level; it rises with the " +
+                 "pencil's speed and holds steady at a full run.")]
+        [SerializeField, Range(0f, 1f)] private float drawSlowLevel = 0.3f;
+        [Tooltip("Seconds the drawing sound takes to swell as the pencil speeds up.")]
+        [SerializeField] private float drawRise = 0.25f;
+        [Tooltip("Seconds it takes to soften as the pencil slows down.")]
+        [SerializeField] private float drawFall = 0.35f;
+        [Tooltip("Pitch at a crawl and at a full run: a faster stroke scratches a touch higher.")]
+        [SerializeField] private Vector2 drawPitch = new(0.94f, 1.03f);
+
+        private DrawRush.Player.ThirdPersonMovement _mover;
+        private float _speedLevel;
         [Tooltip("At most one enemy noise this often (seconds): a crowd must not turn into a racket.")]
         [SerializeField] private float voiceGap = 0.4f;
 
@@ -118,10 +130,20 @@ namespace DrawRush.Audio
 
             if (painter != null && painter.IsPainting) _lastPainting = Time.unscaledTime;
             bool on = Time.timeScale > 0f && Time.unscaledTime - _lastPainting <= drawHold;
-            float target = on ? Mathf.Clamp01(library.drawLoop.volume) : 0f;
+
+            // Speed shapes the scratch: soft while the pencil crawls, swelling as it gets going,
+            // then steady at a full run. Rise and fall are smoothed so steering wobble is not heard.
+            if (_mover == null && GameServices.Player != null) _mover = GameServices.Player.GetComponent<DrawRush.Player.ThirdPersonMovement>();
+            float speed = _mover != null ? _mover.SpeedRatio : 1f;
+            float rate = speed > _speedLevel ? drawRise : drawFall;
+            _speedLevel = Mathf.MoveTowards(_speedLevel, speed, Time.unscaledDeltaTime / Mathf.Max(0.01f, rate));
+            float shaped = Mathf.Lerp(drawSlowLevel, 1f, Mathf.SmoothStep(0f, 1f, _speedLevel));
+
+            float target = on ? Mathf.Clamp01(library.drawLoop.volume) * shaped : 0f;
             _source.mute = SoundChannels.SfxMuted;
             _drawSource.mute = _source.mute;
             _drawSource.volume = Mathf.MoveTowards(_drawSource.volume, target, Time.unscaledDeltaTime / Mathf.Max(0.01f, drawFade));
+            _drawSource.pitch = Mathf.Lerp(drawPitch.x, drawPitch.y, _speedLevel);
         }
 
         private void OnEnemyVoiced(DrawRush.Enemy.EnemyVariant variant)
