@@ -47,7 +47,7 @@ MonoBehaviour:
     volume: 0.5
   drawLoop:
     clip: {fileID: 8300000, guid: f5614f05aa8564024bd519734cb0f156, type: 3}
-    volume: 0.35
+    volume: 0.175
   enemyVoices:
   - clip: {fileID: 8300000, guid: 41d8ca4f0789c40589f45423a6444fdd, type: 3}
     volume: 0.45

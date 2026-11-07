@@ -27,8 +27,10 @@ namespace DrawRush.Audio
         [Tooltip("Free-draw painter (lost-paint sound). Optional.")]
         [SerializeField] private FreeDrawPainter painter;
 
-        [Tooltip("Seconds the drawing sound takes to fade in and out.")]
-        [SerializeField] private float drawFade = 0.08f;
+        [Tooltip("Time constants (s) of the drawing sound's fade in (pencil touches down) and fade out " +
+                 "(it lifts): smooth curves, the same whatever the volume, so it never clicks on or off.")]
+        [SerializeField] private float drawAttack = 0.06f;
+        [SerializeField] private float drawRelease = 0.14f;
         [Tooltip("Seconds the drawing sound holds after the last painting step, so a physics tick " +
                  "that lays no paint (a frame with two fixed steps, a hop over a corner) does not " +
                  "chop the loop into a stutter.")]
@@ -142,7 +144,10 @@ namespace DrawRush.Audio
             float target = on ? Mathf.Clamp01(library.drawLoop.volume) * shaped : 0f;
             _source.mute = SoundChannels.SfxMuted;
             _drawSource.mute = _source.mute;
-            _drawSource.volume = Mathf.MoveTowards(_drawSource.volume, target, Time.unscaledDeltaTime / Mathf.Max(0.01f, drawFade));
+            // Exponential fade: a fixed MoveTowards rate took only ~15 ms at a low volume, a click.
+            float tau = Mathf.Max(0.01f, target > _drawSource.volume ? drawAttack : drawRelease);
+            _drawSource.volume = Mathf.Lerp(_drawSource.volume, target, 1f - Mathf.Exp(-Time.unscaledDeltaTime / tau));
+            if (target <= 0f && _drawSource.volume < 0.0005f) _drawSource.volume = 0f;
             _drawSource.pitch = Mathf.Lerp(drawPitch.x, drawPitch.y, _speedLevel);
         }
 

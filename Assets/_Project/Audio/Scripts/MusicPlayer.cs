@@ -8,7 +8,7 @@ namespace DrawRush.Audio
     public sealed class MusicPlayer : MonoBehaviour
     {
         [SerializeField] private AudioClip loop;
-        [SerializeField, Range(0f, 1f)] private float volume = 0.3f;
+        [SerializeField, Range(0f, 1f)] private float volume = 0.21f;   // Kaan: 30% under the old 0.3
 
         private AudioSource _source;
 
