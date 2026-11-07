@@ -29,11 +29,16 @@ namespace DrawRush.Audio
 
         [Tooltip("Seconds the drawing sound takes to fade in and out.")]
         [SerializeField] private float drawFade = 0.08f;
+        [Tooltip("Seconds the drawing sound holds after the last painting step, so a physics tick " +
+                 "that lays no paint (a frame with two fixed steps, a hop over a corner) does not " +
+                 "chop the loop into a stutter.")]
+        [SerializeField] private float drawHold = 0.12f;
         [Tooltip("At most one enemy noise this often (seconds): a crowd must not turn into a racket.")]
         [SerializeField] private float voiceGap = 0.4f;
 
         private AudioSource _source, _drawSource;
         private float _lastVoice = -1f;
+        private float _lastPainting = float.NegativeInfinity;
         private GameState _boundState;
         private PlayerHealth _boundHealth;
         private int _lastHealth = -1;
@@ -101,9 +106,19 @@ namespace DrawRush.Audio
         private void Update()
         {
             if (library == null || library.drawLoop == null || library.drawLoop.clip == null) return;
-            if (_drawSource.clip == null) { _drawSource.clip = library.drawLoop.clip; _drawSource.Play(); }
-            bool on = painter != null && painter.IsPainting && Time.timeScale > 0f;
-            float target = on ? library.drawLoop.volume : 0f;
+            // One source, one clip, looped: started once and only ever faded, never re-Played or
+            // stacked with PlayOneShot, so the scratch cannot pile up on itself.
+            if (_drawSource.clip != library.drawLoop.clip)
+            {
+                _drawSource.clip = library.drawLoop.clip;
+                _drawSource.loop = true;
+                _drawSource.volume = 0f;
+                _drawSource.Play();
+            }
+
+            if (painter != null && painter.IsPainting) _lastPainting = Time.unscaledTime;
+            bool on = Time.timeScale > 0f && Time.unscaledTime - _lastPainting <= drawHold;
+            float target = on ? Mathf.Clamp01(library.drawLoop.volume) : 0f;
             _source.mute = SoundChannels.SfxMuted;
             _drawSource.mute = _source.mute;
             _drawSource.volume = Mathf.MoveTowards(_drawSource.volume, target, Time.unscaledDeltaTime / Mathf.Max(0.01f, drawFade));

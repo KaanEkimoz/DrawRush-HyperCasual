@@ -19,6 +19,9 @@ namespace DrawRush.Boosters
         [Tooltip("Reach (m) per pet level 1..3.")]
         [SerializeField] private float[] reaches = { 2.5f, 2.8f, 3.2f };
         [SerializeField] private float pushDistance = 2.5f;
+        [Tooltip("Off while the helper is still a raw Unity primitive and its shop row is parked: no " +
+                 "grey-box shape trails the hero and it does nothing, even for an old save that bought it.")]
+        [SerializeField] private bool showPlaceholderBody;
         [SerializeField] private Vector3 followOffset = new(-0.9f, 0f, -0.7f);
 
         private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
@@ -41,7 +44,7 @@ namespace DrawRush.Boosters
 
         private void Refresh()
         {
-            bool owned = BoosterUpgrades.PetLevel > 0;
+            bool owned = BoosterUpgrades.PetLevel > 0 && showPlaceholderBody;   // parked: no grey-box helper at all
             if (owned && _body == null) Build();
             if (_body != null) _body.gameObject.SetActive(owned);
         }
