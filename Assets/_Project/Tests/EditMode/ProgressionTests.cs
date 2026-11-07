@@ -33,14 +33,14 @@ namespace DrawRush.Tests.EditMode
         [Test]
         public void EarlyLevels_FieldOnlyPlainEnemies()
         {
-            for (int level = 1; level <= 5; level++)
+            for (int level = 1; level <= 3; level++)
                 Assert.AreEqual((0, 0, 0, 0, false), Plan(level), $"level {level}");
         }
 
         [Test]
         public void EachNewType_DebutsAlone()
         {
-            Assert.AreEqual((0, 0, 0, 0, true), Plan(6), "the plain stapler, the first enemy of all");
+            Assert.AreEqual((0, 0, 0, 0, true), Plan(4), "the plain stapler, the first enemy of all");
             Assert.AreEqual((1, 0, 0, 0, true), Plan(9));
             Assert.AreEqual((0, 1, 0, 0, true), Plan(13));
             Assert.AreEqual((0, 0, 1, 0, true), Plan(21));

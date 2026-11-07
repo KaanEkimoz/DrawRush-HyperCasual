@@ -9,7 +9,7 @@ namespace DrawRush.Enemy
     /// <summary>
     /// Brings in new enemy types over the campaign, one at a time (research: introduce a threat
     /// alone, in an easier level, then mix it with the known ones):
-    ///   • the plain stapler from the 6th (levels 1-5 have no enemies), then one new type every
+    ///   • the plain stapler from the 4th (levels 1-3 have no enemies), then one new type every
     ///     few levels: scissors (sprinter) 9, hole punch (tank) 13, flanker 17, sharpener (sucks
     ///     the pencil in) 21, putty (throws chunks) 25, glue 29, pushpin (lunges) 33;
     ///   • until level 50 no level fields more than two enemies, after it never more than three.
@@ -27,7 +27,7 @@ namespace DrawRush.Enemy
 
         [Header("Introduction (campaign level number, 1-based)")]
         [Tooltip("The first enemy of all, the plain stapler (levels before it have none).")]
-        [SerializeField] private int normalFrom = 6;
+        [SerializeField] private int normalFrom = 4;
         [SerializeField] private int sprinterFrom = 9;
         [SerializeField] private int tankFrom = 13;
         [SerializeField] private int flankerFrom = 17;

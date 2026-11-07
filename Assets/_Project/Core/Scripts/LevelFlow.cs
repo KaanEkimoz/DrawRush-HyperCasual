@@ -30,7 +30,7 @@ namespace DrawRush.Core
 
         [Header("Difficulty Curve")]
         [Tooltip("Levels after the tutorial that field no enemies.")]
-        [SerializeField] private int enemyFreeLevels = 5;
+        [SerializeField] private int enemyFreeLevels = 3;
         [Tooltip("Difficulty target for the very first level after the tutorial. Low enough that " +
                  "the bag picks the simplest shape and the enemy budget works out to zero.")]
         [SerializeField] private float minTarget = 3f;

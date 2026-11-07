@@ -60,7 +60,7 @@ namespace DrawRush.Core
         }
 
         /// <summary>The opening levels are for learning to draw: no enemies at all, whatever the
-        /// curve asks for. Kaan: the first five levels stay enemy-free.</summary>
+        /// curve asks for. Kaan: the first three levels stay enemy-free.</summary>
         public static int OpeningBudget(int played, int enemyFreeLevels, int budget) =>
             played < enemyFreeLevels ? 0 : played + 1 <= EarlyLevels ? Mathf.Min(budget, EarlyMaxEnemies) : budget;
 

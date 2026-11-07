@@ -41,6 +41,10 @@ namespace DrawRush.Drawing
         [Tooltip("A sliver this short (m) left at an edge's end closes on its own: it sits under the " +
                  "corner drop, where the shapes' edges crowd together.")]
         [SerializeField] private float endGapMeters = 0.6f;
+        [Tooltip("Kaan: a leftover this small (m, in total) on an edge is too small to even see " +
+                 "where it is, so the edge completes. Capped at leftoverShare of the edge's length.")]
+        [SerializeField] private float leftoverMeters = 0.45f;
+        [SerializeField, Range(0f, 0.5f)] private float leftoverShare = 0.12f;
         [Tooltip("Whole-shape coverage (0-1) at which the rest is swept in and the level is won.")]
         [SerializeField, Range(0.5f, 1f)] private float winCoverage = 0.99f;
         [Tooltip("Seconds the finishing sweep takes to paint what is left.")]
@@ -177,11 +181,11 @@ namespace DrawRush.Drawing
                 // Finishing an edge is a save point: the moment it is all but painted it completes,
                 // fresh paint included, instead of waiting out the pending window first (that wait
                 // made finished edges light up a second or more after the player got there).
-                if (e.CoverageClosingGaps(microGapMeters, endGapMeters) >= edgeAutoComplete) { e.CompleteAll(); continue; }
+                if (AllButDone(e, e.CoverageClosingGaps(microGapMeters, endGapMeters))) { e.CompleteAll(); continue; }
                 if (!e.Fill.HasPending)
                 {
                     e.CloseGaps(microGapMeters, endGapMeters);
-                    if (e.Fill.Coverage >= edgeAutoComplete) e.CompleteAll();
+                    if (AllButDone(e, e.Fill.Coverage)) e.CompleteAll();
                 }
             }
 
@@ -196,6 +200,15 @@ namespace DrawRush.Drawing
             if (highlight != _highlighting) { _highlighting = highlight; _network.SetGapHighlight(highlight); }
 
             if (cov >= winCoverage) _sweep = StartCoroutine(Sweep());
+        }
+
+        // Done enough to call it done: the share painted, or a leftover too small to find.
+        private bool AllButDone(DrawEdge e, float coverage)
+        {
+            if (coverage >= edgeAutoComplete) return true;
+            if (coverage <= 0f) return false;
+            float left = (1f - coverage) * e.Length;
+            return left <= Mathf.Min(leftoverMeters, leftoverShare * e.Length);
         }
 
         // Paint what is left, edge by edge, quickly — the last completion fires the win.
