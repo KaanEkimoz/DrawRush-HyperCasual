@@ -147,6 +147,8 @@ namespace DrawRush.Drawing
             var state = GameServices.State;
             IsPainting = false;
             if (_sweeping || (state != null && state.IsGameWon) || _network.IsComplete) return;
+            // A dash darts over the line without painting it: no stroke bridges the jump either.
+            if (DrawRush.Player.PlayerDash.IsDashing) { _lastPosition = transform.position; _lastT.Clear(); return; }
 
             Vector3 p = transform.position;
             Vector3 step = p - _lastPosition; step.y = 0f;

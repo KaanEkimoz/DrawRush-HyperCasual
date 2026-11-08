@@ -39,6 +39,12 @@ namespace DrawRush.Player
         /// <summary>True while the post-hit invulnerability window is active.</summary>
         public bool IsInvulnerable => Time.time < _invulnerableUntil;
 
+        private float _dodgeUntil;
+        /// <summary>A dash's moment of safety: hits are ignored for <paramref name="seconds"/>, without
+        /// the post-hit blink.</summary>
+        public void Dodge(float seconds) => _dodgeUntil = Mathf.Max(_dodgeUntil, Time.time + seconds);
+        public bool IsDodging => Time.time < _dodgeUntil;
+
         [FormerlySerializedAs("playerHp")]
         [SerializeField] private TextMeshProUGUI healthLabel;
 
@@ -70,7 +76,7 @@ namespace DrawRush.Player
         /// that window, or after the level was won or lost, are ignored.</summary>
         public void TakeDamage(int amount)
         {
-            if (amount <= 0 || IsInvulnerable || LevelIsOver) return;
+            if (amount <= 0 || IsInvulnerable || IsDodging || LevelIsOver) return;
 
             if (ShieldCharges > 0)
             {

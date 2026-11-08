@@ -127,8 +127,38 @@ namespace DrawRush.UI
             return Mathf.Max(1f, reachDp * dpi / 160f / Mathf.Max(0.0001f, scale));
         }
 
+        /// <summary>The steering thumb tapped twice (lifted and came straight back): the dash.</summary>
+        public static event System.Action DoubleTapped;
+
+        [Header("Double tap (dash)")]
+        [Tooltip("Seconds between lifting the thumb and touching again that count as a double tap.")]
+        [SerializeField] private float doubleTapSeconds = 0.28f;
+        [Tooltip("How far (dp) the second touch may land from where the thumb lifted.")]
+        [SerializeField] private float doubleTapDp = 70f;
+
+        private float _lastUpTime = -10f;
+        private Vector2 _lastUpPosition;
+        private Vector2 _lastDeflection;   // knob offset / reach while steering (-1..1)
+        private Vector2 _heldDeflection;   // what it was when the thumb lifted
+
+        /// <summary>Whether a touch at <paramref name="now"/>/<paramref name="at"/> is the second tap
+        /// of a double tap after a lift at <paramref name="upTime"/>/<paramref name="upAt"/>.</summary>
+        public static bool IsDoubleTap(float upTime, Vector2 upAt, float now, Vector2 at, float maxSeconds, float maxPixels) =>
+            now - upTime <= maxSeconds && now >= upTime && (at - upAt).sqrMagnitude <= maxPixels * maxPixels;
+
         public void OnPointerDown(PointerEventData eventData)
         {
+            bool dashTap = false;
+            if (_pointerId == int.MinValue)
+            {
+                float dpi = Screen.dpi > 0f ? Screen.dpi : FallbackDpi;
+                if (IsDoubleTap(_lastUpTime, _lastUpPosition, Time.unscaledTime, eventData.position, doubleTapSeconds, doubleTapDp * dpi / 160f))
+                {
+                    _lastUpTime = -10f;   // a third tap starts over
+                    dashTap = true;
+                    DoubleTapped?.Invoke();
+                }
+            }
             if (background == null || _pointerId != int.MinValue) return;   // one thumb owns the stick
             if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
                     _rect, eventData.position, eventData.pressEventCamera, out Vector2 local))
@@ -138,6 +168,10 @@ namespace DrawRush.UI
                 Sizing();
                 if (FixedMode) { SendValueToControl(Vector2.zero); OnDrag(eventData); return; }   // parked stick: steer from its centre
                 background.anchoredPosition = local;
+                // After a dash the hero keeps running the way it was going: the ring opens behind
+                // the thumb, so the stick is already at full deflection in that direction.
+                if (dashTap && _heldDeflection.sqrMagnitude > 0.04f)
+                    background.anchoredPosition = local - _heldDeflection.normalized * _reach;
                 if (handle != null) handle.anchoredPosition = local;
                 background.gameObject.SetActive(true);
                 if (handle != null) handle.gameObject.SetActive(true);
@@ -164,6 +198,7 @@ namespace DrawRush.UI
             }
 
             Vector2 clamped = Vector2.ClampMagnitude(delta, _reach);
+            _lastDeflection = clamped / Mathf.Max(0.0001f, _reach);
             // handle is a sibling (same local space), so add the ring's position.
             if (handle != null) handle.anchoredPosition = background.anchoredPosition + clamped;
             SendValueToControl(Deflect(clamped / _reach, deadzone));
@@ -181,8 +216,44 @@ namespace DrawRush.UI
         {
             if (eventData.pointerId != _pointerId) return;
             _pointerId = int.MinValue;
+            _lastUpTime = Time.unscaledTime;
+            _lastUpPosition = eventData.position;
+            _heldDeflection = _lastDeflection;
+            _lastDeflection = Vector2.zero;
             SendValueToControl(Vector2.zero);
             ApplyMode();   // floating: hide; fixed: knob back to the parked centre
+        }
+
+        // The dash's cooldown, drawn as a ring around the stick: it fills while recharging and
+        // lights up when ready. Only once the dash is owned.
+        private UnityEngine.UI.Image _dashRing;
+
+        private void LateUpdate()
+        {
+            bool show = DrawRush.Core.DashSkill.Owned && background != null && background.gameObject.activeInHierarchy;
+            if (_dashRing == null)
+            {
+                if (!show) return;
+                var bgImage = background.GetComponent<UnityEngine.UI.Image>();
+                var go = new GameObject("DashRing", typeof(RectTransform), typeof(CanvasRenderer), typeof(UnityEngine.UI.Image));
+                var rt = (RectTransform)go.transform;
+                rt.SetParent(background, false);
+                rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
+                rt.sizeDelta = background.rect.size * 1.18f;
+                _dashRing = go.GetComponent<UnityEngine.UI.Image>();
+                if (bgImage != null) _dashRing.sprite = bgImage.sprite;
+                _dashRing.type = UnityEngine.UI.Image.Type.Filled;
+                _dashRing.fillMethod = UnityEngine.UI.Image.FillMethod.Radial360;
+                _dashRing.fillOrigin = (int)UnityEngine.UI.Image.Origin360.Top;
+                _dashRing.fillClockwise = true;
+                _dashRing.raycastTarget = false;
+                rt.SetAsFirstSibling();   // behind the ring art
+            }
+            _dashRing.enabled = show;
+            if (!show) return;
+            float r = DrawRush.Player.PlayerDash.Readiness;
+            _dashRing.fillAmount = r;
+            _dashRing.color = r >= 1f ? new Color(0.35f, 0.55f, 1f, 0.95f) : new Color(1f, 1f, 1f, 0.45f);
         }
 
         // A disabled stick (pause, level end) must not keep a held direction or a stale owner.

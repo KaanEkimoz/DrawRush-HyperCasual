@@ -22,6 +22,7 @@ namespace DrawRush.Boosters
         [SerializeField] private Color speedColor = new(1f, 0.75f, 0.2f, 1f);
         [SerializeField] private Color healthColor = new(0.95f, 0.35f, 0.35f, 1f);
         [SerializeField] private Color drawAreaColor = new(0.35f, 0.7f, 1f, 1f);
+        [SerializeField] private Color dashColor = new(0.55f, 0.45f, 1f, 1f);
         [Tooltip("List area inside the shop panel, from its centre (canvas units): between the " +
                  "skin grid (bottom at -250) and the Close button (top near -770).")]
         [SerializeField] private Vector2 areaPosition = new(0f, -470f);
@@ -49,6 +50,7 @@ namespace DrawRush.Boosters
             AddStat("Speed", speedColor, PlayerStat.Speed);
             AddStat("Health", healthColor, PlayerStat.Health);
             AddStat("Draw Area", drawAreaColor, PlayerStat.DrawArea);
+            AddRow("Dash", dashColor, DashSkill.Describe, () => DashSkill.NextPrice, DashSkill.TryUpgrade);
             if (!showBoosters) return;
 
             foreach (BoosterType t in new[] { BoosterType.Shield, BoosterType.Freeze, BoosterType.Speed, BoosterType.Shockwave })
@@ -72,6 +74,7 @@ namespace DrawRush.Boosters
         private void OnEnable()
         {
             StatUpgrades.Changed += Refresh;
+            DashSkill.Changed += Refresh;
             BoosterUpgrades.Changed += Refresh;
             PlayerProgress.CoinsChanged += OnCoins;
             Refresh();
@@ -80,6 +83,7 @@ namespace DrawRush.Boosters
         private void OnDisable()
         {
             StatUpgrades.Changed -= Refresh;
+            DashSkill.Changed -= Refresh;
             BoosterUpgrades.Changed -= Refresh;
             PlayerProgress.CoinsChanged -= OnCoins;
         }

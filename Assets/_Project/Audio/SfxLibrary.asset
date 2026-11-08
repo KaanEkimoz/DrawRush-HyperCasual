@@ -48,6 +48,9 @@ MonoBehaviour:
   drawLoop:
     clip: {fileID: 8300000, guid: f5614f05aa8564024bd519734cb0f156, type: 3}
     volume: 0.175
+  dash:
+    clip: {fileID: 8300000, guid: 49ae8cb85c46e4fcaa91bce7473295ed, type: 3}
+    volume: 0.5
   spikeUp:
     clip: {fileID: 8300000, guid: 4a8442daf51ca4089adf6ba22c0a71bd, type: 3}
     volume: 0.4

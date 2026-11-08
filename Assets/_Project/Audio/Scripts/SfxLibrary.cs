@@ -42,6 +42,8 @@ namespace DrawRush.Audio
         public Cue paintLost = new();
         [Tooltip("Looping pencil scratch while the player is painting the shape.")]
         public Cue drawLoop = new();
+        [Tooltip("The hero dashes (the double-tap skill).")]
+        public Cue dash = new();
         [Tooltip("Spike trap shoots up out of its holes.")]
         public Cue spikeUp = new();
         [Tooltip("Spike trap sinks back into its holes.")]

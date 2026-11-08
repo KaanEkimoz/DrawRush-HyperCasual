@@ -97,6 +97,7 @@ namespace DrawRush.Audio
             if (combat != null) combat.ShieldBroken += OnShieldBroken;
             if (painter != null) painter.PaintLost += OnPaintLost;
             DrawRush.Hazards.GroundTraps.SpikesRose += OnSpikesRose;
+            DrawRush.Player.PlayerDash.Dashed += OnDash;
             DrawRush.Hazards.GroundTraps.SpikesSank += OnSpikesSank;
         }
 
@@ -119,6 +120,7 @@ namespace DrawRush.Audio
             if (combat != null) combat.ShieldBroken -= OnShieldBroken;
             if (painter != null) painter.PaintLost -= OnPaintLost;
             DrawRush.Hazards.GroundTraps.SpikesRose -= OnSpikesRose;
+            DrawRush.Player.PlayerDash.Dashed -= OnDash;
             DrawRush.Hazards.GroundTraps.SpikesSank -= OnSpikesSank;
         }
 
@@ -230,6 +232,7 @@ namespace DrawRush.Audio
         private void OnBooster(BoosterType _) { Play(library != null ? library.boosterPickup : null); Haptics.Light(); }
         private void OnShieldBroken() { Play(library != null ? library.shieldBreak : null); Haptics.Medium(); }
         private void OnPaintLost() => Play(library != null ? library.paintLost : null);
+        private void OnDash() => Play(library != null ? library.dash : null);
 
         // Several Dashers may flash together; one whine per moment is enough.
         private float _lastDash = -1f;
