@@ -76,14 +76,14 @@ namespace DrawRush.Player
             if (!DashSkill.Owned || PlayerPrefs.GetInt(HintKey, 0) >= hintTimes) return;
             PlayerPrefs.SetInt(HintKey, PlayerPrefs.GetInt(HintKey, 0) + 1);
             var hud = FindFirstObjectByType<BoosterHud>();
-            if (hud != null) hud.Toast("DASH READY", "Double-tap to dash", new Color(0.35f, 0.55f, 1f));
+            if (hud != null) hud.Toast("DASH READY", Application.isMobilePlatform ? "Double-tap to dash" : "Double-tap or Space to dash", new Color(0.35f, 0.55f, 1f));
         }
 
         private void Update()
         {
-#if UNITY_EDITOR
-            if (UnityEngine.InputSystem.Keyboard.current != null && UnityEngine.InputSystem.Keyboard.current.spaceKey.wasPressedThisFrame) TryDash();
-#endif
+            // PC: Space dashes too (phones have no keyboard, so this is a no-op there).
+            var keyboard = UnityEngine.InputSystem.Keyboard.current;
+            if (keyboard != null && keyboard.spaceKey.wasPressedThisFrame) TryDash();
             Readiness = !DashSkill.Owned ? 0f
                 : Mathf.Clamp01(1f - (_readyAt - Time.time) / Mathf.Max(0.01f, DashSkill.Cooldown));
             if (IsDashing && Time.time >= _dashEnds)
