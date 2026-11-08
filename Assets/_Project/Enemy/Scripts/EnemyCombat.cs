@@ -41,7 +41,7 @@ namespace DrawRush.Enemy
         [SerializeField, Range(30f, 360f)] private float coneAngle = 100f;
         [SerializeField] private Color coneColor = new(0.92f, 0.16f, 0.16f, 0.42f);
         [Tooltip("Cone opacity at rest; it rises to full while the enemy winds up an attack.")]
-        [SerializeField, Range(0f, 1f)] private float coneRest = 0.72f;
+        [SerializeField, Range(0f, 1f)] private float coneRest = 0.85f;
         [Tooltip("World height of the cone: on the page, over the drawn lines.")]
         [SerializeField] private float coneY = 0.03f;
 
@@ -55,7 +55,7 @@ namespace DrawRush.Enemy
         private float _nextSwing;
 
         private const int ConeSegments = 24;
-        private const float RimStart = 0.93f;
+        private const float RimStart = 0.88f;   // a clear edge: where the reach ends
 
         private PlayerCombat _playerCombat;
         private GameState _state;
@@ -107,6 +107,8 @@ namespace DrawRush.Enemy
             _coneRenderer.sharedMaterial = _coneMaterial;
             _coneRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             _coneRenderer.receiveShadows = false;
+            // Over the page's decals (stains, ink, trap holes; sprites at order 0), under the enemies.
+            _coneRenderer.sortingOrder = 5;
             go.SetActive(false);
         }
 
