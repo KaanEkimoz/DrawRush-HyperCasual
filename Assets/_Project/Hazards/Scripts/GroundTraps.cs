@@ -174,7 +174,8 @@ namespace DrawRush.Hazards
                 if (hud != null) hud.Toast("TRAP TEST", "Spikes, saw, roller", new Color(0.45f, 0.5f, 0.6f));
                 return;
             }
-            int count = Campaign.TrapCount(level);
+            Transform shapeRoot = network.transform.parent != null ? network.transform.parent : network.transform;
+            int count = Campaign.Traps(level, LevelDifficulty.ShapeScore(shapeRoot));
             if (count <= 0) return;
             Place(network, count, level);
             if (hud == null || _traps.Count == 0) return;

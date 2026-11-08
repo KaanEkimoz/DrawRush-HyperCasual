@@ -48,7 +48,7 @@ namespace DrawRush.Core
             for (int played = 0; played < levels; played++)
             {
                 int number = played + 1;
-                float target = LevelDifficulty.SawtoothTarget(played, Campaign.Period, min, max, ramp);
+                float target = LevelDifficulty.SawtoothTarget(played, Campaign.Period, min, max, ramp);   // = Campaign.Target(number) at the defaults
                 int next = bag.Draw(target, i => LevelFlow.RankScore(number, target, shapes[i].Score, shapes[i].Enemies), all);
                 Shape s = shapes[next];
                 int enemies = LevelFlow.Enemies(number, target, s.Score, s.Enemies);
@@ -61,8 +61,8 @@ namespace DrawRush.Core
                 rows.Add(new Row
                 {
                     Level = number, Target = target, Index = next, Name = s.Name, Shape = s.Score,
-                    Traps = Campaign.TrapCount(number), Events = Campaign.EventsOn(number), Enemies = enemies,
-                    Total = s.Score + Campaign.FixedCost(number) + enemies * LevelDifficulty.EnemyWeight,
+                    Traps = Campaign.Traps(number, s.Score), Events = Campaign.EventsOn(number), Enemies = enemies,
+                    Total = s.Score + Campaign.FixedCost(number, s.Score) + enemies * LevelDifficulty.EnemyWeight,
                     Debut = debut, Breather = Campaign.IsBreather(number), Boss = Campaign.IsBoss(number), Kinds = kinds,
                 });
             }

@@ -156,8 +156,29 @@ namespace DrawRush.Core
         /// <summary>Which enemy kind slot <paramref name="slot"/> of the level wears.</summary>
         public static Novelty EnemyKind(int level, int slot) => Pick(EnemyKinds, level, slot);
 
+        /// <summary>The difficulty curve's defaults (LevelFlow uses the same values).</summary>
+        public const float MinTarget = 3f, MaxTarget = 21f;
+        public const int RampLevels = 30;
+
+        /// <summary>The sawtooth's target for campaign level <paramref name="level"/> (1-based).</summary>
+        public static float Target(int level) =>
+            LevelDifficulty.SawtoothTarget(Mathf.Max(0, level - 1), Period, MinTarget, MaxTarget, RampLevels);
+
+        /// <summary>Traps for this level on a shape of this score: up to <see cref="TrapCount"/>,
+        /// fewer when the shape itself is already hard (a complex drawing needs fewer traps to reach
+        /// the target), never fewer than one once traps are on.</summary>
+        public static int Traps(int level, float shapeScore)
+        {
+            int max = TrapCount(level);
+            if (max <= 1) return max;
+            float room = Target(level) - shapeScore - (EventsOn(level) ? EventWeight : 0f)
+                         - EnemyFloor(level) * LevelDifficulty.EnemyWeight;
+            return Mathf.Clamp(Mathf.FloorToInt(room / TrapWeight), 1, max);
+        }
+
         /// <summary>Points the level's traps and accidents add, before any enemy.</summary>
-        public static float FixedCost(int level) => TrapCount(level) * TrapWeight + (EventsOn(level) ? EventWeight : 0f);
+        public static float FixedCost(int level, float shapeScore) =>
+            Traps(level, shapeScore) * TrapWeight + (EventsOn(level) ? EventWeight : 0f);
 
         // A debut fills slot 0 with the new kind; for NewcomerLevels after it the newest still leads;
         // the other slots (and every other level) rotate through the unlocked kinds, one step a

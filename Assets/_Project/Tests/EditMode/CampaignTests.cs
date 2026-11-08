@@ -7,13 +7,16 @@ namespace DrawRush.Tests.EditMode
     /// <summary>The campaign rule book and the sawtooth it produces, checked on paper.</summary>
     public sealed class CampaignTests
     {
-        // The 34 shapes of 1.5.0 (score, authored enemies), so the sawtooth is tested on the real mix.
+        // The 54 shapes of 1.6.0 (score, authored enemies), so the sawtooth is tested on the real mix.
         private static readonly (float score, int enemies)[] RealShapes =
         {
             (5.6f, 2), (4.1f, 1), (6.0f, 1), (7.3f, 2), (5.0f, 2), (4.0f, 2), (7.0f, 2), (8.0f, 2), (4.0f, 2), (6.5f, 2),
             (9.0f, 3), (10.0f, 2), (12.0f, 3), (4.3f, 4), (12.0f, 3), (7.9f, 1), (9.2f, 5), (5.1f, 3), (7.0f, 4), (6.4f, 5),
             (6.1f, 4), (7.3f, 5), (12.9f, 4), (11.5f, 5), (16.1f, 3), (17.9f, 4), (15.9f, 5), (17.2f, 4), (5.1f, 3), (6.7f, 4),
             (6.2f, 5), (11.4f, 4), (5.4f, 5), (9.1f, 6),
+            // the 20 added in 1.6.0
+            (5.4f, 3), (5.3f, 3), (7.1f, 3), (7.7f, 3), (7.0f, 3), (8.3f, 3), (9.9f, 3), (8.1f, 3), (9.3f, 3), (8.2f, 3),
+            (8.7f, 3), (8.1f, 3), (8.6f, 3), (6.9f, 3), (8.0f, 3), (8.9f, 3), (8.3f, 3), (8.6f, 3), (11.9f, 3), (11.3f, 3),
         };
 
         private static List<CampaignSimulator.Shape> Shapes()
@@ -140,7 +143,7 @@ namespace DrawRush.Tests.EditMode
         [Test]
         public void Sawtooth_OnTheRealShapes_DropsClimbsAndHitsItsTargets()
         {
-            List<CampaignSimulator.Row> rows = CampaignSimulator.Run(Shapes(), 110);
+            List<CampaignSimulator.Row> rows = CampaignSimulator.Run(Shapes(), 130);
             float gap = 0f;
             int counted = 0;
             var last = new Dictionary<int, int>();

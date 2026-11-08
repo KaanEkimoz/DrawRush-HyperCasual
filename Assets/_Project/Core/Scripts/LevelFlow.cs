@@ -29,20 +29,8 @@ namespace DrawRush.Core
         [SerializeField] private AdManager ads;
 
         [Header("Difficulty Curve")]
-        [Tooltip("Difficulty target for the very first level after the tutorial. Low enough that " +
-                 "the bag picks the simplest shape and the enemy budget works out to zero.")]
-        [SerializeField] private float minTarget = 3f;
-
-        [Tooltip("Difficulty target at the very top of the curve. Keep this inside what the levels " +
-                 "can actually be dialled up to (shape + every authored enemy) — set it higher and " +
-                 "the peaks just sit permanently under target. 34 levels: 9 reach 20, only 4 reach 24.")]
-        [SerializeField] private float maxTarget = 21f;
-
-        [Tooltip("Levels per sawtooth tooth: difficulty climbs for this many, then drops to minTarget.")]
-        [SerializeField] private int sawPeriod = 5;
-
-        [Tooltip("Levels it takes for the teeth to grow from a beginner's peak to the full maxTarget.")]
-        [SerializeField] private int rampLevels = 30;
+        // The curve itself (floor, peak, tooth length, ramp) lives in Campaign, with the rest of
+        // the campaign rules, so traps and accidents read the same targets.
 
         [Tooltip("How many of the closest-to-target levels the bag chooses between. 1 = a fixed " +
                  "campaign: every player gets the same order (Kaan: levels must feel like 1→2→3, " +
@@ -93,7 +81,7 @@ namespace DrawRush.Core
             // underneath, so closing it reveals a ready level. No-ops unless both gates pass and an
             // ad is loaded.
             if (ads != null) ads.MaybeShowInterstitial();
-            float target = LevelDifficulty.SawtoothTarget(played, sawPeriod, minTarget, maxTarget, rampLevels);
+            float target = Campaign.Target(played + 1);
 
             int next = _bag.Draw(target, i => AttainableScore(i, target), DrawableLevels());
             if (next < 0) return;
@@ -129,7 +117,7 @@ namespace DrawRush.Core
             // The level on screen is number LevelsPlayed; NextLevel aimed it at the curve one step
             // back (the count before it was bumped), so the same target is used here.
             int number = Mathf.Max(1, PlayerProgress.LevelsPlayed);
-            float target = LevelDifficulty.SawtoothTarget(number - 1, sawPeriod, minTarget, maxTarget, rampLevels);
+            float target = Campaign.Target(number);
             int enemies = EnemiesFor(number, target, level);
             LevelDifficulty.ApplyEnemyBudget(level, enemies);
             PlayerProgress.LastLevelEnemies = enemies;   // persist so a relaunch restores this count
@@ -157,14 +145,14 @@ namespace DrawRush.Core
         /// its shape, the traps and accidents the campaign puts on that level, and the enemies the
         /// budget adds on top.</summary>
         public static float Attainable(int number, float target, float shape, int available) =>
-            shape + Campaign.FixedCost(number) + Enemies(number, target, shape, available) * LevelDifficulty.EnemyWeight;
+            shape + Campaign.FixedCost(number, shape) + Enemies(number, target, shape, available) * LevelDifficulty.EnemyWeight;
 
         /// <summary>Enemies for campaign level <paramref name="number"/>: whatever closes the gap
         /// to the target once the shape, traps and accidents are counted, within the campaign's cap
         /// for that level (none on breathers and under trap / accident debuts, one for a debut).</summary>
         public static int Enemies(int number, float target, float shape, int available) =>
             Mathf.Min(Mathf.Min(Campaign.EnemyCap(number), available), Mathf.Max(Campaign.EnemyFloor(number),
-                LevelDifficulty.EnemyBudget(target - Campaign.FixedCost(number), shape, available)));
+                LevelDifficulty.EnemyBudget(target - Campaign.FixedCost(number, shape), shape, available)));
 
         /// <summary>The bag's ranking score: what the level is worth, with debut levels steered to
         /// simple shapes (a new thing is learnt on an easy page).</summary>

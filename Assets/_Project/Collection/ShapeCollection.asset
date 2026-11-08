@@ -115,3 +115,63 @@ MonoBehaviour:
   - levelIndex: 34
     displayName: Cherries
     illustration: {fileID: 21300000, guid: ab2c847cf7b274ab08aebe3c205f63fc, type: 3}
+  - levelIndex: 35
+    displayName: Diamond
+    illustration: {fileID: 21300000, guid: 3cd2788d462fc4b7a9375b904c0db5e9, type: 3}
+  - levelIndex: 36
+    displayName: Kite
+    illustration: {fileID: 21300000, guid: 04d954f841af94029bd0c488bae1bd53, type: 3}
+  - levelIndex: 37
+    displayName: House
+    illustration: {fileID: 21300000, guid: aaff4f86671e54db6a92c927aac1f1fe, type: 3}
+  - levelIndex: 38
+    displayName: Moon
+    illustration: {fileID: 21300000, guid: 88e899c124bc74947afa6e21034e0b97, type: 3}
+  - levelIndex: 39
+    displayName: Leaf
+    illustration: {fileID: 21300000, guid: 8276963b11f0e441c9c34213fa4c2e5d, type: 3}
+  - levelIndex: 40
+    displayName: Heart
+    illustration: {fileID: 21300000, guid: 7f8d6107b50514a1aa1798c6f92eb8c9, type: 3}
+  - levelIndex: 41
+    displayName: Cloud
+    illustration: {fileID: 21300000, guid: ab045dd8ba2d74f2fa6f82018acfef4f, type: 3}
+  - levelIndex: 42
+    displayName: Lightning
+    illustration: {fileID: 21300000, guid: 57cb5ec55354d4ab8883688448a95403, type: 3}
+  - levelIndex: 43
+    displayName: Crown
+    illustration: {fileID: 21300000, guid: dcb2419de9ba14441830c2657e2b6f98, type: 3}
+  - levelIndex: 44
+    displayName: Fish
+    illustration: {fileID: 21300000, guid: b487005c38eff4d5687c99b8400f9729, type: 3}
+  - levelIndex: 45
+    displayName: Hourglass
+    illustration: {fileID: 21300000, guid: fb74de0d13e7c409bbdfadd351e57a85, type: 3}
+  - levelIndex: 46
+    displayName: Arrow
+    illustration: {fileID: 21300000, guid: e731bdd78fb974a6e9d42b6cb6390851, type: 3}
+  - levelIndex: 47
+    displayName: Umbrella
+    illustration: {fileID: 21300000, guid: 3c41a0cb097644da3ae67da937ca31f0, type: 3}
+  - levelIndex: 48
+    displayName: Gem
+    illustration: {fileID: 21300000, guid: 4cde51a97f6cf41e293691c0d90a5752, type: 3}
+  - levelIndex: 49
+    displayName: Cat
+    illustration: {fileID: 21300000, guid: 899f09f3d2ddf48f4804fe9cdc8edd07, type: 3}
+  - levelIndex: 50
+    displayName: Rocket
+    illustration: {fileID: 21300000, guid: 29865d1ecabaf4c179d8bf3ec60b2488, type: 3}
+  - levelIndex: 51
+    displayName: Sailboat
+    illustration: {fileID: 21300000, guid: 4e493ef6d47464edea910a25923cba69, type: 3}
+  - levelIndex: 52
+    displayName: Key
+    illustration: {fileID: 21300000, guid: 34b4fc5d1cf2540a793f5c3c010d3e5a, type: 3}
+  - levelIndex: 53
+    displayName: Pine Tree
+    illustration: {fileID: 21300000, guid: c8d81a04592e3473ba829f14f02806c6, type: 3}
+  - levelIndex: 54
+    displayName: Castle
+    illustration: {fileID: 21300000, guid: b34b3c5c290454322863b9277d935c9f, type: 3}
