@@ -71,23 +71,40 @@ namespace DrawRush.Collection
             return $"{owned}/{collection.Count}";
         }
 
-        // A small count under the button, so the goal shows before the screen is opened.
+        // A small count badge on the button's top-right corner, so the goal shows before the screen
+        // is opened. It used to hang under the button, where it ran into the button below (the
+        // rewarded x2); above the row there is room.
         private void AddCountLabel(Button button)
         {
             if (collection == null) return;
+            var badge = new GameObject("CountBadge", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+            var brt = badge.GetComponent<RectTransform>();
+            brt.SetParent(button.transform, false);
+            brt.anchorMin = brt.anchorMax = new Vector2(1f, 1f);
+            brt.pivot = new Vector2(0.5f, 0.5f);
+            brt.anchoredPosition = new Vector2(-14f, -8f);
+            brt.sizeDelta = new Vector2(96f, 40f);
+            var bg = badge.GetComponent<Image>();
+            if (button.image != null && button.image.sprite != null)
+            {
+                bg.sprite = button.image.sprite;   // the same doodle pill as the buttons
+                bg.type = button.image.type;
+                bg.pixelsPerUnitMultiplier = button.image.pixelsPerUnitMultiplier;
+            }
+            bg.color = countColor;
+            bg.raycastTarget = false;
+
             var go = new GameObject("Count", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI), typeof(CollectionCountLabel));
             var rt = go.GetComponent<RectTransform>();
-            rt.SetParent(button.transform, false);
-            rt.anchorMin = new Vector2(0f, 0f);
-            rt.anchorMax = new Vector2(1f, 0f);
-            rt.pivot = new Vector2(0.5f, 1f);
-            rt.anchoredPosition = new Vector2(0f, -8f);
-            rt.sizeDelta = new Vector2(0f, 56f);
+            rt.SetParent(brt, false);
+            rt.anchorMin = Vector2.zero;
+            rt.anchorMax = Vector2.one;
+            rt.offsetMin = rt.offsetMax = Vector2.zero;
             var label = go.GetComponent<TextMeshProUGUI>();
             if (font != null) label.font = font;
             label.alignment = TextAlignmentOptions.Center;
-            label.fontSize = 46f;
-            label.color = countColor;
+            label.fontSize = 30f;
+            label.color = Color.white;
             label.raycastTarget = false;
             go.GetComponent<CollectionCountLabel>().Bind(label, CountText);
         }
