@@ -5,6 +5,13 @@
 
 ---
 
+## 🍎 iOS İLK SÜRÜM — 12 Kas 2026: 1.6.0 (1) TestFlight'ta, inceleme GÖNDERİLMEDİ (dal `ios-release`, push yok)
+- Ayrıntı ve tekrar akışı: `AppStore/IOS_RELEASE.md`. ASC app **6834031898**, bundle `com.ekimozgames.drawrush`, profil `Draw Rush App Store` (manuel imza; otomatik imza "takımda cihaz yok" diye düşüyor).
+- Build CLI ile alınır, Unity'nin ana Android editörüne dokunulmaz: worktree'de `cp -c` Library klonu + `Unity -batchmode -buildTarget iOS -executeMethod IosBuild.Build`, sonra `xcodebuild archive` + `-exportArchive` (upload). Cihaz ayarı değişirse `Builds/iOS`'u sil (append, eski iPad storyboard referansını bırakıyor).
+- Kod: `AdConfig` iOS alanları + `AppKey` platforma göre; `IosBuildPostProcess` (ATT yok, manifest tracking=false, exempt encryption); iPhone only; build no 1.
+- LevelPlay iOS app key `298249335` + 3 ad unit, `AdConfig.asset`'te. Reklamlar cihazda denenmedi.
+- ASC: 4 dil metin + her dilde 5 adet 6.3" görsel + kategori; build sürüme bağlı. **Kaan'da:** content rights, age rating, App Privacy (tracking hep No), fiyat Free + ülkeler, review iletişim + telefon, TestFlight'a kendini internal tester ekleyip denemek, sonra Submit.
+
 ## 🧭 Yeni yön — 31 Eki 2026: Defter Doodle + Kırtasiye Çetesi (henüz kod yok)
 - Kaan seçti: tasarım dili Defter Doodle; düşmanlar zımba (normal), makas (hızlı), delgeç (tank), kalemtıraş (çizgi yiyen), raptiye (atılan). Kalem kahraman.
 - Eklenecek: can = kalemin boyu, mürekkep hokkası pickup, Sakar Devler (kahve fincanı, masa sallanması), Dev Silgi boss, kahraman sınıfları (Kurşun/Tükenmez/Fırça).
