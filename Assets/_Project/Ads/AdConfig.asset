@@ -16,6 +16,10 @@ MonoBehaviour:
   interstitialAdUnitId: gn5krubs30l4gsgf
   rewardedAdUnitId: yucbr0o8l7jz27n7
   bannerAdUnitId: p1q6pbiz873u0hym
+  iosAppKey: 298249335
+  iosInterstitialAdUnitId: zw6f608gtz9xwlez
+  iosRewardedAdUnitId: 75tx7fdrr71vcwen
+  iosBannerAdUnitId: uj8pmgtaf84nvjei
   simulateRewardedInEditor: 1
   interstitialEveryNWins: 3
   minSecondsBetweenAds: 90
