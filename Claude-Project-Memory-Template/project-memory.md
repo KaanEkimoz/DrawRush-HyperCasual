@@ -10,7 +10,7 @@
 - Build CLI ile alınır, Unity'nin ana Android editörüne dokunulmaz: worktree'de `cp -c` Library klonu + `Unity -batchmode -buildTarget iOS -executeMethod IosBuild.Build`, sonra `xcodebuild archive` + `-exportArchive` (upload). Cihaz ayarı değişirse `Builds/iOS`'u sil (append, eski iPad storyboard referansını bırakıyor).
 - Kod: `AdConfig` iOS alanları + `AppKey` platforma göre; `IosBuildPostProcess` (ATT yok, manifest tracking=false, exempt encryption); iPhone only; build no 1.
 - LevelPlay iOS app key `298249335` + 3 ad unit, `AdConfig.asset`'te. Reklamlar cihazda denenmedi.
-- ASC: 4 dil metin + her dilde 5 adet 6.3" görsel + kategori; build sürüme bağlı. **Kaan'da:** content rights, age rating, App Privacy (tracking hep No), fiyat Free + ülkeler, review iletişim + telefon, TestFlight'a kendini internal tester ekleyip denemek, sonra Submit.
+- ASC: 4 dil metin + her dilde 5 adet 6.3" görsel + kategori; build sürüme bağlı. Brick Crack'ten kopyalandı (Kaan onayı): content rights, age rating 4+, App Privacy (4 tür, tracking yok, YAYINDA), review iletişim + not, Free + 175 ülke. **Kaan'da:** TestFlight'ta kendini internal tester ekleyip iPhone'da denemek, sonra Add for Review → Submit.
 
 ## 🧭 Yeni yön — 31 Eki 2026: Defter Doodle + Kırtasiye Çetesi (henüz kod yok)
 - Kaan seçti: tasarım dili Defter Doodle; düşmanlar zımba (normal), makas (hızlı), delgeç (tank), kalemtıraş (çizgi yiyen), raptiye (atılan). Kalem kahraman.

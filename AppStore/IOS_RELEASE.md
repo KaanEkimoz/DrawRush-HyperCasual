@@ -33,21 +33,17 @@ UnityAds adaptörü (5.11.0.0) Xcode 26.5 ile sorunsuz link'lendi — Brick Crac
 - Telif: `2026 Ekimoz Games`. Kategori: Games › Casual + Puzzle.
 - Ekran görüntüleri: her dilde 5 adet iPhone 6.3" (1206×2622). Play görsellerinden (1080×1920) kâğıt rengiyle üst/alt dolgu (`AppStore/screenshots/<dil>/`). 6.5" (1284×2778) kopyaları da klasörde.
 
-## Kaan'ın yapması gerekenler (beyan / hesap işleri)
-1. **Content Rights** (App Information): "No, it does not contain, show, or access third-party content" — Kaan beyan etmeli.
-2. **Age Rating** anketi: yalnız *Advertising = Yes* (reklam var), şiddet sorularında karikatür/fantastik çatışma için "Infrequent/Mild" mi "None" mı Kaan karar versin (düşmanlar kovalıyor, kan/ölüm yok). Brick Crack'te sonuç 4+ oldu.
-3. **App Privacy** (LevelPlay resmi listesi, ATT yok → tracking **No**):
-   | Veri türü | Kullanıcıya bağlı | Takip | Amaç |
-   |---|---|---|---|
-   | Identifiers › Device ID | No | **No** | Third-Party Advertising |
-   | Usage Data › Product Interaction | No | No | Third-Party Advertising |
-   | Usage Data › Advertising Data | No | No | Third-Party Advertising |
-   | Diagnostics › Performance Data | No | No | Third-Party Advertising |
-   Brick Crack'te "tracking Yes" binary'deki ATT ile çelişti diye reddedildi; burada binary'de ATT metni yok, manifest tracking=false → hepsi **No** olmalı.
-4. **Pricing and Availability**: Free, tüm ülkeler (DSA trader durumu AB için hâlâ "In Review" olabilir).
-5. **App Review Information**: ad, soyad, e-posta, **telefon**; "Sign-in required" işaretsiz. Not önerisi:
-   > Draw Rush is a one-finger drawing game. Move with one finger; the pencil draws where it runs. Trace the dotted outline to finish a level while enemies chase you. No account or login. Ads are served by Unity LevelPlay (non-personalised unless the player consents in the EU/UK prompt); the app does not request App Tracking Transparency.
-6. Build işlenince sürüme **build 1.6.0 (1)**'i seç → TestFlight'ta kendi iPhone'unda dene → **Add for Review → Submit** (Kaan onayı).
+## Brick Crack'ten kopyalananlar (12 Kas 2026, Kaan onayıyla)
+- **Content Rights:** Does not use third-party content.
+- **Age Rating:** Brick Crack'in anketi bire bir (yalnız Advertising = Yes) → **4+**.
+- **App Privacy (YAYINDA):** Device ID, Product Interaction, Advertising Data, Performance Data — hepsi Not Linked, tracking yok, amaç Third-Party Advertising.
+- **App Review Information:** iletişim bilgileri Brick Crack'ten, Sign-in required işaretsiz, not:
+  > Draw Rush is a one-finger drawing game. Move with one finger; the pencil draws where it runs. Trace the dotted outline to finish a level while enemies chase you. No account or login. Ads are served by Unity LevelPlay (non-personalised unless the player consents in the EU/UK prompt); the app does not request App Tracking Transparency.
+- **Pricing and Availability:** Free (taban ABD), Brick Crack'le aynı 175 ülke, yeni ülkelerde otomatik.
+
+## Kaan'ın yapması gerekenler
+1. TestFlight'ta kendini internal tester ekle → iPhone'da oyun + reklam testi.
+2. Sürüm sayfasında **Add for Review → Submit** (Kaan onayı).
 
 ## Bilinen eksikler / sonra
 - Ekran görüntüleri Android görsellerinden uyarlandı (üst/alt düz kâğıt bandı). Gerçek 19.5:9 iPhone görüntüleri sonra çekilebilir.
