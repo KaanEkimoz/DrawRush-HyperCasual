@@ -26,6 +26,20 @@ namespace DrawRush.Ads
                  "console → Ad Units.")]
         [SerializeField] private string bannerAdUnitId = "";
 
+        [Header("LevelPlay (ironSource) — iOS")]
+        [Tooltip("LevelPlay App Key for the iOS app (a separate app in the LevelPlay console). " +
+                 "Empty = no ads on iOS.")]
+        [SerializeField] private string iosAppKey = "";
+
+        [Tooltip("iOS Interstitial Ad Unit ID. Ad units belong to one app, so iOS has its own.")]
+        [SerializeField] private string iosInterstitialAdUnitId = "";
+
+        [Tooltip("iOS Rewarded Ad Unit ID. Empty = the rewarded offers stay hidden on iOS.")]
+        [SerializeField] private string iosRewardedAdUnitId = "";
+
+        [Tooltip("iOS Banner Ad Unit ID. Empty = no banner on iOS.")]
+        [SerializeField] private string iosBannerAdUnitId = "";
+
         [Tooltip("Editor only: pretend a rewarded ad was watched, so the offer flows can be tested " +
                  "without a device (ads never fill in the Editor).")]
         [SerializeField] private bool simulateRewardedInEditor = true;
@@ -45,9 +59,20 @@ namespace DrawRush.Ads
         [SerializeField] private bool verboseLogging = false;
 
         public string AndroidAppKey => androidAppKey;
+
+#if UNITY_IOS
+        /// <summary>App Key of the platform this build runs on.</summary>
+        public string AppKey => iosAppKey;
+        public string InterstitialAdUnitId => iosInterstitialAdUnitId;
+        public string RewardedAdUnitId => iosRewardedAdUnitId;
+        public string BannerAdUnitId => iosBannerAdUnitId;
+#else
+        /// <summary>App Key of the platform this build runs on.</summary>
+        public string AppKey => androidAppKey;
         public string InterstitialAdUnitId => interstitialAdUnitId;
         public string RewardedAdUnitId => rewardedAdUnitId;
         public string BannerAdUnitId => bannerAdUnitId;
+#endif
         public bool SimulateRewardedInEditor => simulateRewardedInEditor;
         public int InterstitialEveryNWins => interstitialEveryNWins;
         public float MinSecondsBetweenAds => minSecondsBetweenAds;

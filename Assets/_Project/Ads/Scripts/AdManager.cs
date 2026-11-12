@@ -42,7 +42,7 @@ namespace DrawRush.Ads
                 Debug.LogWarning("[Ads] No AdConfig assigned — ads disabled.");
                 return;
             }
-            if (string.IsNullOrEmpty(config.AndroidAppKey))
+            if (string.IsNullOrEmpty(config.AppKey))
             {
                 Debug.LogWarning("[Ads] AdConfig has no App Key — ads disabled.");
                 return;
@@ -67,7 +67,7 @@ namespace DrawRush.Ads
         private void InitSdk()
         {
             AdConsent.Apply();
-            LevelPlay.Init(config.AndroidAppKey);
+            LevelPlay.Init(config.AppKey);
         }
 
         // The banner sits where the thumb lands for the joystick, so it only shows while the game
@@ -247,7 +247,7 @@ namespace DrawRush.Ads
         private void OnInitFailed(LevelPlayInitError error)
         {
             Debug.LogWarning($"[Ads] LevelPlay init failed: {error}");
-            RetryLater(_initTries++, () => { if (!_initialised) LevelPlay.Init(config.AndroidAppKey); });
+            RetryLater(_initTries++, () => { if (!_initialised) LevelPlay.Init(config.AppKey); });
         }
 
         /// <summary>
