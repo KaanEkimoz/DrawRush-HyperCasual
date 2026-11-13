@@ -41,6 +41,10 @@ UnityAds adaptörü (5.11.0.0) Xcode 26.5 ile sorunsuz link'lendi — Brick Crac
   > Draw Rush is a one-finger drawing game. Move with one finger; the pencil draws where it runs. Trace the dotted outline to finish a level while enemies chase you. No account or login. Ads are served by Unity LevelPlay (non-personalised unless the player consents in the EU/UK prompt); the app does not request App Tracking Transparency.
 - **Pricing and Availability:** Free (taban ABD), Brick Crack'le aynı 175 ülke, yeni ülkelerde otomatik.
 
+## 13 Kas 2026 — Ret: Guideline 2.1 Information Needed (gönderim 11f07e98, sürüm REJECTED)
+Apple fiziksel cihazda ekran kaydı + 5 açıklama istedi. Açıklamalar (madde 2-6) yazıldı ve App Review Notes'a girildi: `AppStore/review_notes_2.1.txt`.
+Kalan: (1) Kaan TestFlight'tan iPhone'a kurar (henüz beta grubu yok), (2) açılıştan başlayan ekran kaydı: menü → Level 1 tutorial → bir level kazan/kaybet → mağaza → ödüllü reklam, (3) video App Review Information'a ek olarak yüklenir, (4) Kaan "Resubmit".
+
 ## Kaan'ın yapması gerekenler
 1. TestFlight'ta kendini internal tester ekle → iPhone'da oyun + reklam testi.
 2. Sürüm sayfasında **Add for Review → Submit** (Kaan onayı).

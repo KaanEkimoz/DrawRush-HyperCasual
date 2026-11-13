@@ -1,0 +1,25 @@
+1. Screen recording
+A screen recording made on a physical iPhone (latest iOS), starting from the app launch and showing the typical flow, is attached to this App Review Information section.
+The app has no account registration, no login, no user-generated content and no paid content (no In-App Purchases).
+
+2. Purpose and target audience
+Draw Rush is a casual, offline drawing-and-chase game for a general audience (rated 4+). The player steers a pencil character with one finger. Each level shows a dashed shape outline on the ground; walking over the outline paints it. The level is complete when the shape is fully painted, while simple cartoon enemies chase the player and power-ups appear on the field. It offers short, relaxing sessions (about one minute per level, 55 levels) that combine shape tracing with light action, for players who want a quick, easy-to-learn game.
+
+3. Setup and main features
+No setup, login or sample files are needed. Launch the app and start Level 1 from the main screen; the first level is a short guided tutorial.
+- Movement: touch and drag anywhere on the screen (virtual joystick).
+- Goal: walk over the dashed outline until the shape is fully painted.
+- Enemies: avoid them; touching one costs health (shown as pencil length). The level fails at zero health.
+- Boosters: pick up items on the field (shield, freeze enemies, speed, shockwave, ink bottle that restores health). Double-tap to dash.
+- Coins earned in levels buy upgrades and cosmetic items in the in-game shop (coins only, no real money).
+- Optional rewarded videos (never forced, never mid-level): "Second chance" or "Retry with a shield" after a fail, "Start with a shield", and "x2 coins" after a win.
+
+4. External services
+- Unity LevelPlay (ironSource) mediation with the Unity Ads network, used only to show ads (interstitial, rewarded, banner).
+No other third-party services: no analytics, authentication, payment processor, data provider or AI service. Gameplay works fully offline.
+
+5. Regional differences
+The app works the same in all regions. The only difference: the first time ads load, the app asks once for ad-personalisation consent (personalised vs non-personalised ads). On iOS this prompt is shown to all players. The app does not request App Tracking Transparency.
+
+6. Regulated industry / third-party material
+Not applicable. The app is not in a regulated industry and contains no protected third-party material; all art, characters and levels are original to Ekimoz Games.
