@@ -51,6 +51,8 @@ Build 1'de iPhone'da: ses yok (Unity'nin Ambient oturumu sessiz düğmesine uyuy
 Simülatör build'i: `Unity ... -executeMethod IosBuild.BuildSimulator` → `Builds/iOS-Simulator`, `xcodebuild -sdk iphonesimulator ARCHS=arm64`.
 Kaan'ın ilk ekran kaydı (build 1) akışı kapsıyor ama sessiz ve dişli çakışması görünüyor → build 2 ile yeniden çekilmesi önerildi; yeniden gönderimde build 2 seçilmeli.
 
+Build 2 işlendi (VALID), "Review Recording" grubuna eklendi, "What to Test" yazıldı. Beta incelemesine gönderilemedi: build 1 hâlâ WAITING_FOR_REVIEW ve Apple aynı sürümde ikinci gönderimi kabul etmiyor → build 1 onaylanınca build 2'yi beta incelemesine gönder.
+
 ## Kaan'ın yapması gerekenler
 1. TestFlight'ta kendini internal tester ekle → iPhone'da oyun + reklam testi.
 2. Sürüm sayfasında **Add for Review → Submit** (Kaan onayı).
