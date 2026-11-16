@@ -47,8 +47,8 @@ namespace DrawRush.Player
             _trail.widthCurve = new AnimationCurve(new Keyframe(0f, 0.55f), new Keyframe(1f, 0f));
             _trail.material = new Material(Shader.Find("Sprites/Default"));
             var g = new Gradient();
-            g.SetKeys(new[] { new GradientColorKey(new Color(0.35f, 0.55f, 1f), 0f), new GradientColorKey(Color.white, 1f) },
-                      new[] { new GradientAlphaKey(0.7f, 0f), new GradientAlphaKey(0f, 1f) });
+            g.SetKeys(new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },   // white streak (Kaan)
+                      new[] { new GradientAlphaKey(0.85f, 0f), new GradientAlphaKey(0f, 1f) });
             _trail.colorGradient = g;
             _trail.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             _trail.emitting = false;
