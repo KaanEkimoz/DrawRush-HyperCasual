@@ -136,6 +136,7 @@ namespace DrawRush.Ads
         {
             _initialised = true;
             _initTries = 0;
+            Audio.IosAudioSession.Apply();   // SDK init can reset the audio session category
             if (config.VerboseLogging) Debug.Log("[Ads] LevelPlay init success.");
 
             SetUpRewarded();
@@ -148,7 +149,11 @@ namespace DrawRush.Ads
             }
 
             _interstitial = new LevelPlayInterstitialAd(config.InterstitialAdUnitId);
-            _interstitial.OnAdClosed += _ => _interstitial.LoadAd();          // preload the next one
+            _interstitial.OnAdClosed += _ =>
+            {
+                Audio.IosAudioSession.Apply();   // the ad may leave its own audio session behind
+                _interstitial.LoadAd();          // preload the next one
+            };
             _interstitial.OnAdDisplayFailed += (_, __) => _interstitial.LoadAd();
             _interstitial.OnAdLoaded += _ =>
             {
@@ -175,6 +180,7 @@ namespace DrawRush.Ads
             _rewarded.OnAdClosed += _ =>
             {
                 MarkAdShown();
+                Audio.IosAudioSession.Apply();
                 _rewardClosed = true;
                 _rewarded.LoadAd();
                 TryGrantReward();

@@ -24,6 +24,10 @@ namespace DrawRush.UI
         [SerializeField] private Color offColor = new(0.35f, 0.35f, 0.4f, 1f);
 
         private GameObject _panel;
+        private RectTransform _menuButton;
+        private Canvas _canvas;
+        private Rect _appliedSafeArea;
+        private float _appliedScale;
         private TextMeshProUGUI _vibrationLabel, _joystickLabel, _adsLabel;
         private Image _vibrationButton, _joystickButton, _adsButton;
         private GameObject _consentPanel;
@@ -46,12 +50,32 @@ namespace DrawRush.UI
             var rt = (RectTransform)go.transform;
             rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0f, 1f);
             rt.sizeDelta = Vector2.one * buttonSize;
-            rt.anchoredPosition = buttonOffset;
+            _menuButton = rt;
+            _canvas = GetComponentInParent<Canvas>();
+            PlaceMenuButton();
             var img = go.GetComponent<Image>();
             img.sprite = buttonIcon != null ? buttonIcon : Circle(64);
             go.GetComponent<Button>().onClick.AddListener(Open);
             go.AddComponent<ButtonJuice>();
         }
+
+        // The sound and music buttons above the gear sit under a SafeAreaPadding that pushes them below
+        // the notch / Dynamic Island. The gear is built at runtime outside that panel, so it has to
+        // follow the same top inset itself, or on an iPhone it lands on top of the music button.
+        private void Update()
+        {
+            if (_menuButton != null && (Screen.safeArea != _appliedSafeArea || CanvasScale() != _appliedScale)) PlaceMenuButton();
+        }
+
+        private void PlaceMenuButton()
+        {
+            _appliedSafeArea = Screen.safeArea;
+            _appliedScale = CanvasScale();
+            float topInset = (Screen.height - _appliedSafeArea.yMax) / _appliedScale;
+            _menuButton.anchoredPosition = buttonOffset - new Vector2(0f, topInset);
+        }
+
+        private float CanvasScale() => _canvas != null && _canvas.scaleFactor > 0f ? _canvas.scaleFactor : 1f;
 
         private void BuildPanel()
         {

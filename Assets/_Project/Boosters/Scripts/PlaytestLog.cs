@@ -1,4 +1,3 @@
-#if DEVELOPMENT_BUILD || UNITY_EDITOR
 using System.IO;
 using System.Text;
 using DrawRush.Core;
@@ -14,7 +13,7 @@ namespace DrawRush.Boosters
     /// difficulty, booster and coin numbers can be tuned from real play instead of guesses. The
     /// file lives at Application.persistentDataPath/playtest_log.csv (on a device:
     /// <c>adb pull /sdcard/Android/data/com.ekimozgames.drawrush/files/playtest_log.csv</c>).
-    /// Compiled out of release builds.
+    /// The logging is compiled out of release builds.
     /// </summary>
     public sealed class PlaytestLog : MonoBehaviour
     {
@@ -22,6 +21,11 @@ namespace DrawRush.Boosters
         [SerializeField] private PlayerCombat combat;
         [SerializeField] private PlayerBoosts boosts;
         [SerializeField] private PlayerHealth health;
+
+        // Only the logging is compiled out of release builds. The class and its serialized fields
+        // stay, because the scene stores them: removing them made iOS release builds report
+        // "different serialization layout" on load and open the on-screen error console.
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
 
         private const string Header = "time,campaign_level,level,enemies,sprinters,tanks,eaters,dashers,result,seconds,coverage,hits,paint_lost,boosters,stars,coins";
 
@@ -110,6 +114,6 @@ namespace DrawRush.Boosters
             while (t.parent != null && t.parent.parent != null) t = t.parent;   // the level group under the levels root
             return t.name;
         }
+#endif
     }
 }
-#endif
