@@ -15,7 +15,7 @@
 | Field | `public` field yasak — `[SerializeField] private` veya property | [Kod Stili] |
 | Update | `Find*ByType`, `GetComponent`, `Camera.main`, `Resources.Load` Awake'te cache | [Performance] |
 | Branch | `claude-dev` Claude, `main` Kaan onayı + `--no-ff` | [Git] |
-| Commit | Conventional Commits, her özellik anında commit, **amend yok** | [Git] |
+| Commit | Conventional Commits, her özellik anında commit, **amend yok**, **sormadan commit'le** (2026-11-03) | [Git] |
 | MCP | Unity işi → önce Unity MCP, bağlı değilse Kaan'a sor | [Tooling] |
 | İzin gerekir | Package install, asmdef ekle, sahne sil, history rewrite, secret ekle | [İzin Sınırları] |
 | İzin gerekmez | Kod ekle/edit, yeni sahne, prefab/SO yarat, normal commit | [İzin Sınırları] |
@@ -33,6 +33,10 @@ Detaylar aşağıda.
 ### Konuşma Türkçe, kod ve yorumlar İngilizce
 **Kural:** Claude ile sohbet, dokümantasyon ve commit dışı metinler Türkçe. Kod, değişken/sınıf/fonksiyon isimleri, kod içi yorumlar (`//`, `///`) ve commit mesajları İngilizce.
 **Neden:** TR Kaan'ın ana dili — iletişim hızlı. EN kod ise Asset Store import'ları, Stack Overflow örnekleri ve olası takım üyeleriyle tutarlılığı garantiler.
+
+### Commit için izin sorma
+**Kural:** İş bitince değişiklikleri Kaan'a sormadan commit'le (sadece bu işin dosyaları). Push ve master merge yine Kaan istediğinde.
+**Neden:** Kaan 2026-11-03'te "artık benden izin istemeden hepsini commitle" dedi; her işin sonunda commit sorusu tempo kaybıydı.
 
 ### Plan sonrası uygula, izin isteme
 **Kural:** Plan tartışıldıktan sonra Claude küçük kararlar için onay beklemez — uygular ve özet rapor verir.
