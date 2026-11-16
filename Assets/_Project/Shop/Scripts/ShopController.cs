@@ -28,6 +28,10 @@ namespace DrawRush.Shop
         [Tooltip("The showroom area (top of the shop panel).")]
         [SerializeField] private RectTransform content;
         [SerializeField] private TMP_Text coinText;
+        [Tooltip("The in-game coin pill. The shop shows an exact copy of it in the same spot, so " +
+                 "opening the shop doesn't shift the coin counter.")]
+        [SerializeField] private RectTransform hudCoinPill;
+        private RectTransform _coinPill;
 
         [Header("Buttons")]
         [SerializeField] private Button openButton;
@@ -71,6 +75,7 @@ namespace DrawRush.Shop
         private void Awake()
         {
             _font = coinText != null ? coinText.font : null;
+            MirrorHudCoins();
             if (openButton != null) { openButton.onClick.AddListener(Open); BuildBadge(); }
             if (closeButton != null) closeButton.onClick.AddListener(Close);
             if (panel != null) panel.SetActive(false);
@@ -94,9 +99,36 @@ namespace DrawRush.Shop
 
         private void OnCoinsChanged(int total)
         {
-            if (coinText != null) coinText.text = total.ToString();
+            if (coinText != null) coinText.text = CoinHud.Abbreviate(total);
             Refresh();
             RefreshBadge();
+        }
+
+        // ---------- coin counter ----------
+
+        // The shop's own counter is replaced by a copy of the HUD pill (its CoinHud keeps the number
+        // current), laid exactly over the original.
+        private void MirrorHudCoins()
+        {
+            if (hudCoinPill == null || panel == null) return;
+            _coinPill = Instantiate(hudCoinPill, panel.transform);
+            _coinPill.name = "ShopCoins";
+            if (coinText != null)
+            {
+                coinText.gameObject.SetActive(false);
+                coinText = _coinPill.GetComponentInChildren<TMP_Text>(true);
+            }
+        }
+
+        private void AlignCoinPill()
+        {
+            if (_coinPill == null || hudCoinPill == null) return;
+            _coinPill.position = hudCoinPill.position;
+            _coinPill.rotation = hudCoinPill.rotation;
+            Vector3 hs = hudCoinPill.lossyScale, ps = _coinPill.parent.lossyScale;
+            _coinPill.localScale = new Vector3(hs.x / ps.x, hs.y / ps.y, 1f);
+            _coinPill.sizeDelta = hudCoinPill.rect.size;
+            _coinPill.SetAsLastSibling();
         }
 
         // ---------- "upgrades you can buy" badge on the shop button ----------
@@ -164,7 +196,8 @@ namespace DrawRush.Shop
             if (panel == null || IsOpen) return;   // MenuPause counts opens: never open twice
             MenuPause.Open();
             panel.SetActive(true);
-            if (coinText != null) coinText.text = PlayerProgress.Coins.ToString();
+            if (coinText != null) coinText.text = CoinHud.Abbreviate(PlayerProgress.Coins);
+            AlignCoinPill();
             // Start on the skin being worn.
             _target = Mathf.Max(0, IndexOf(Equipped));
             _scroll = _target;
