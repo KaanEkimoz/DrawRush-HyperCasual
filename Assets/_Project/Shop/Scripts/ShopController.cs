@@ -120,12 +120,12 @@ namespace DrawRush.Shop
             return n;
         }
 
-        // A red count bubble on the shop button's top-left corner.
+        // A red count bubble on the shop button's top-right corner.
         private void BuildBadge()
         {
             _badge = Child(openButton.transform, "UpgradeBadge", typeof(Image));
-            _badge.anchorMin = _badge.anchorMax = new Vector2(0f, 1f);
-            _badge.anchoredPosition = new Vector2(6f, -6f);
+            _badge.anchorMin = _badge.anchorMax = new Vector2(1f, 1f);
+            _badge.anchoredPosition = new Vector2(-6f, -6f);
             _badge.sizeDelta = new Vector2(60f, 60f);
             var img = _badge.GetComponent<Image>();
             RoundedSprite.Apply(img, new Color(0.93f, 0.22f, 0.25f, 1f), 3f);
