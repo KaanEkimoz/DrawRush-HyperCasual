@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using DrawRush.Core;
 using DrawRush.UI;
 using TMPro;
+using DrawRush.Localization;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -368,7 +369,7 @@ namespace DrawRush.Shop
             if (item.preview != null) { img.sprite = item.preview; img.color = Color.white; }
             else { img.sprite = characterSprite; img.color = item.color; }
 
-            var name = Text(root, item.displayName, 50f, Color.white);
+            var name = Text(root, Loc.T(item.displayName), 50f, Color.white);
             name.rectTransform.anchorMin = new Vector2(0f, 0.86f); name.rectTransform.anchorMax = Vector2.one;
             name.rectTransform.offsetMin = name.rectTransform.offsetMax = Vector2.zero;
             name.fontStyle = FontStyles.Bold;
@@ -413,7 +414,7 @@ namespace DrawRush.Shop
                     ? (c.Item.preview != null ? Color.white : c.Item.color)
                     : new Color(0.08f, 0.08f, 0.14f, 0.92f);
                 c.Glow.enabled = owned || reach;
-                c.Tag.text = worn ? "EQUIPPED" : owned ? "OWNED" : reach ? $"{c.Item.price} coins" : $"LOCKED  ·  {c.Item.price}";
+                c.Tag.text = worn ? Loc.T("EQUIPPED") : owned ? Loc.T("OWNED") : reach ? Loc.F("{0} coins", c.Item.price) : Loc.F("LOCKED  ·  {0}", c.Item.price);
                 c.Tag.color = worn ? equippedColor : owned ? new Color(1f, 1f, 1f, 0.7f) : lockedText;
                 if (i < _dots.Count)
                     _dots[i].color = i == _target ? Color.white : owned ? new Color(1f, 1f, 1f, 0.5f) : new Color(1f, 1f, 1f, 0.18f);
@@ -423,19 +424,19 @@ namespace DrawRush.Shop
             bool tOwned = Owned(_target), tReach = InReach(_target), tWorn = t.Item.id == equipped;
             _actionCoin.enabled = false;
             _hint.text = "";
-            if (tWorn) { SetAction("EQUIPPED", equippedColor, new Color(0.3f, 0.2f, 0f)); }
-            else if (tOwned) { SetAction("USE", useColor, Color.white); }
+            if (tWorn) { SetAction(Loc.T("EQUIPPED"), equippedColor, new Color(0.3f, 0.2f, 0f)); }
+            else if (tOwned) { SetAction(Loc.T("USE"), useColor, Color.white); }
             else if (!tReach)
             {
-                SetAction("LOCKED", cantColor, Color.white);
-                _hint.text = $"Unlock {_cards[FirstLocked()].Item.displayName} first";
+                SetAction(Loc.T("LOCKED"), cantColor, Color.white);
+                _hint.text = Loc.F("Unlock {0} first", Loc.T(_cards[FirstLocked()].Item.displayName));
             }
             else
             {
                 bool afford = PlayerProgress.Coins >= t.Item.price;
                 SetAction(t.Item.price.ToString(), afford ? buyColor : cantColor, Color.white);
                 _actionCoin.enabled = coinIcon != null;
-                if (!afford) _hint.text = $"{t.Item.price - PlayerProgress.Coins} more coins to unlock";
+                if (!afford) _hint.text = Loc.F("{0} more coins to unlock", t.Item.price - PlayerProgress.Coins);
                 LayoutCoin();
             }
         }

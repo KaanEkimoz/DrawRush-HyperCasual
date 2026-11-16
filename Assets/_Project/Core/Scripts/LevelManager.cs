@@ -217,8 +217,8 @@ namespace DrawRush.Core
             if (_hud == null) _hud = FindFirstObjectByType<HudPanels>();
             if (_hud == null) return;
             _hud.SetLevelText(index == tutorialLevelIndex
-                ? "Tutorial"
-                : "Level " + Mathf.Max(1, PlayerProgress.LevelsPlayed));
+                ? DrawRush.Localization.Loc.T("Tutorial")
+                : DrawRush.Localization.Loc.F("Level {0}", Mathf.Max(1, PlayerProgress.LevelsPlayed)));
         }
 
         // The countdown runs at timeScale 0: anything left of the last level (confetti, poofs, the

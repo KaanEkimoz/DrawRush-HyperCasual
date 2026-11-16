@@ -2,6 +2,7 @@ using DrawRush.Boosters;
 using DrawRush.Core;
 using DrawRush.UI;
 using TMPro;
+using DrawRush.Localization;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -24,9 +25,9 @@ namespace DrawRush.Player
             set { PlayerPrefs.SetInt(PracticeKey, value ? 1 : 0); PlayerPrefs.Save(); }
         }
 
-        public static string HowTo => Application.isMobilePlatform
+        public static string HowTo => Loc.T(Application.isMobilePlatform
             ? "Double-tap anywhere to dash"
-            : "Double-tap or press Space to dash";
+            : "Double-tap or press Space to dash");
 
         internal static RectTransform Child(Transform parent, string name, params System.Type[] components)
         {
@@ -169,7 +170,7 @@ namespace DrawRush.Player
             band.pivot = new Vector2(0.5f, 1f); band.sizeDelta = new Vector2(0f, 150f);
             RoundedSprite.Apply(band.GetComponent<Image>(), accent, 1.6f);
 
-            var title = DashTutorial.Text(_card, font, "DASH UNLOCKED!", 84f, Color.white);
+            var title = DashTutorial.Text(_card, font, Loc.T("DASH UNLOCKED!"), 84f, Color.white);
             title.rectTransform.anchorMin = new Vector2(0f, 1f); title.rectTransform.anchorMax = new Vector2(1f, 1f);
             title.rectTransform.sizeDelta = new Vector2(0f, 150f); title.rectTransform.anchoredPosition = new Vector2(0f, -75f);
             title.fontStyle = FontStyles.Bold;
@@ -187,7 +188,7 @@ namespace DrawRush.Player
             how.fontStyle = FontStyles.Bold;
 
             var why = DashTutorial.Text(_card, font,
-                "Dart past enemies, saws and spikes.\nYou can't be hurt mid-dash.\nUpgrades: further, more often.",
+                Loc.T("Dart past enemies, saws and spikes.\nYou can't be hurt mid-dash.\nUpgrades: further, more often."),
                 42f, new Color(1f, 1f, 1f, 0.85f));
             why.rectTransform.sizeDelta = new Vector2(760f, 190f); why.rectTransform.anchoredPosition = new Vector2(0f, -195f);
 
@@ -195,7 +196,7 @@ namespace DrawRush.Player
             btn.anchorMin = btn.anchorMax = new Vector2(0.5f, 0f);
             btn.sizeDelta = new Vector2(460f, 120f); btn.anchoredPosition = new Vector2(0f, 105f);
             RoundedSprite.Apply(btn.GetComponent<Image>(), new Color(0.25f, 0.8f, 0.4f, 1f), 1.2f);
-            var label = DashTutorial.Text(btn, font, "GOT IT!", 60f, Color.white);
+            var label = DashTutorial.Text(btn, font, Loc.T("GOT IT!"), 60f, Color.white);
             label.rectTransform.anchorMin = Vector2.zero; label.rectTransform.anchorMax = Vector2.one;
             label.rectTransform.offsetMin = label.rectTransform.offsetMax = Vector2.zero;
             label.fontStyle = FontStyles.Bold;
@@ -263,7 +264,7 @@ namespace DrawRush.Player
             RoundedSprite.Apply(pill.GetComponent<Image>(), new Color(0.1f, 0.1f, 0.2f, 0.82f), 2.4f);
             pill.GetComponent<Image>().raycastTarget = false;
 
-            var title = DashTutorial.Text(root, font, "TRY YOUR DASH!", 76f, Color.white);
+            var title = DashTutorial.Text(root, font, Loc.T("TRY YOUR DASH!"), 76f, Color.white);
             title.rectTransform.sizeDelta = new Vector2(820f, 100f); title.rectTransform.anchoredPosition = new Vector2(70f, 60f);
             title.fontStyle = FontStyles.Bold;
             var how = DashTutorial.Text(root, font, DashTutorial.HowTo, 46f, Color.Lerp(accent, Color.white, 0.45f));

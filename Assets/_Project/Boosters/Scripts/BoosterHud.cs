@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using TMPro;
+using DrawRush.Localization;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -58,9 +59,9 @@ namespace DrawRush.Boosters
 
         public void Toast(string title, string hint, Color color)
         {
-            _toastTitle.text = title;
+            _toastTitle.text = Loc.T(title);
             _toastTitle.color = color;
-            _toastHint.text = hint;
+            _toastHint.text = Loc.T(hint);
             _toastUntil = Time.unscaledTime + toastSeconds;
         }
 

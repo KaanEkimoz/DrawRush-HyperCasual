@@ -3,6 +3,7 @@ using DrawRush.Core;
 using DrawRush.Player;
 using DrawRush.UI;
 using TMPro;
+using DrawRush.Localization;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -88,11 +89,11 @@ namespace DrawRush.Boosters
                     () => BoosterUpgrades.NextPrice(type), () => BoosterUpgrades.TryUpgrade(type));
             }
             AddRow("Bump Pet", petColor, null,
-                () => BoosterUpgrades.PetLevel == 0 ? "Not owned" : $"Lv {BoosterUpgrades.PetLevel}",
+                () => BoosterUpgrades.PetLevel == 0 ? Loc.T("Not owned") : $"Lv {BoosterUpgrades.PetLevel}",
                 () => BoosterUpgrades.PetLevel, BoosterUpgrades.PetMaxLevel,
                 () => BoosterUpgrades.PetNextPrice, BoosterUpgrades.TryUpgradePet);
             AddRow("Brush Buddy", buddyColor, null,
-                () => BoosterUpgrades.BuddyLevel == 0 ? "Not owned" : $"Lv {BoosterUpgrades.BuddyLevel}",
+                () => BoosterUpgrades.BuddyLevel == 0 ? Loc.T("Not owned") : $"Lv {BoosterUpgrades.BuddyLevel}",
                 () => BoosterUpgrades.BuddyLevel, BoosterUpgrades.BuddyMaxLevel,
                 () => BoosterUpgrades.BuddyNextPrice, BoosterUpgrades.TryUpgradeBuddy);
         }
@@ -162,7 +163,7 @@ namespace DrawRush.Boosters
             else RoundedSprite.Apply(iconImg, accent, 3f);
 
             float textLeft = 22f + iconSize + 18f;
-            var name = Label(card.transform, title, h * 0.44f, TextAlignmentOptions.BottomLeft);
+            var name = Label(card.transform, Loc.T(title), h * 0.44f, TextAlignmentOptions.BottomLeft);
             Place(name.rectTransform, new Vector2(0f, 0.5f), new Vector2(0.62f, 1f), textLeft, -4f);
             name.fontStyle = FontStyles.Bold;
 
@@ -230,7 +231,7 @@ namespace DrawRush.Boosters
 
                 bool maxed = price < 0;
                 bool afford = !maxed && PlayerProgress.Coins >= price;
-                r.Price.text = maxed ? "MAX" : price.ToString();
+                r.Price.text = maxed ? Loc.T("MAX") : price.ToString();
                 r.Price.color = maxed ? new Color(0.35f, 0.22f, 0.02f) : Color.white;
                 r.Button.color = maxed ? maxColor : afford ? buyColor : cantColor;
                 r.CoinImage.enabled = !maxed && coinIcon != null;

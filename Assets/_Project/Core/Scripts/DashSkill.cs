@@ -45,6 +45,6 @@ namespace DrawRush.Core
         }
 
         /// <summary>The shop row's middle text.</summary>
-        public static string Describe() => Owned ? $"{Distance:0.#}m · {Cooldown:0.#}s" : "Locked";
+        public static string Describe() => Owned ? $"{Distance:0.#}m · {Cooldown:0.#}s" : DrawRush.Localization.Loc.T("Locked");
     }
 }

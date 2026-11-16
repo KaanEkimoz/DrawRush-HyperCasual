@@ -115,21 +115,21 @@ namespace DrawRush.Boosters
         public string TitleOf(BoosterType type)
         {
             string t = Get(type).title;
-            return string.IsNullOrEmpty(t) ? type.ToString().ToUpperInvariant() : t;
+            return DrawRush.Localization.Loc.T(string.IsNullOrEmpty(t) ? type.ToString().ToUpperInvariant() : t);
         }
 
         public string HintOf(BoosterType type)
         {
             string h = Get(type).hint;
-            if (!string.IsNullOrEmpty(h)) return h;
-            return type switch
+            if (!string.IsNullOrEmpty(h)) return DrawRush.Localization.Loc.T(h);
+            return DrawRush.Localization.Loc.T(type switch
             {
                 BoosterType.Shield => "Blocks the next hit",
                 BoosterType.Freeze => "Enemies freeze in place",
                 BoosterType.Speed => "You run faster",
                 BoosterType.Ink => "+1 health",
                 _ => "Blasts nearby enemies away",
-            };
+            });
         }
 
         /// <summary>True for boosters that only do something when enemies are on the field.</summary>
