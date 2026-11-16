@@ -53,6 +53,9 @@ Kaan'ın ilk ekran kaydı (build 1) akışı kapsıyor ama sessiz ve dişli çak
 
 Build 2 işlendi (VALID), "Review Recording" grubuna eklendi, "What to Test" yazıldı. Beta incelemesine gönderilemedi: build 1 hâlâ WAITING_FOR_REVIEW ve Apple aynı sürümde ikinci gönderimi kabul etmiyor → build 1 onaylanınca build 2'yi beta incelemesine gönder.
 
+## 16 Kas 2026 — YENİDEN GÖNDERİLDİ (Kaan'ın isteğiyle)
+Sürüm 1.6.0'a build **2** seçildi; ek: Kaan'ın build 1 ekran kaydı (`DrawRush_review_recording.mp4`, 600 px H.264, 8.9 MB, sessiz). Nota "kayıt build 1'den, build 2 yalnız ses + dişli düzeltmesi" eklendi. Gönderim 11f07e98 → WAITING_FOR_REVIEW. Kayıt yeniden istenirse build 2 ile, sesli çekilecek.
+
 ## Kaan'ın yapması gerekenler
 1. TestFlight'ta kendini internal tester ekle → iPhone'da oyun + reklam testi.
 2. Sürüm sayfasında **Add for Review → Submit** (Kaan onayı).
