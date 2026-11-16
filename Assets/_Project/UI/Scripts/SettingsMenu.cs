@@ -42,7 +42,10 @@ namespace DrawRush.UI
         private readonly Image[] _langChips = new Image[3];
         private readonly TextMeshProUGUI[] _langLabels = new TextMeshProUGUI[3];
         private TextMeshProUGUI _title, _resetLabel, _policyLabel, _closeLabel, _langHeader, _gameHeader, _moreHeader;
-        private float _resetArmedUntil;
+        private GameObject _confirm;
+        private RectTransform _confirmCard;
+        private float _confirmOpenedAt;
+        private readonly System.Collections.Generic.List<(Transform t, int index)> _raised = new();
         private Language _languageOnOpen;
         private GameObject _consentPanel;
         private System.Action<bool> _onConsent;
@@ -125,7 +128,7 @@ namespace DrawRush.UI
 
             _moreHeader = Section(card.transform, ref y);
             _policyLabel = ActionRow(card.transform, ref y, OpenPrivacyPolicy, rowColor);
-            _resetLabel = ActionRow(card.transform, ref y, ResetLevels, new Color(dangerColor.r, dangerColor.g, dangerColor.b, 0.85f));
+            _resetLabel = ActionRow(card.transform, ref y, AskReset, new Color(dangerColor.r, dangerColor.g, dangerColor.b, 0.85f));
 
             var close = NewUi("Close", card.transform, typeof(Image), typeof(Button));
             var clrt = (RectTransform)close.transform;
@@ -138,8 +141,7 @@ namespace DrawRush.UI
             _closeLabel = Label(close.transform, "", Vector2.zero, new Vector2(440f, 120f), 58f);
             _closeLabel.fontStyle = FontStyles.Bold;
 
-            var version = Label(card.transform, "v" + Application.version, new Vector2(0f, -560f), new Vector2(400f, 40f), 28f);
-            version.color = new Color(1f, 1f, 1f, 0.35f);
+            BuildConfirm();
         }
 
         private TextMeshProUGUI Section(Transform parent, ref float y)
@@ -232,14 +234,50 @@ namespace DrawRush.UI
             _openedAt = Time.unscaledTime;
             Refresh();
             _panel.SetActive(true);
+            RaiseSoundButtons();
         }
 
         public void Close()
         {
             if (!IsOpen) return;
+            HideConfirm();
             _panel.SetActive(false);
+            LowerSoundButtons();
             MenuPause.Close();
-            if (Loc.Current != _languageOnOpen) Reload();   // rebuild every label in the new language
+            if (Loc.Current != _languageOnOpen) { Reload(); return; }   // rebuild every label in the new language
+            CountDownBackIn();
+        }
+
+        // Back into a live level after the menu: 3-2-1 first, so the player isn't caught off guard.
+        // Not on the win/lose panels or while the level is wrapping up.
+        private void CountDownBackIn()
+        {
+            var state = GameServices.State;
+            if (state != null && (state.IsGameWon || state.IsFinishing)) return;
+            var hud = FindFirstObjectByType<HudPanels>();
+            if (hud != null && ((hud.WinPanel != null && hud.WinPanel.activeInHierarchy) || (hud.LosePanel != null && hud.LosePanel.activeInHierarchy))) return;
+            var countdown = FindFirstObjectByType<LevelStartCountdown>();
+            if (countdown != null) countdown.Begin();
+        }
+
+        // The sound and music buttons stay usable above the dimmed screen while the card is open.
+        private void RaiseSoundButtons()
+        {
+            _raised.Clear();
+            foreach (var b in FindObjectsByType<MuteButton>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+            {
+                if (b.transform.parent != transform.parent) continue;   // same canvas layer only
+                _raised.Add((b.transform, b.transform.GetSiblingIndex()));
+            }
+            foreach (var r in _raised) r.t.SetAsLastSibling();
+        }
+
+        private void LowerSoundButtons()
+        {
+            // Put them back in their original order (lowest index first).
+            _raised.Sort((a, b) => a.index.CompareTo(b.index));
+            foreach (var r in _raised) if (r.t != null) r.t.SetSiblingIndex(r.index);
+            _raised.Clear();
         }
 
         private void Update()
@@ -247,7 +285,11 @@ namespace DrawRush.UI
             if (!IsOpen) return;
             float t = Time.unscaledTime - _openedAt;
             _card.localScale = Vector3.one * (t < 0.2f ? Mathf.SmoothStep(0.85f, 1f, t / 0.2f) : 1f);
-            if (_resetArmedUntil > 0f && Time.unscaledTime > _resetArmedUntil) { _resetArmedUntil = 0f; Refresh(); }
+            if (_confirm != null && _confirm.activeSelf)
+            {
+                float c = Time.unscaledTime - _confirmOpenedAt;
+                _confirmCard.localScale = Vector3.one * (c < 0.18f ? Mathf.SmoothStep(0.85f, 1f, c / 0.18f) : 1f);
+            }
         }
 
         private static void Reload()
@@ -266,19 +308,68 @@ namespace DrawRush.UI
 
         private void ToggleVibration() { Haptics.Enabled = !Haptics.Enabled; Refresh(); if (Haptics.Enabled) Haptics.Light(); }
 
-        // Two taps (the second within 3 s): back to level 1 and reload, for tests and clean videos.
-        private void ResetLevels()
+        // ---------- reset, behind a confirmation card ----------
+
+        private void AskReset()
         {
-            if (Time.unscaledTime > _resetArmedUntil)
-            {
-                _resetArmedUntil = Time.unscaledTime + 3f;
-                _resetLabel.text = Loc.T("Tap again to reset");
-                return;
-            }
+            if (_confirm == null) return;
+            _confirm.SetActive(true);
+            _confirm.transform.SetAsLastSibling();
+            _confirmOpenedAt = Time.unscaledTime;
+        }
+
+        private void HideConfirm() { if (_confirm != null) _confirm.SetActive(false); }
+
+        // Back to level 1 and reload, for tests and clean videos.
+        private void ConfirmReset()
+        {
             PlayerProgress.ResetLevelProgress();
+            HideConfirm();
             _panel.SetActive(false);
+            LowerSoundButtons();
             MenuPause.Close();
             Reload();
+        }
+
+        private void BuildConfirm()
+        {
+            _confirm = NewUi("ResetConfirm", _panel.transform, typeof(Image), typeof(Button));
+            var rt = (RectTransform)_confirm.transform;
+            rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one; rt.offsetMin = rt.offsetMax = Vector2.zero;
+            _confirm.GetComponent<Image>().color = new Color(0.02f, 0.02f, 0.08f, 0.6f);
+            _confirm.GetComponent<Button>().transition = Selectable.Transition.None;
+            _confirm.GetComponent<Button>().onClick.AddListener(HideConfirm);   // tap outside = cancel
+
+            var card = NewUi("Card", _confirm.transform, typeof(Image), typeof(Button));
+            _confirmCard = (RectTransform)card.transform;
+            _confirmCard.anchorMin = _confirmCard.anchorMax = new Vector2(0.5f, 0.5f);
+            _confirmCard.sizeDelta = new Vector2(760f, 620f);
+            RoundedSprite.Apply(card.GetComponent<Image>(), cardColor, 2f);
+            card.GetComponent<Button>().transition = Selectable.Transition.None;
+
+            var title = Label(card.transform, Loc.T("Reset game?"), new Vector2(0f, 205f), new Vector2(680f, 100f), 62f);
+            title.fontStyle = FontStyles.Bold;
+            var body = Label(card.transform, Loc.T("You'll start again from the first level.\nCoins, skins and upgrades are kept."),
+                new Vector2(0f, 50f), new Vector2(660f, 190f), 38f);
+            body.textWrappingMode = TextWrappingModes.Normal;
+            body.color = new Color(1f, 1f, 1f, 0.8f);
+
+            ConfirmButton(card.transform, Loc.Upper(Loc.T("Cancel")), new Vector2(-165f, -195f), offColor, HideConfirm);
+            ConfirmButton(card.transform, Loc.Upper(Loc.T("Reset")), new Vector2(165f, -195f), dangerColor, ConfirmReset);
+            _confirm.SetActive(false);
+        }
+
+        private void ConfirmButton(Transform parent, string text, Vector2 pos, Color color, UnityEngine.Events.UnityAction onClick)
+        {
+            var go = NewUi(text, parent, typeof(Image), typeof(Button));
+            var rt = (RectTransform)go.transform;
+            rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = new Vector2(300f, 116f);
+            rt.anchoredPosition = pos;
+            RoundedSprite.Apply(go.GetComponent<Image>(), color, 1.4f);
+            go.GetComponent<Button>().onClick.AddListener(onClick);
+            go.AddComponent<ButtonJuice>();
+            Label(go.transform, text, Vector2.zero, rt.sizeDelta, 48f).fontStyle = FontStyles.Bold;
         }
 
         private void Refresh()
@@ -296,7 +387,7 @@ namespace DrawRush.UI
             SetSwitch(_vibration, Haptics.Enabled);
             SetSwitch(_ads, DrawRush.Ads.AdConsent.Personalised);
             _policyLabel.text = Loc.T("Privacy Policy");
-            if (_resetArmedUntil <= 0f) _resetLabel.text = Loc.T("Reset levels");
+            _resetLabel.text = Loc.T("Reset game");
             _closeLabel.text = Loc.Upper(Loc.T("Done"));
         }
 
