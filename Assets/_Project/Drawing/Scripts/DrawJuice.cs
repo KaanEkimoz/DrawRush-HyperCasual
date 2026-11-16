@@ -19,6 +19,8 @@ namespace DrawRush.Core
         [SerializeField] private float burstSpeed = 4.5f;
         [SerializeField] private float particleLife = 0.6f;
         [SerializeField] private float particleSize = 0.22f;
+        [Tooltip("Coins paid for every edge the player finishes (Kaan, 2026-11: 2 per edge).")]
+        [SerializeField] private int coinsPerEdge = 2;
 
         private ParticleSystem _ps;
         private ParticleSystemRenderer _psr;
@@ -30,6 +32,8 @@ namespace DrawRush.Core
 
         private void OnEdgeFinished(Vector3 midpoint, Color color)
         {
+            // DrawEdge raises completion once per edge, so this pays each edge exactly once.
+            PlayerProgress.AddCoins(coinsPerEdge);
             if (_ps == null) return;
             _ps.transform.position = midpoint + Vector3.up * 0.4f;
             var main = _ps.main;

@@ -605,7 +605,7 @@ MonoBehaviour:
   lungeWindUp: 0.85
   lungeTime: 0.44
   lungeRest: 0.75
-  lungeDistance: 3.6
+  lungeDistance: 3.24
   lungeOvershoot: 0.5
   lungeSoundRange: 9
   windUpColor: {r: 1, g: 1, b: 1, a: 1}

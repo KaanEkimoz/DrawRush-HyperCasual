@@ -53,6 +53,9 @@ namespace DrawRush.Boosters
             => Toast(boosts.Config.TitleOf(type), boosts.Config.HintOf(type), boosts.Config.ColorOf(type));
 
         /// <summary>Big mid-screen announcement (boosters, hazards, the boss).</summary>
+        /// <summary>The HUD's font, for other code-built overlays to match.</summary>
+        public TMP_FontAsset Font => font;
+
         public void Toast(string title, string hint, Color color)
         {
             _toastTitle.text = title;

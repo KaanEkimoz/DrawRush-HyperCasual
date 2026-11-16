@@ -73,7 +73,14 @@ namespace DrawRush.Player
         private void OnLevelBound(DrawRush.Drawing.EdgeNetwork _)
         {
             _readyAt = 0f;
-            if (!DashSkill.Owned || PlayerPrefs.GetInt(HintKey, 0) >= hintTimes) return;
+            if (!DashSkill.Owned) return;
+            if (DashTutorial.PracticePending && GetComponent<DashPractice>() == null)
+            {
+                DashPractice.Begin(gameObject);   // the guided first dash replaces the first hint
+                PlayerPrefs.SetInt(HintKey, Mathf.Max(1, PlayerPrefs.GetInt(HintKey, 0)));
+                return;
+            }
+            if (PlayerPrefs.GetInt(HintKey, 0) >= hintTimes) return;
             PlayerPrefs.SetInt(HintKey, PlayerPrefs.GetInt(HintKey, 0) + 1);
             var hud = FindFirstObjectByType<BoosterHud>();
             if (hud != null) hud.Toast("DASH READY", Application.isMobilePlatform ? "Double-tap to dash" : "Double-tap or Space to dash", new Color(0.35f, 0.55f, 1f));
