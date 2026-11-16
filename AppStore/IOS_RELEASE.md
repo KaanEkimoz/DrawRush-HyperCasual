@@ -43,7 +43,8 @@ UnityAds adaptörü (5.11.0.0) Xcode 26.5 ile sorunsuz link'lendi — Brick Crac
 
 ## 13 Kas 2026 — Ret: Guideline 2.1 Information Needed (gönderim 11f07e98, sürüm REJECTED)
 Apple fiziksel cihazda ekran kaydı + 5 açıklama istedi. Açıklamalar (madde 2-6) yazıldı ve App Review Notes'a girildi: `AppStore/review_notes_2.1.txt`.
-Kalan: (1) Kaan TestFlight'tan iPhone'a kurar (henüz beta grubu yok), (2) açılıştan başlayan ekran kaydı: menü → Level 1 tutorial → bir level kazan/kaybet → mağaza → ödüllü reklam, (3) video App Review Information'a ek olarak yüklenir, (4) Kaan "Resubmit".
+16 Kas: external TestFlight grubu "Review Recording" açıldı (build 1 içinde, Kaan'ın arkadaşı tester), build Beta App Review'a gönderildi (WAITING_FOR_REVIEW); onaylanınca davet gider.
+Kalan: (1) arkadaş TestFlight'tan kurar, (2) açılıştan başlayan ekran kaydı: menü → Level 1 tutorial → bir level kazan/kaybet → mağaza → ödüllü reklam, (3) video App Review Information'a ek olarak yüklenir, (4) Kaan "Resubmit".
 
 ## Kaan'ın yapması gerekenler
 1. TestFlight'ta kendini internal tester ekle → iPhone'da oyun + reklam testi.
