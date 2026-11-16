@@ -46,6 +46,11 @@ Apple fiziksel cihazda ekran kaydı + 5 açıklama istedi. Açıklamalar (madde 
 16 Kas: external TestFlight grubu "Review Recording" açıldı (build 1 içinde, Kaan'ın arkadaşı tester), build Beta App Review'a gönderildi (WAITING_FOR_REVIEW); onaylanınca davet gider.
 Kalan: (1) arkadaş TestFlight'tan kurar, (2) açılıştan başlayan ekran kaydı: menü → Level 1 tutorial → bir level kazan/kaybet → mağaza → ödüllü reklam, (3) video App Review Information'a ek olarak yüklenir, (4) Kaan "Resubmit".
 
+## 16 Kas 2026 — build 1.6.0 (2) yüklendi
+Build 1'de iPhone'da: ses yok (Unity'nin Ambient oturumu sessiz düğmesine uyuyor) + ayar dişlisi müzik butonuna biniyor (safe area). Düzeltme `f3185152`: Playback ses oturumu (`IosAudioSession` + `Plugins/iOS/DrawRushAudioSession.mm`), dişli safe-area inset'i, PlaytestLog release düzeni. Simülatörde (iPhone 17 Pro) dişli düzgün, hata konsolu yok; **ses sessiz düğmesiyle yalnız gerçek iPhone'da doğrulanabilir.**
+Simülatör build'i: `Unity ... -executeMethod IosBuild.BuildSimulator` → `Builds/iOS-Simulator`, `xcodebuild -sdk iphonesimulator ARCHS=arm64`.
+Kaan'ın ilk ekran kaydı (build 1) akışı kapsıyor ama sessiz ve dişli çakışması görünüyor → build 2 ile yeniden çekilmesi önerildi; yeniden gönderimde build 2 seçilmeli.
+
 ## Kaan'ın yapması gerekenler
 1. TestFlight'ta kendini internal tester ekle → iPhone'da oyun + reklam testi.
 2. Sürüm sayfasında **Add for Review → Submit** (Kaan onayı).
