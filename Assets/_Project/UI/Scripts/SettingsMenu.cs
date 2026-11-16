@@ -24,7 +24,8 @@ namespace DrawRush.UI
         [SerializeField] private Color offColor = new(0.35f, 0.35f, 0.4f, 1f);
 
         private GameObject _panel;
-        private TextMeshProUGUI _vibrationLabel, _joystickLabel, _adsLabel;
+        private TextMeshProUGUI _vibrationLabel, _joystickLabel, _adsLabel, _resetLabel;
+        private float _resetArmedUntil;
         private Image _vibrationButton, _joystickButton, _adsButton;
         private GameObject _consentPanel;
         private System.Action<bool> _onConsent;
@@ -63,21 +64,22 @@ namespace DrawRush.UI
             var card = NewUi("Card", _panel.transform, typeof(Image));
             var crt = (RectTransform)card.transform;
             crt.anchorMin = crt.anchorMax = new Vector2(0.5f, 0.5f);
-            crt.sizeDelta = new Vector2(820f, 880f);
+            crt.sizeDelta = new Vector2(820f, 1020f);
             card.GetComponent<Image>().color = cardColor;
 
-            Label(card.transform, "SETTINGS", new Vector2(0f, 360f), new Vector2(760f, 100f), 72f);
-            _vibrationButton = Toggle(card.transform, new Vector2(0f, 220f), ToggleVibration, out _vibrationLabel);
-            _joystickButton = Toggle(card.transform, new Vector2(0f, 90f), ToggleJoystick, out _joystickLabel);
-            _adsButton = Toggle(card.transform, new Vector2(0f, -40f), ToggleAdConsent, out _adsLabel);
-            Toggle(card.transform, new Vector2(0f, -170f), OpenPrivacyPolicy, out TextMeshProUGUI policy).color = offColor;
+            Label(card.transform, "SETTINGS", new Vector2(0f, 430f), new Vector2(760f, 100f), 72f);
+            _vibrationButton = Toggle(card.transform, new Vector2(0f, 290f), ToggleVibration, out _vibrationLabel);
+            _joystickButton = Toggle(card.transform, new Vector2(0f, 160f), ToggleJoystick, out _joystickLabel);
+            _adsButton = Toggle(card.transform, new Vector2(0f, 30f), ToggleAdConsent, out _adsLabel);
+            Toggle(card.transform, new Vector2(0f, -100f), OpenPrivacyPolicy, out TextMeshProUGUI policy).color = offColor;
             policy.text = "PRIVACY POLICY";
+            Toggle(card.transform, new Vector2(0f, -230f), ResetLevels, out _resetLabel).color = new Color(0.85f, 0.45f, 0.15f, 1f);
 
             var close = NewUi("Close", card.transform, typeof(Image), typeof(Button));
             var clrt = (RectTransform)close.transform;
             clrt.anchorMin = clrt.anchorMax = new Vector2(0.5f, 0.5f);
             clrt.sizeDelta = new Vector2(400f, 120f);
-            clrt.anchoredPosition = new Vector2(0f, -330f);
+            clrt.anchoredPosition = new Vector2(0f, -400f);
             close.GetComponent<Image>().color = new Color(0.9f, 0.25f, 0.25f, 1f);
             close.GetComponent<Button>().onClick.AddListener(Close);
             Label(close.transform, "CLOSE", Vector2.zero, new Vector2(400f, 120f), 56f);
@@ -187,6 +189,21 @@ namespace DrawRush.UI
             Refresh();
         }
 
+        // Two taps (the second within 3 s): back to level 1 and reload, for tests and clean videos.
+        private void ResetLevels()
+        {
+            if (Time.unscaledTime > _resetArmedUntil)
+            {
+                _resetArmedUntil = Time.unscaledTime + 3f;
+                _resetLabel.text = "TAP AGAIN TO RESET";
+                return;
+            }
+            PlayerProgress.ResetLevelProgress();
+            Close();
+            MenuPause.SetGameTimeScale(1f);
+            UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex);
+        }
+
         private static void OpenPrivacyPolicy() => Application.OpenURL(DrawRush.Ads.AdConsent.PrivacyPolicyUrl);
 
         private void ToggleVibration() { Haptics.Enabled = !Haptics.Enabled; Refresh(); if (Haptics.Enabled) Haptics.Light(); }
@@ -203,6 +220,8 @@ namespace DrawRush.UI
             bool personal = DrawRush.Ads.AdConsent.Personalised;
             _adsLabel.text = personal ? "PERSONALISED ADS: ON" : "PERSONALISED ADS: OFF";
             _adsButton.color = personal ? onColor : offColor;
+            _resetArmedUntil = 0f;
+            _resetLabel.text = "RESET LEVELS";
         }
 
         private TextMeshProUGUI Label(Transform parent, string text, Vector2 pos, Vector2 size, float fontSize)

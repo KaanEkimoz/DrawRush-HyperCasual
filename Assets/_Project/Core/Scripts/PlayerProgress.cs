@@ -86,6 +86,19 @@ namespace DrawRush.Core
             return sum;
         }
 
+        /// <summary>Back to the first level (the tutorial), as on a fresh install: level position,
+        /// difficulty curve and shape bag are cleared. Coins, skins, upgrades and stars stay.</summary>
+        public static void ResetLevelProgress()
+        {
+            PlayerPrefs.SetInt(TutorialCompletedKey, 0);
+            PlayerPrefs.SetInt(LastLevelIndexKey, -1);
+            PlayerPrefs.SetInt(LevelsPlayedKey, 0);
+            PlayerPrefs.SetInt(WonLevelKey, -1);
+            PlayerPrefs.SetInt(LastLevelEnemiesKey, -1);
+            PlayerPrefs.SetString(LevelBagKey, string.Empty);
+            PlayerPrefs.Save();
+        }
+
         /// <summary>True once the player has finished the tutorial level.</summary>
         public static bool TutorialCompleted
         {
