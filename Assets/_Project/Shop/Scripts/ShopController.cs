@@ -70,20 +70,91 @@ namespace DrawRush.Shop
 
         private void Awake()
         {
-            if (openButton != null) openButton.onClick.AddListener(Open);
+            _font = coinText != null ? coinText.font : null;
+            if (openButton != null) { openButton.onClick.AddListener(Open); BuildBadge(); }
             if (closeButton != null) closeButton.onClick.AddListener(Close);
             if (panel != null) panel.SetActive(false);
-            _font = coinText != null ? coinText.font : null;
             Build();
         }
 
-        private void OnEnable() => PlayerProgress.CoinsChanged += OnCoinsChanged;
-        private void OnDisable() => PlayerProgress.CoinsChanged -= OnCoinsChanged;
+        private void OnEnable()
+        {
+            PlayerProgress.CoinsChanged += OnCoinsChanged;
+            StatUpgrades.Changed += RefreshBadge;
+            DashSkill.Changed += RefreshBadge;
+            RefreshBadge();
+        }
+
+        private void OnDisable()
+        {
+            PlayerProgress.CoinsChanged -= OnCoinsChanged;
+            StatUpgrades.Changed -= RefreshBadge;
+            DashSkill.Changed -= RefreshBadge;
+        }
 
         private void OnCoinsChanged(int total)
         {
             if (coinText != null) coinText.text = total.ToString();
             Refresh();
+            RefreshBadge();
+        }
+
+        // ---------- "upgrades you can buy" badge on the shop button ----------
+
+        private RectTransform _badge;
+        private TMP_Text _badgeText;
+        private int _badgeCount = -1;
+        private float _badgeBumpAt = -10f;
+
+        /// <summary>Upgrades (stats and the dash) the player can afford right now.</summary>
+        public static int AffordableUpgrades()
+        {
+            int coins = PlayerProgress.Coins, n = 0;
+            foreach (PlayerStat stat in new[] { PlayerStat.Speed, PlayerStat.Health, PlayerStat.DrawArea })
+            {
+                int p = StatUpgrades.NextPrice(stat);
+                if (p >= 0 && coins >= p) n++;
+            }
+            int d = DashSkill.NextPrice;
+            if (d >= 0 && coins >= d) n++;
+            return n;
+        }
+
+        // A red count bubble on the shop button's top-left corner.
+        private void BuildBadge()
+        {
+            _badge = Child(openButton.transform, "UpgradeBadge", typeof(Image));
+            _badge.anchorMin = _badge.anchorMax = new Vector2(0f, 1f);
+            _badge.anchoredPosition = new Vector2(6f, -6f);
+            _badge.sizeDelta = new Vector2(60f, 60f);
+            var img = _badge.GetComponent<Image>();
+            RoundedSprite.Apply(img, new Color(0.93f, 0.22f, 0.25f, 1f), 3f);
+            img.raycastTarget = false;
+            var outline = _badge.gameObject.AddComponent<Outline>();
+            outline.effectColor = Color.white; outline.effectDistance = new Vector2(3f, 3f);
+            _badgeText = Text(_badge, "", 40f, Color.white);
+            Stretch(_badgeText.rectTransform);
+            _badgeText.fontStyle = FontStyles.Bold;
+            _badge.gameObject.SetActive(false);
+        }
+
+        private void RefreshBadge()
+        {
+            if (_badge == null) return;
+            int n = AffordableUpgrades();
+            if (n > _badgeCount && _badgeCount >= 0) _badgeBumpAt = Time.unscaledTime;   // a new one just became buyable
+            _badgeCount = n;
+            _badge.gameObject.SetActive(n > 0);
+            _badgeText.text = n.ToString();
+        }
+
+        private void LateUpdate()
+        {
+            if (_badge == null || !_badge.gameObject.activeSelf) return;
+            float t = Time.unscaledTime - _badgeBumpAt;
+            float bump = t < 0.4f ? Mathf.Sin(t / 0.4f * Mathf.PI) * 0.35f : 0f;
+            float breathe = 0.05f * Mathf.Sin(Time.unscaledTime * 3f);   // a gentle pulse so it draws the eye
+            _badge.localScale = Vector3.one * (1f + bump + breathe);
         }
 
         public bool IsOpen => panel != null && panel.activeSelf;
