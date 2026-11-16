@@ -8,8 +8,7 @@ namespace DrawRush.UI
 {
     /// <summary>
     /// The settings menu: a round gear button under the music button opens a card with grouped
-    /// rows — language (English / Türkçe / Español), switches for vibration, joystick mode and
-    /// personalised ads, then the privacy policy and a two-tap level reset. The panel pauses the
+    /// rows — language (English / Türkçe / Español), switches for vibration and personalised ads, then the privacy policy and a two-tap level reset. The panel pauses the
     /// game while open, like the shop. Built at runtime so it needs no authored prefab.
     ///
     /// Changing the language updates this card at once; the rest of the screen is rebuilt (scene
@@ -20,6 +19,8 @@ namespace DrawRush.UI
     public sealed class SettingsMenu : MonoBehaviour
     {
         [SerializeField] private TMP_FontAsset font;
+        [Tooltip("Bold, roomy font for the settings card (the thin hand font read cramped).")]
+        [SerializeField] private TMP_FontAsset cardFont;
         [Tooltip("Gear button position from the top-left corner (canvas units), under the music button.")]
         [SerializeField] private Vector2 buttonOffset = new(30f, -286f);
         [SerializeField] private float buttonSize = 110f;
@@ -37,7 +38,7 @@ namespace DrawRush.UI
         private GameObject _panel;
         private RectTransform _card;
         private float _openedAt;
-        private Switch _vibration, _joystick, _ads;
+        private Switch _vibration, _ads;
         private readonly Image[] _langChips = new Image[3];
         private readonly TextMeshProUGUI[] _langLabels = new TextMeshProUGUI[3];
         private TextMeshProUGUI _title, _resetLabel, _policyLabel, _closeLabel, _langHeader, _gameHeader, _moreHeader;
@@ -92,7 +93,7 @@ namespace DrawRush.UI
             var card = NewUi("Card", _panel.transform, typeof(Image), typeof(Button));
             _card = (RectTransform)card.transform;
             _card.anchorMin = _card.anchorMax = new Vector2(0.5f, 0.5f);
-            _card.sizeDelta = new Vector2(CardWidth, 1300f);
+            _card.sizeDelta = new Vector2(CardWidth, 1180f);
             RoundedSprite.Apply(card.GetComponent<Image>(), cardColor, 2f);
             card.GetComponent<Button>().transition = Selectable.Transition.None;   // swallow taps on the card
 
@@ -102,25 +103,24 @@ namespace DrawRush.UI
             brt.anchorMin = new Vector2(0f, 1f); brt.anchorMax = Vector2.one; brt.pivot = new Vector2(0.5f, 1f);
             brt.sizeDelta = new Vector2(0f, 150f);
             RoundedSprite.Apply(band.GetComponent<Image>(), accentColor, 2f);
-            _title = Label(card.transform, "", new Vector2(0f, 575f), new Vector2(700f, 120f), 76f);
+            _title = Label(card.transform, "", new Vector2(0f, 515f), new Vector2(700f, 120f), 76f);
             _title.fontStyle = FontStyles.Bold;
 
             var x = NewUi("X", card.transform, typeof(Image), typeof(Button));
             var xrt = (RectTransform)x.transform;
             xrt.anchorMin = xrt.anchorMax = new Vector2(0.5f, 0.5f);
-            xrt.sizeDelta = new Vector2(96f, 96f); xrt.anchoredPosition = new Vector2(CardWidth * 0.5f - 70f, 575f);
+            xrt.sizeDelta = new Vector2(96f, 96f); xrt.anchoredPosition = new Vector2(CardWidth * 0.5f - 70f, 515f);
             RoundedSprite.Apply(x.GetComponent<Image>(), new Color(1f, 1f, 1f, 0.22f), 4f);
             x.GetComponent<Button>().onClick.AddListener(Close);
             x.AddComponent<ButtonJuice>();
             Label(x.transform, "X", Vector2.zero, new Vector2(96f, 96f), 54f).fontStyle = FontStyles.Bold;
 
-            float y = 440f;
+            float y = 380f;
             _langHeader = Section(card.transform, ref y);
             BuildLanguageRow(card.transform, ref y);
 
             _gameHeader = Section(card.transform, ref y);
             _vibration = SwitchRow(card.transform, "Vibration", ref y, ToggleVibration);
-            _joystick = SwitchRow(card.transform, "Fixed joystick", ref y, ToggleJoystick);
             _ads = SwitchRow(card.transform, "Personalised ads", ref y, ToggleAdConsent);
 
             _moreHeader = Section(card.transform, ref y);
@@ -131,22 +131,23 @@ namespace DrawRush.UI
             var clrt = (RectTransform)close.transform;
             clrt.anchorMin = clrt.anchorMax = new Vector2(0.5f, 0.5f);
             clrt.sizeDelta = new Vector2(440f, 120f);
-            clrt.anchoredPosition = new Vector2(0f, -550f);
+            clrt.anchoredPosition = new Vector2(0f, -490f);
             RoundedSprite.Apply(close.GetComponent<Image>(), onColor, 1.4f);
             close.GetComponent<Button>().onClick.AddListener(Close);
             close.AddComponent<ButtonJuice>();
             _closeLabel = Label(close.transform, "", Vector2.zero, new Vector2(440f, 120f), 58f);
             _closeLabel.fontStyle = FontStyles.Bold;
 
-            var version = Label(card.transform, "v" + Application.version, new Vector2(0f, -620f), new Vector2(400f, 40f), 28f);
+            var version = Label(card.transform, "v" + Application.version, new Vector2(0f, -560f), new Vector2(400f, 40f), 28f);
             version.color = new Color(1f, 1f, 1f, 0.35f);
         }
 
         private TextMeshProUGUI Section(Transform parent, ref float y)
         {
-            var t = Label(parent, "", new Vector2(0f, y), new Vector2(RowWidth, 50f), 34f);
+            var t = Label(parent, "", new Vector2(0f, y), new Vector2(RowWidth - 20f, 50f), 30f);
             t.alignment = TextAlignmentOptions.Left;
-            t.color = new Color(1f, 1f, 1f, 0.5f);
+            t.characterSpacing = 8f;
+            t.color = new Color(1f, 1f, 1f, 0.45f);
             y -= 62f;
             return t;
         }
@@ -167,7 +168,7 @@ namespace DrawRush.UI
                 RoundedSprite.Apply(_langChips[i], offColor, 1.2f);
                 chip.GetComponent<Button>().onClick.AddListener(() => SetLanguage(lang));
                 chip.AddComponent<ButtonJuice>();
-                _langLabels[i] = Label(chip.transform, Loc.NameOf(lang), Vector2.zero, rt.sizeDelta, 42f);
+                _langLabels[i] = Label(chip.transform, Loc.NameOf(lang), Vector2.zero, rt.sizeDelta, 40f);
             }
             y -= RowHeight + 14f;
         }
@@ -177,8 +178,9 @@ namespace DrawRush.UI
             var row = Row(parent, y, rowColor);
             row.gameObject.AddComponent<Button>().onClick.AddListener(onClick);
             var s = new Switch { English = english };
-            s.Label = Label(row, "", Vector2.zero, Vector2.zero, 44f);
-            Stretch(s.Label.rectTransform, 30f, 200f);
+            s.Label = Label(row, "", Vector2.zero, Vector2.zero, 42f);
+            Stretch(s.Label.rectTransform, 34f, 200f);
+            s.Label.enableAutoSizing = true; s.Label.fontSizeMin = 30f; s.Label.fontSizeMax = 42f;
             s.Label.alignment = TextAlignmentOptions.Left;
 
             var track = NewUi("Track", row, typeof(Image));
@@ -201,8 +203,8 @@ namespace DrawRush.UI
             var row = Row(parent, y, color);
             row.gameObject.AddComponent<Button>().onClick.AddListener(onClick);
             row.gameObject.AddComponent<ButtonJuice>();
-            var t = Label(row, "", Vector2.zero, Vector2.zero, 44f);
-            Stretch(t.rectTransform, 20f, 20f);
+            var t = Label(row, "", Vector2.zero, Vector2.zero, 42f);
+            Stretch(t.rectTransform, 24f, 24f);
             y -= RowHeight + 14f;
             return t;
         }
@@ -263,7 +265,6 @@ namespace DrawRush.UI
         private static void OpenPrivacyPolicy() => Application.OpenURL(DrawRush.Ads.AdConsent.PrivacyPolicyUrl);
 
         private void ToggleVibration() { Haptics.Enabled = !Haptics.Enabled; Refresh(); if (Haptics.Enabled) Haptics.Light(); }
-        private void ToggleJoystick() { FloatingJoystick.FixedMode = !FloatingJoystick.FixedMode; Refresh(); }
 
         // Two taps (the second within 3 s): back to level 1 and reload, for tests and clean videos.
         private void ResetLevels()
@@ -293,7 +294,6 @@ namespace DrawRush.UI
                 _langLabels[i].fontStyle = on ? FontStyles.Bold : FontStyles.Normal;
             }
             SetSwitch(_vibration, Haptics.Enabled);
-            SetSwitch(_joystick, FloatingJoystick.FixedMode);
             SetSwitch(_ads, DrawRush.Ads.AdConsent.Personalised);
             _policyLabel.text = Loc.T("Privacy Policy");
             if (_resetArmedUntil <= 0f) _resetLabel.text = Loc.T("Reset levels");
@@ -329,6 +329,7 @@ namespace DrawRush.UI
                 Loc.T("Draw Rush is free thanks to ads.\n\nWith your OK, our ad partner (Unity Ads) may use your device's advertising ID to show ads that suit you. Say no and you still see ads, just less relevant ones.\n\nYou can change this any time in Settings."),
                 new Vector2(0f, 90f), new Vector2(780f, 500f), 38f);
             body.textWrappingMode = TextWrappingModes.Normal;
+            body.lineSpacing = 6f;
 
             ConsentButton(card.transform, Loc.Upper(Loc.T("Accept")), new Vector2(0f, -250f), true);
             ConsentButton(card.transform, Loc.Upper(Loc.T("No, thanks")), new Vector2(0f, -380f), false);
@@ -392,8 +393,11 @@ namespace DrawRush.UI
             rt.sizeDelta = size;
             rt.anchoredPosition = pos;
             var t = go.GetComponent<TextMeshProUGUI>();
-            if (font != null) t.font = font;
+            TMP_FontAsset f = cardFont != null ? cardFont : font;
+            if (f != null) t.font = f;
             t.text = text; t.fontSize = fontSize; t.alignment = TextAlignmentOptions.Center; t.color = Color.white; t.raycastTarget = false;
+            t.characterSpacing = 2f;                       // a little air between letters
+            t.textWrappingMode = TextWrappingModes.NoWrap;
             return t;
         }
 
