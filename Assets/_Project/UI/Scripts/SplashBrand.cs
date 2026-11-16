@@ -27,7 +27,7 @@ namespace DrawRush.UI
 
         // Timeline (seconds).
         private const float GuideIn = 0.15f, DrawStart = 0.45f, DrawEnd = 1.3f;
-        private const float LettersStart = 1.3f, LetterGap = 0.07f, LetterPop = 0.32f;
+        private const float LettersStart = 1.3f, LetterGap = 0.045f, LetterPop = 0.32f;
         private const float SubIn = 1.75f, FadeOut = 2.4f, FadeLen = 0.3f;
 
         /// <summary>Total length; the scene timer should wait at least this long.</summary>

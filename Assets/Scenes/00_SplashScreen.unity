@@ -240,7 +240,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
-  m_BackGroundColor: {r: 0.98, g: 0.95, b: 0.87, a: 1}
+  m_BackGroundColor: {r: 0.33, g: 0.27, b: 0.85, a: 1}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
@@ -486,12 +486,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: DrawRush::DrawRush.UI.SplashBrand
   logo: {fileID: 476549673}
   title: {fileID: 1035734322}
-  subtitle: {fileID: 1514212904}
+  subtitle: {fileID: 0}
   heroSprite: {fileID: 21300000, guid: cfe3c38f6a2fb40be96140b5061fc59e, type: 3}
   loopSize: {x: 920, y: 560}
   cornerRadius: 130
-  guideColor: {r: 0.13, g: 0.17, b: 0.35, a: 0.3}
-  strokeColor: {r: 0.92, g: 0.27, b: 0.27, a: 1}
+  guideColor: {r: 1, g: 1, b: 1, a: 0.35}
+  strokeColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!225 &476549675
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -554,7 +554,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.98, g: 0.95, b: 0.87, a: 1}
+  m_Color: {r: 0.33, g: 0.27, b: 0.85, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -717,8 +717,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 50}
-  m_SizeDelta: {x: 1000, y: 220}
+  m_AnchoredPosition: {x: 0, y: -60}
+  m_SizeDelta: {x: 1000, y: 460}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1035734322
 MonoBehaviour:
@@ -740,17 +740,19 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: EKIMOZ
+  m_text: 'Ekimoz
+
+    <color=#FFD23F>Games</color>'
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 4c5bba6eb7b9758449e52d4f4d160e3b, type: 2}
-  m_sharedMaterial: {fileID: -3740871720979980690, guid: 4c5bba6eb7b9758449e52d4f4d160e3b, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: c2e0d10941cbe4d96939411294483c51, type: 2}
+  m_sharedMaterial: {fileID: -1241103213297061775, guid: c2e0d10941cbe4d96939411294483c51, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4284033825
-  m_fontColor: {r: 0.13, g: 0.17, b: 0.35, a: 1}
+    rgba: 4294967295
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -767,8 +769,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 82
-  m_fontSizeBase: 82
+  m_fontSize: 162
+  m_fontSizeBase: 162
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -780,7 +782,7 @@ MonoBehaviour:
   m_characterSpacing: 0
   m_characterHorizontalScale: 1
   m_wordSpacing: 0
-  m_lineSpacing: 0
+  m_lineSpacing: -55
   m_lineSpacingMax: 0
   m_paragraphSpacing: 0
   m_charWidthMaxAdj: 0
@@ -869,7 +871,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1514212903
 RectTransform:
   m_ObjectHideFlags: 0
