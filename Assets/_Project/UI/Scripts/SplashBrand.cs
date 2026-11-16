@@ -22,8 +22,8 @@ namespace DrawRush.UI
         [SerializeField] private Sprite heroSprite;
         [SerializeField] private Vector2 loopSize = new(800f, 520f);
         [SerializeField] private float cornerRadius = 120f;
-        [SerializeField] private Color guideColor = new(0.13f, 0.17f, 0.35f, 0.3f);
-        [SerializeField] private Color strokeColor = new(0.92f, 0.27f, 0.27f, 1f);
+        [SerializeField] private Color guideColor = new(1f, 1f, 1f, 0.28f);
+        [SerializeField] private Color strokeColor = new(1f, 0.82f, 0.2f, 1f);
 
         // Timeline (seconds).
         private const float GuideIn = 0.15f, DrawStart = 0.45f, DrawEnd = 1.3f;
@@ -131,7 +131,7 @@ namespace DrawRush.UI
             // Loop closes: the line flashes and confetti pops.
             if (!_burst && t >= DrawEnd) { _burst = true; Burst(); }
             float flash = t >= DrawEnd ? 1f - Mathf.Clamp01((t - DrawEnd) / 0.25f) : 0f;
-            _stroke.color = Color.Lerp(strokeColor, new Color(1f, 0.82f, 0.2f, 1f), flash);   // a golden flash
+            _stroke.color = Color.Lerp(strokeColor, Color.white, flash);   // a bright flash as the loop closes
             _stroke.Width = 26f + 10f * flash;
             UpdateConfetti();
 
