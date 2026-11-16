@@ -320,10 +320,10 @@ namespace DrawRush.UI
 
         private void HideConfirm() { if (_confirm != null) _confirm.SetActive(false); }
 
-        // Back to level 1 and reload, for tests and clean videos.
+        // A fresh start (levels, coins, skins, upgrades) and reload, for tests and clean videos.
         private void ConfirmReset()
         {
-            PlayerProgress.ResetLevelProgress();
+            PlayerProgress.ResetEverything();
             HideConfirm();
             _panel.SetActive(false);
             LowerSoundButtons();
@@ -349,7 +349,7 @@ namespace DrawRush.UI
 
             var title = Label(card.transform, Loc.T("Reset game?"), new Vector2(0f, 205f), new Vector2(680f, 100f), 62f);
             title.fontStyle = FontStyles.Bold;
-            var body = Label(card.transform, Loc.T("You'll start again from the first level.\nCoins, skins and upgrades are kept."),
+            var body = Label(card.transform, Loc.T("Levels, coins, skins and upgrades will all be lost.\nThis can't be undone."),
                 new Vector2(0f, 50f), new Vector2(660f, 190f), 38f);
             body.textWrappingMode = TextWrappingModes.Normal;
             body.color = new Color(1f, 1f, 1f, 0.8f);

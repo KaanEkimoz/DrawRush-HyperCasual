@@ -23,7 +23,7 @@ namespace DrawRush.Localization
             ["Tap again to reset"] = new[] { "Sıfırlamak için tekrar dokun", "Toca otra vez para reiniciar" },
             ["Reset game"] = new[] { "Oyunu sıfırla", "Reiniciar juego" },
             ["Reset game?"] = new[] { "Oyun sıfırlansın mı?", "¿Reiniciar el juego?" },
-            ["You'll start again from the first level.\nCoins, skins and upgrades are kept."] = new[] { "İlk levelden yeniden başlayacaksın.\nAltın, skin ve geliştirmeler kalır.", "Volverás a empezar desde el primer nivel.\nLas monedas, skins y mejoras se conservan." },
+            ["Levels, coins, skins and upgrades will all be lost.\nThis can't be undone."] = new[] { "Leveller, altınlar, skinler ve geliştirmeler silinecek.\nBu geri alınamaz.", "Se perderán niveles, monedas, skins y mejoras.\nNo se puede deshacer." },
             ["Cancel"] = new[] { "Vazgeç", "Cancelar" },
             ["Reset"] = new[] { "Sıfırla", "Reiniciar" },
             ["Done"] = new[] { "Tamam", "Listo" },
