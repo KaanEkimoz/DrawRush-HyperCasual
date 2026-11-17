@@ -56,6 +56,9 @@ Build 2 işlendi (VALID), "Review Recording" grubuna eklendi, "What to Test" yaz
 ## 16 Kas 2026 — YENİDEN GÖNDERİLDİ (Kaan'ın isteğiyle)
 Sürüm 1.6.0'a build **2** seçildi; ek: Kaan'ın build 1 ekran kaydı (`DrawRush_review_recording.mp4`, 600 px H.264, 8.9 MB, sessiz). Nota "kayıt build 1'den, build 2 yalnız ses + dişli düzeltmesi" eklendi. Gönderim 11f07e98 → WAITING_FOR_REVIEW. Kayıt yeniden istenirse build 2 ile, sesli çekilecek.
 
+## 17 Kas 2026 — build 1.6.0 (3) TestFlight'ta (yalnız internal "Team")
+`claude-dev-feat-controls` (4180cb50) ios-release'e birleştirildi (`34ba6136`, push'landı). Build 3 yüklendi (Apple ASC arızası yüzünden 5. denemede), VALID, Team grubunda IN_BETA_TESTING. App Store incelemesindeki 1.6.0 (2)'ye dokunulmadı.
+
 ## Kaan'ın yapması gerekenler
 1. TestFlight'ta kendini internal tester ekle → iPhone'da oyun + reklam testi.
 2. Sürüm sayfasında **Add for Review → Submit** (Kaan onayı).
