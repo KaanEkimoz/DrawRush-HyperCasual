@@ -12,8 +12,8 @@ namespace DrawRush.Ads
     /// </summary>
     public static class AdConsent
     {
-        public const string PrivacyPolicyUrl = "https://kaanusta.dev/drawrush-privacy";
-        public const string TermsOfServiceUrl = "https://kaanusta.dev/drawrush-terms";
+        public const string PrivacyPolicyUrl = "https://kaanusta.dev/drawrush-privacy/";
+        public const string TermsOfServiceUrl = "https://kaanusta.dev/drawrush-terms/";
 
         private const string Key = "AdConsent";   // -1 never asked, 0 declined, 1 granted
 
