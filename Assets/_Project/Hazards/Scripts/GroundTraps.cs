@@ -66,9 +66,12 @@ namespace DrawRush.Hazards
         [SerializeField] private float clearOfHero = 2.5f;
 
         [Header("Spikes (seconds)")]
-        [SerializeField] private float downSeconds = 2.4f;
-        [SerializeField] private float warnSeconds = 0.7f;
-        [SerializeField] private float upSeconds = 1.8f;
+        // New field names on purpose (Kaan, 2026-11-17: 2.5 s under, 2.5 s up), so older values
+        // saved in the scene don't override them.
+        [Tooltip("Seconds the spikes stay under the paper each cycle (includes sinking).")]
+        [SerializeField] private float hiddenSeconds = 2.5f;
+        [Tooltip("Seconds the spikes stay out each cycle (includes rising).")]
+        [SerializeField] private float activeSeconds = 2.5f;
         [SerializeField] private float moveSeconds = 0.28f;
         [Tooltip("Ground radius (m) that blocks paint and hurts while up.")]
         [SerializeField] private float radius = 0.6f;
@@ -295,7 +298,7 @@ namespace DrawRush.Hazards
             spikes.localScale = new Vector3(1f, 0.001f, 1f);
             spikes.gameObject.SetActive(false);
             trap.Moving = spikes;
-            trap.Clock = Random.Range(0f, downSeconds);   // traps do not all rise together
+            trap.Clock = Random.Range(0f, hiddenSeconds);   // traps do not all rise together
             return trap;
         }
 
@@ -501,7 +504,10 @@ namespace DrawRush.Hazards
 
         private void UpdateSpikes(Trap t, Vector3 hero)
         {
-            float cycle = downSeconds + warnSeconds + upSeconds;
+            // The last 0.7 s under the paper is the "coming" phase (no visible tell; sound logic).
+            float warnSeconds = Mathf.Min(0.7f, hiddenSeconds * 0.5f);
+            float downSeconds = hiddenSeconds - warnSeconds;
+            float cycle = hiddenSeconds + activeSeconds;
             float rise;   // 0 = sunk, 1 = up
             int phase;
             if (t.Retired)
