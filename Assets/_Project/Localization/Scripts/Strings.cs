@@ -19,6 +19,7 @@ namespace DrawRush.Localization
             ["Fixed joystick"] = new[] { "Sabit joystick", "Joystick fijo" },
             ["Personalised ads"] = new[] { "Kişiselleştirilmiş reklamlar", "Anuncios personalizados" },
             ["Privacy Policy"] = new[] { "Gizlilik Politikası", "Política de privacidad" },
+            ["Terms of Service"] = new[] { "Kullanım Şartları", "Términos del servicio" },
             ["Reset levels"] = new[] { "Levelleri sıfırla", "Reiniciar niveles" },
             ["Tap again to reset"] = new[] { "Sıfırlamak için tekrar dokun", "Toca otra vez para reiniciar" },
             ["Reset game"] = new[] { "Oyunu sıfırla", "Reiniciar juego" },

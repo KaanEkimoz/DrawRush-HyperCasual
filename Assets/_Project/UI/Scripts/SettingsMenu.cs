@@ -41,7 +41,7 @@ namespace DrawRush.UI
         private Switch _vibration, _ads;
         private readonly Image[] _langChips = new Image[3];
         private readonly TextMeshProUGUI[] _langLabels = new TextMeshProUGUI[3];
-        private TextMeshProUGUI _title, _resetLabel, _policyLabel, _closeLabel, _langHeader, _gameHeader, _moreHeader;
+        private TextMeshProUGUI _title, _resetLabel, _policyLabel, _termsLabel, _closeLabel, _langHeader, _gameHeader, _moreHeader;
         private GameObject _confirm;
         private RectTransform _confirmCard;
         private float _confirmOpenedAt;
@@ -96,7 +96,7 @@ namespace DrawRush.UI
             var card = NewUi("Card", _panel.transform, typeof(Image), typeof(Button));
             _card = (RectTransform)card.transform;
             _card.anchorMin = _card.anchorMax = new Vector2(0.5f, 0.5f);
-            _card.sizeDelta = new Vector2(CardWidth, 1180f);
+            _card.sizeDelta = new Vector2(CardWidth, 1300f);
             RoundedSprite.Apply(card.GetComponent<Image>(), cardColor, 2f);
             card.GetComponent<Button>().transition = Selectable.Transition.None;   // swallow taps on the card
 
@@ -106,19 +106,19 @@ namespace DrawRush.UI
             brt.anchorMin = new Vector2(0f, 1f); brt.anchorMax = Vector2.one; brt.pivot = new Vector2(0.5f, 1f);
             brt.sizeDelta = new Vector2(0f, 150f);
             RoundedSprite.Apply(band.GetComponent<Image>(), accentColor, 2f);
-            _title = Label(card.transform, "", new Vector2(0f, 515f), new Vector2(700f, 120f), 76f);
+            _title = Label(card.transform, "", new Vector2(0f, 575f), new Vector2(700f, 120f), 76f);
             _title.fontStyle = FontStyles.Bold;
 
             var x = NewUi("X", card.transform, typeof(Image), typeof(Button));
             var xrt = (RectTransform)x.transform;
             xrt.anchorMin = xrt.anchorMax = new Vector2(0.5f, 0.5f);
-            xrt.sizeDelta = new Vector2(96f, 96f); xrt.anchoredPosition = new Vector2(CardWidth * 0.5f - 70f, 515f);
+            xrt.sizeDelta = new Vector2(96f, 96f); xrt.anchoredPosition = new Vector2(CardWidth * 0.5f - 70f, 575f);
             RoundedSprite.Apply(x.GetComponent<Image>(), new Color(1f, 1f, 1f, 0.22f), 4f);
             x.GetComponent<Button>().onClick.AddListener(Close);
             x.AddComponent<ButtonJuice>();
             Label(x.transform, "X", Vector2.zero, new Vector2(96f, 96f), 54f).fontStyle = FontStyles.Bold;
 
-            float y = 380f;
+            float y = 440f;
             _langHeader = Section(card.transform, ref y);
             BuildLanguageRow(card.transform, ref y);
 
@@ -128,13 +128,14 @@ namespace DrawRush.UI
 
             _moreHeader = Section(card.transform, ref y);
             _policyLabel = ActionRow(card.transform, ref y, OpenPrivacyPolicy, rowColor);
+            _termsLabel = ActionRow(card.transform, ref y, OpenTerms, rowColor);
             _resetLabel = ActionRow(card.transform, ref y, AskReset, new Color(dangerColor.r, dangerColor.g, dangerColor.b, 0.85f));
 
             var close = NewUi("Close", card.transform, typeof(Image), typeof(Button));
             var clrt = (RectTransform)close.transform;
             clrt.anchorMin = clrt.anchorMax = new Vector2(0.5f, 0.5f);
             clrt.sizeDelta = new Vector2(440f, 120f);
-            clrt.anchoredPosition = new Vector2(0f, -490f);
+            clrt.anchoredPosition = new Vector2(0f, -550f);
             RoundedSprite.Apply(close.GetComponent<Image>(), onColor, 1.4f);
             close.GetComponent<Button>().onClick.AddListener(Close);
             close.AddComponent<ButtonJuice>();
@@ -305,6 +306,7 @@ namespace DrawRush.UI
         private void ToggleAdConsent() { DrawRush.Ads.AdConsent.Set(!DrawRush.Ads.AdConsent.Personalised); Refresh(); }
 
         private static void OpenPrivacyPolicy() => Application.OpenURL(DrawRush.Ads.AdConsent.PrivacyPolicyUrl);
+        private static void OpenTerms() => Application.OpenURL(DrawRush.Ads.AdConsent.TermsOfServiceUrl);
 
         private void ToggleVibration() { Haptics.Enabled = !Haptics.Enabled; Refresh(); if (Haptics.Enabled) Haptics.Light(); }
 
@@ -387,6 +389,7 @@ namespace DrawRush.UI
             SetSwitch(_vibration, Haptics.Enabled);
             SetSwitch(_ads, DrawRush.Ads.AdConsent.Personalised);
             _policyLabel.text = Loc.T("Privacy Policy");
+            _termsLabel.text = Loc.T("Terms of Service");
             _resetLabel.text = Loc.T("Reset game");
             _closeLabel.text = Loc.Upper(Loc.T("Done"));
         }
