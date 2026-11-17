@@ -1,4 +1,5 @@
 using DrawRush.Core;
+using DrawRush.Localization;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -6,32 +7,60 @@ using UnityEngine.UI;
 namespace DrawRush.UI
 {
     /// <summary>
-    /// A small settings menu for the two player-facing control options the redesign research
-    /// asked for: vibration on/off and floating vs fixed joystick. A round gear button sits under
-    /// the music button; the panel pauses the game while open, like the shop. Built at runtime so
-    /// it needs no authored prefab.
+    /// The settings menu: a round gear button under the music button opens a card with grouped
+    /// rows — language (English / Türkçe / Español), switches for vibration and personalised ads, then the privacy policy and a two-tap level reset. The panel pauses the
+    /// game while open, like the shop. Built at runtime so it needs no authored prefab.
+    ///
+    /// Changing the language updates this card at once; the rest of the screen is rebuilt (scene
+    /// reload) when the card closes, so every runtime-built label picks up the new language.
+    /// Also owns the first-launch ad consent card.
     /// </summary>
     [RequireComponent(typeof(RectTransform))]
     public sealed class SettingsMenu : MonoBehaviour
     {
         [SerializeField] private TMP_FontAsset font;
+        [Tooltip("Bold, roomy font for the settings card (the thin hand font read cramped).")]
+        [SerializeField] private TMP_FontAsset cardFont;
         [Tooltip("Gear button position from the top-left corner (canvas units), under the music button.")]
         [SerializeField] private Vector2 buttonOffset = new(30f, -286f);
         [SerializeField] private float buttonSize = 110f;
         [SerializeField] private Sprite buttonIcon;
-        [SerializeField] private Color cardColor = new(0.16f, 0.17f, 0.24f, 0.97f);
+        [SerializeField] private Color cardColor = new(0.13f, 0.14f, 0.24f, 0.98f);
+        [SerializeField] private Color rowColor = new(1f, 1f, 1f, 0.06f);
         [SerializeField] private Color onColor = new(0.25f, 0.8f, 0.4f, 1f);
-        [SerializeField] private Color offColor = new(0.35f, 0.35f, 0.4f, 1f);
+        [SerializeField] private Color offColor = new(0.35f, 0.35f, 0.42f, 1f);
+        [SerializeField] private Color switchOffColor = new(0.07f, 0.07f, 0.13f, 1f);
+        [SerializeField] private Color accentColor = new(0.55f, 0.45f, 1f, 1f);
+        [SerializeField] private Color dangerColor = new(0.9f, 0.45f, 0.15f, 1f);
+
+        private const float CardWidth = 860f, RowWidth = 760f, RowHeight = 104f;
 
         private GameObject _panel;
         private RectTransform _menuButton;
         private Canvas _canvas;
         private Rect _appliedSafeArea;
         private float _appliedScale;
-        private TextMeshProUGUI _vibrationLabel, _joystickLabel, _adsLabel;
-        private Image _vibrationButton, _joystickButton, _adsButton;
+        private RectTransform _card;
+        private float _openedAt;
+        private Switch _vibration, _ads;
+        private readonly Image[] _langChips = new Image[3];
+        private readonly TextMeshProUGUI[] _langLabels = new TextMeshProUGUI[3];
+        private TextMeshProUGUI _title, _resetLabel, _policyLabel, _closeLabel, _langHeader, _gameHeader, _moreHeader;
+        private GameObject _confirm;
+        private RectTransform _confirmCard;
+        private float _confirmOpenedAt;
+        private readonly System.Collections.Generic.List<(Transform t, int index)> _raised = new();
+        private Language _languageOnOpen;
         private GameObject _consentPanel;
         private System.Action<bool> _onConsent;
+
+        private sealed class Switch
+        {
+            public TextMeshProUGUI Label, State;
+            public Image Track;
+            public RectTransform Knob;
+            public string English;
+        }
 
         private void Awake()
         {
@@ -62,7 +91,7 @@ namespace DrawRush.UI
         // The sound and music buttons above the gear sit under a SafeAreaPadding that pushes them below
         // the notch / Dynamic Island. The gear is built at runtime outside that panel, so it has to
         // follow the same top inset itself, or on an iPhone it lands on top of the music button.
-        private void Update()
+        private void KeepMenuButtonInSafeArea()
         {
             if (_menuButton != null && (Screen.safeArea != _appliedSafeArea || CanvasScale() != _appliedScale)) PlaceMenuButton();
         }
@@ -77,47 +106,147 @@ namespace DrawRush.UI
 
         private float CanvasScale() => _canvas != null && _canvas.scaleFactor > 0f ? _canvas.scaleFactor : 1f;
 
+        // ---------- the card ----------
+
         private void BuildPanel()
         {
-            _panel = NewUi("SettingsPanel", transform, typeof(Image));
+            _panel = NewUi("SettingsPanel", transform, typeof(Image), typeof(Button));
             var prt = (RectTransform)_panel.transform;
             prt.anchorMin = Vector2.zero; prt.anchorMax = Vector2.one; prt.offsetMin = prt.offsetMax = Vector2.zero;
-            _panel.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.6f);   // dims the game, eats taps
+            _panel.GetComponent<Image>().color = new Color(0.02f, 0.02f, 0.08f, 0.72f);   // dims the game, eats taps
+            _panel.GetComponent<Button>().transition = Selectable.Transition.None;
+            _panel.GetComponent<Button>().onClick.AddListener(Close);                       // tap outside closes
 
-            var card = NewUi("Card", _panel.transform, typeof(Image));
-            var crt = (RectTransform)card.transform;
-            crt.anchorMin = crt.anchorMax = new Vector2(0.5f, 0.5f);
-            crt.sizeDelta = new Vector2(820f, 880f);
-            card.GetComponent<Image>().color = cardColor;
+            var card = NewUi("Card", _panel.transform, typeof(Image), typeof(Button));
+            _card = (RectTransform)card.transform;
+            _card.anchorMin = _card.anchorMax = new Vector2(0.5f, 0.5f);
+            _card.sizeDelta = new Vector2(CardWidth, 1180f);
+            RoundedSprite.Apply(card.GetComponent<Image>(), cardColor, 2f);
+            card.GetComponent<Button>().transition = Selectable.Transition.None;   // swallow taps on the card
 
-            Label(card.transform, "SETTINGS", new Vector2(0f, 360f), new Vector2(760f, 100f), 72f);
-            _vibrationButton = Toggle(card.transform, new Vector2(0f, 220f), ToggleVibration, out _vibrationLabel);
-            _joystickButton = Toggle(card.transform, new Vector2(0f, 90f), ToggleJoystick, out _joystickLabel);
-            _adsButton = Toggle(card.transform, new Vector2(0f, -40f), ToggleAdConsent, out _adsLabel);
-            Toggle(card.transform, new Vector2(0f, -170f), OpenPrivacyPolicy, out TextMeshProUGUI policy).color = offColor;
-            policy.text = "PRIVACY POLICY";
+            // Header band.
+            var band = NewUi("Header", card.transform, typeof(Image));
+            var brt = (RectTransform)band.transform;
+            brt.anchorMin = new Vector2(0f, 1f); brt.anchorMax = Vector2.one; brt.pivot = new Vector2(0.5f, 1f);
+            brt.sizeDelta = new Vector2(0f, 150f);
+            RoundedSprite.Apply(band.GetComponent<Image>(), accentColor, 2f);
+            _title = Label(card.transform, "", new Vector2(0f, 515f), new Vector2(700f, 120f), 76f);
+            _title.fontStyle = FontStyles.Bold;
+
+            var x = NewUi("X", card.transform, typeof(Image), typeof(Button));
+            var xrt = (RectTransform)x.transform;
+            xrt.anchorMin = xrt.anchorMax = new Vector2(0.5f, 0.5f);
+            xrt.sizeDelta = new Vector2(96f, 96f); xrt.anchoredPosition = new Vector2(CardWidth * 0.5f - 70f, 515f);
+            RoundedSprite.Apply(x.GetComponent<Image>(), new Color(1f, 1f, 1f, 0.22f), 4f);
+            x.GetComponent<Button>().onClick.AddListener(Close);
+            x.AddComponent<ButtonJuice>();
+            Label(x.transform, "X", Vector2.zero, new Vector2(96f, 96f), 54f).fontStyle = FontStyles.Bold;
+
+            float y = 380f;
+            _langHeader = Section(card.transform, ref y);
+            BuildLanguageRow(card.transform, ref y);
+
+            _gameHeader = Section(card.transform, ref y);
+            _vibration = SwitchRow(card.transform, "Vibration", ref y, ToggleVibration);
+            _ads = SwitchRow(card.transform, "Personalised ads", ref y, ToggleAdConsent);
+
+            _moreHeader = Section(card.transform, ref y);
+            _policyLabel = ActionRow(card.transform, ref y, OpenPrivacyPolicy, rowColor);
+            _resetLabel = ActionRow(card.transform, ref y, AskReset, new Color(dangerColor.r, dangerColor.g, dangerColor.b, 0.85f));
 
             var close = NewUi("Close", card.transform, typeof(Image), typeof(Button));
             var clrt = (RectTransform)close.transform;
             clrt.anchorMin = clrt.anchorMax = new Vector2(0.5f, 0.5f);
-            clrt.sizeDelta = new Vector2(400f, 120f);
-            clrt.anchoredPosition = new Vector2(0f, -330f);
-            close.GetComponent<Image>().color = new Color(0.9f, 0.25f, 0.25f, 1f);
+            clrt.sizeDelta = new Vector2(440f, 120f);
+            clrt.anchoredPosition = new Vector2(0f, -490f);
+            RoundedSprite.Apply(close.GetComponent<Image>(), onColor, 1.4f);
             close.GetComponent<Button>().onClick.AddListener(Close);
-            Label(close.transform, "CLOSE", Vector2.zero, new Vector2(400f, 120f), 56f);
+            close.AddComponent<ButtonJuice>();
+            _closeLabel = Label(close.transform, "", Vector2.zero, new Vector2(440f, 120f), 58f);
+            _closeLabel.fontStyle = FontStyles.Bold;
+
+            BuildConfirm();
         }
 
-        private Image Toggle(Transform parent, Vector2 pos, UnityEngine.Events.UnityAction onClick, out TextMeshProUGUI label)
+        private TextMeshProUGUI Section(Transform parent, ref float y)
         {
-            var go = NewUi("Toggle", parent, typeof(Image), typeof(Button));
+            var t = Label(parent, "", new Vector2(0f, y), new Vector2(RowWidth - 20f, 50f), 30f);
+            t.alignment = TextAlignmentOptions.Left;
+            t.characterSpacing = 8f;
+            t.color = new Color(1f, 1f, 1f, 0.45f);
+            y -= 62f;
+            return t;
+        }
+
+        private void BuildLanguageRow(Transform parent, ref float y)
+        {
+            var row = Row(parent, y, rowColor);
+            float w = (RowWidth - 16f * 4) / 3f;
+            for (int i = 0; i < 3; i++)
+            {
+                var lang = (Language)i;
+                var chip = NewUi("Lang_" + lang, row, typeof(Image), typeof(Button));
+                var rt = (RectTransform)chip.transform;
+                rt.anchorMin = rt.anchorMax = new Vector2(0f, 0.5f);
+                rt.sizeDelta = new Vector2(w, RowHeight - 22f);
+                rt.anchoredPosition = new Vector2(16f + w * 0.5f + i * (w + 16f), 0f);
+                _langChips[i] = chip.GetComponent<Image>();
+                RoundedSprite.Apply(_langChips[i], offColor, 1.2f);
+                chip.GetComponent<Button>().onClick.AddListener(() => SetLanguage(lang));
+                chip.AddComponent<ButtonJuice>();
+                _langLabels[i] = Label(chip.transform, Loc.NameOf(lang), Vector2.zero, rt.sizeDelta, 40f);
+            }
+            y -= RowHeight + 14f;
+        }
+
+        private Switch SwitchRow(Transform parent, string english, ref float y, UnityEngine.Events.UnityAction onClick)
+        {
+            var row = Row(parent, y, rowColor);
+            row.gameObject.AddComponent<Button>().onClick.AddListener(onClick);
+            var s = new Switch { English = english };
+            s.Label = Label(row, "", Vector2.zero, Vector2.zero, 42f);
+            Stretch(s.Label.rectTransform, 34f, 200f);
+            s.Label.enableAutoSizing = true; s.Label.fontSizeMin = 30f; s.Label.fontSizeMax = 42f;
+            s.Label.alignment = TextAlignmentOptions.Left;
+
+            var track = NewUi("Track", row, typeof(Image));
+            var trt = (RectTransform)track.transform;
+            trt.anchorMin = trt.anchorMax = new Vector2(1f, 0.5f);
+            trt.sizeDelta = new Vector2(140f, 70f); trt.anchoredPosition = new Vector2(-100f, 0f);
+            s.Track = track.GetComponent<Image>();
+            RoundedSprite.Apply(s.Track, offColor, 3f);
+            var knob = NewUi("Knob", track.transform, typeof(Image));
+            s.Knob = (RectTransform)knob.transform;
+            s.Knob.anchorMin = s.Knob.anchorMax = new Vector2(0.5f, 0.5f);
+            s.Knob.sizeDelta = new Vector2(56f, 56f);
+            RoundedSprite.Apply(knob.GetComponent<Image>(), Color.white, 3f);
+            y -= RowHeight + 14f;
+            return s;
+        }
+
+        private TextMeshProUGUI ActionRow(Transform parent, ref float y, UnityEngine.Events.UnityAction onClick, Color color)
+        {
+            var row = Row(parent, y, color);
+            row.gameObject.AddComponent<Button>().onClick.AddListener(onClick);
+            row.gameObject.AddComponent<ButtonJuice>();
+            var t = Label(row, "", Vector2.zero, Vector2.zero, 42f);
+            Stretch(t.rectTransform, 24f, 24f);
+            y -= RowHeight + 14f;
+            return t;
+        }
+
+        private RectTransform Row(Transform parent, float y, Color color)
+        {
+            var go = NewUi("Row", parent, typeof(Image));
             var rt = (RectTransform)go.transform;
             rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
-            rt.sizeDelta = new Vector2(700f, 110f);
-            rt.anchoredPosition = pos;
-            go.GetComponent<Button>().onClick.AddListener(onClick);
-            label = Label(go.transform, "", Vector2.zero, new Vector2(700f, 110f), 50f);
-            return go.GetComponent<Image>();
+            rt.sizeDelta = new Vector2(RowWidth, RowHeight);
+            rt.anchoredPosition = new Vector2(0f, y);
+            RoundedSprite.Apply(go.GetComponent<Image>(), color, 1.4f);
+            return rt;
         }
+
+        // ---------- open / close ----------
 
         public bool IsOpen => _panel != null && _panel.activeSelf;
 
@@ -125,19 +254,179 @@ namespace DrawRush.UI
         {
             if (_panel == null || IsOpen) return;   // MenuPause counts opens: never open twice
             MenuPause.Open();
+            _languageOnOpen = Loc.Current;
+            _openedAt = Time.unscaledTime;
             Refresh();
             _panel.SetActive(true);
+            RaiseSoundButtons();
         }
 
         public void Close()
         {
             if (!IsOpen) return;
+            HideConfirm();
             _panel.SetActive(false);
+            LowerSoundButtons();
             MenuPause.Close();
+            if (Loc.Current != _languageOnOpen) { Reload(); return; }   // rebuild every label in the new language
+            CountDownBackIn();
         }
 
-        // First-launch consent card (GDPR regions only, see AdConsent). Both answers get the same
-        // size and weight: a lopsided "Accept" button is exactly what regulators object to.
+        // Back into a live level after the menu: 3-2-1 first, so the player isn't caught off guard.
+        // Not on the win/lose panels or while the level is wrapping up.
+        private void CountDownBackIn()
+        {
+            var state = GameServices.State;
+            if (state != null && (state.IsGameWon || state.IsFinishing)) return;
+            var hud = FindFirstObjectByType<HudPanels>();
+            if (hud != null && ((hud.WinPanel != null && hud.WinPanel.activeInHierarchy) || (hud.LosePanel != null && hud.LosePanel.activeInHierarchy))) return;
+            var countdown = FindFirstObjectByType<LevelStartCountdown>();
+            if (countdown != null) countdown.Begin();
+        }
+
+        // The sound and music buttons stay usable above the dimmed screen while the card is open.
+        private void RaiseSoundButtons()
+        {
+            _raised.Clear();
+            foreach (var b in FindObjectsByType<MuteButton>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+            {
+                if (b.transform.parent != transform.parent) continue;   // same canvas layer only
+                _raised.Add((b.transform, b.transform.GetSiblingIndex()));
+            }
+            foreach (var r in _raised) r.t.SetAsLastSibling();
+        }
+
+        private void LowerSoundButtons()
+        {
+            // Put them back in their original order (lowest index first).
+            _raised.Sort((a, b) => a.index.CompareTo(b.index));
+            foreach (var r in _raised) if (r.t != null) r.t.SetSiblingIndex(r.index);
+            _raised.Clear();
+        }
+
+        private void Update()
+        {
+            KeepMenuButtonInSafeArea();
+            if (!IsOpen) return;
+            float t = Time.unscaledTime - _openedAt;
+            _card.localScale = Vector3.one * (t < 0.2f ? Mathf.SmoothStep(0.85f, 1f, t / 0.2f) : 1f);
+            if (_confirm != null && _confirm.activeSelf)
+            {
+                float c = Time.unscaledTime - _confirmOpenedAt;
+                _confirmCard.localScale = Vector3.one * (c < 0.18f ? Mathf.SmoothStep(0.85f, 1f, c / 0.18f) : 1f);
+            }
+        }
+
+        private static void Reload()
+        {
+            MenuPause.SetGameTimeScale(1f);
+            UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex);
+        }
+
+        // ---------- actions ----------
+
+        private void SetLanguage(Language l) { Loc.Current = l; Refresh(); }
+
+        private void ToggleAdConsent() { DrawRush.Ads.AdConsent.Set(!DrawRush.Ads.AdConsent.Personalised); Refresh(); }
+
+        private static void OpenPrivacyPolicy() => Application.OpenURL(DrawRush.Ads.AdConsent.PrivacyPolicyUrl);
+
+        private void ToggleVibration() { Haptics.Enabled = !Haptics.Enabled; Refresh(); if (Haptics.Enabled) Haptics.Light(); }
+
+        // ---------- reset, behind a confirmation card ----------
+
+        private void AskReset()
+        {
+            if (_confirm == null) return;
+            _confirm.SetActive(true);
+            _confirm.transform.SetAsLastSibling();
+            _confirmOpenedAt = Time.unscaledTime;
+        }
+
+        private void HideConfirm() { if (_confirm != null) _confirm.SetActive(false); }
+
+        // A fresh start (levels, coins, skins, upgrades) and reload, for tests and clean videos.
+        private void ConfirmReset()
+        {
+            PlayerProgress.ResetEverything();
+            HideConfirm();
+            _panel.SetActive(false);
+            LowerSoundButtons();
+            MenuPause.Close();
+            Reload();
+        }
+
+        private void BuildConfirm()
+        {
+            _confirm = NewUi("ResetConfirm", _panel.transform, typeof(Image), typeof(Button));
+            var rt = (RectTransform)_confirm.transform;
+            rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one; rt.offsetMin = rt.offsetMax = Vector2.zero;
+            _confirm.GetComponent<Image>().color = new Color(0.02f, 0.02f, 0.08f, 0.6f);
+            _confirm.GetComponent<Button>().transition = Selectable.Transition.None;
+            _confirm.GetComponent<Button>().onClick.AddListener(HideConfirm);   // tap outside = cancel
+
+            var card = NewUi("Card", _confirm.transform, typeof(Image), typeof(Button));
+            _confirmCard = (RectTransform)card.transform;
+            _confirmCard.anchorMin = _confirmCard.anchorMax = new Vector2(0.5f, 0.5f);
+            _confirmCard.sizeDelta = new Vector2(760f, 620f);
+            RoundedSprite.Apply(card.GetComponent<Image>(), cardColor, 2f);
+            card.GetComponent<Button>().transition = Selectable.Transition.None;
+
+            var title = Label(card.transform, Loc.T("Reset game?"), new Vector2(0f, 205f), new Vector2(680f, 100f), 62f);
+            title.fontStyle = FontStyles.Bold;
+            var body = Label(card.transform, Loc.T("Levels, coins, skins and upgrades will all be lost.\nThis can't be undone."),
+                new Vector2(0f, 50f), new Vector2(660f, 190f), 38f);
+            body.textWrappingMode = TextWrappingModes.Normal;
+            body.color = new Color(1f, 1f, 1f, 0.8f);
+
+            ConfirmButton(card.transform, Loc.Upper(Loc.T("Cancel")), new Vector2(-165f, -195f), offColor, HideConfirm);
+            ConfirmButton(card.transform, Loc.Upper(Loc.T("Reset")), new Vector2(165f, -195f), dangerColor, ConfirmReset);
+            _confirm.SetActive(false);
+        }
+
+        private void ConfirmButton(Transform parent, string text, Vector2 pos, Color color, UnityEngine.Events.UnityAction onClick)
+        {
+            var go = NewUi(text, parent, typeof(Image), typeof(Button));
+            var rt = (RectTransform)go.transform;
+            rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = new Vector2(300f, 116f);
+            rt.anchoredPosition = pos;
+            RoundedSprite.Apply(go.GetComponent<Image>(), color, 1.4f);
+            go.GetComponent<Button>().onClick.AddListener(onClick);
+            go.AddComponent<ButtonJuice>();
+            Label(go.transform, text, Vector2.zero, rt.sizeDelta, 48f).fontStyle = FontStyles.Bold;
+        }
+
+        private void Refresh()
+        {
+            _title.text = Loc.Upper(Loc.T("Settings"));
+            _langHeader.text = Loc.Upper(Loc.T("Language"));
+            _gameHeader.text = Loc.Upper(Loc.T("Game"));
+            _moreHeader.text = Loc.Upper(Loc.T("More"));
+            for (int i = 0; i < 3; i++)
+            {
+                bool on = (int)Loc.Current == i;
+                _langChips[i].color = on ? accentColor : offColor;
+                _langLabels[i].fontStyle = on ? FontStyles.Bold : FontStyles.Normal;
+            }
+            SetSwitch(_vibration, Haptics.Enabled);
+            SetSwitch(_ads, DrawRush.Ads.AdConsent.Personalised);
+            _policyLabel.text = Loc.T("Privacy Policy");
+            _resetLabel.text = Loc.T("Reset game");
+            _closeLabel.text = Loc.Upper(Loc.T("Done"));
+        }
+
+        private void SetSwitch(Switch s, bool on)
+        {
+            s.Label.text = Loc.T(s.English);
+            s.Track.color = on ? onColor : switchOffColor;
+            s.Knob.anchoredPosition = new Vector2(on ? 34f : -34f, 0f);
+        }
+
+        // ---------- first-launch consent card ----------
+
+        // GDPR regions only, see AdConsent. Both answers get the same size and weight: a lopsided
+        // "Accept" button is exactly what regulators object to.
         private void BuildConsentPanel()
         {
             _consentPanel = NewUi("ConsentPanel", transform, typeof(Image));
@@ -149,18 +438,17 @@ namespace DrawRush.UI
             var crt = (RectTransform)card.transform;
             crt.anchorMin = crt.anchorMax = new Vector2(0.5f, 0.5f);
             crt.sizeDelta = new Vector2(880f, 1000f);
-            card.GetComponent<Image>().color = cardColor;
+            RoundedSprite.Apply(card.GetComponent<Image>(), cardColor, 2f);
 
-            Label(card.transform, "YOUR PRIVACY", new Vector2(0f, 400f), new Vector2(800f, 100f), 66f);
+            Label(card.transform, Loc.Upper(Loc.T("Your privacy")), new Vector2(0f, 400f), new Vector2(800f, 100f), 66f);
             var body = Label(card.transform,
-                "Draw Rush is free thanks to ads.\n\nWith your OK, our ad partner (Unity Ads) may use your device's " +
-                "advertising ID to show ads that suit you. Say no and you still see ads, just less relevant ones." +
-                "\n\nYou can change this any time in Settings.",
+                Loc.T("Draw Rush is free thanks to ads.\n\nWith your OK, our ad partner (Unity Ads) may use your device's advertising ID to show ads that suit you. Say no and you still see ads, just less relevant ones.\n\nYou can change this any time in Settings."),
                 new Vector2(0f, 90f), new Vector2(780f, 500f), 38f);
             body.textWrappingMode = TextWrappingModes.Normal;
+            body.lineSpacing = 6f;
 
-            ConsentButton(card.transform, "ACCEPT", new Vector2(0f, -250f), true);
-            ConsentButton(card.transform, "NO, THANKS", new Vector2(0f, -380f), false);
+            ConsentButton(card.transform, Loc.Upper(Loc.T("Accept")), new Vector2(0f, -250f), true);
+            ConsentButton(card.transform, Loc.Upper(Loc.T("No, thanks")), new Vector2(0f, -380f), false);
 
             var link = NewUi("Policy", card.transform, typeof(Image), typeof(Button));
             var lrt = (RectTransform)link.transform;
@@ -169,7 +457,7 @@ namespace DrawRush.UI
             lrt.anchoredPosition = new Vector2(0f, -465f);
             link.GetComponent<Image>().color = Color.clear;
             link.GetComponent<Button>().onClick.AddListener(OpenPrivacyPolicy);
-            var linkLabel = Label(link.transform, "<u>Privacy Policy</u>", Vector2.zero, new Vector2(500f, 70f), 34f);
+            var linkLabel = Label(link.transform, "<u>" + Loc.T("Privacy Policy") + "</u>", Vector2.zero, new Vector2(500f, 70f), 34f);
             linkLabel.color = new Color(0.75f, 0.85f, 1f, 1f);
         }
 
@@ -180,7 +468,7 @@ namespace DrawRush.UI
             rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
             rt.sizeDelta = new Vector2(620f, 110f);
             rt.anchoredPosition = pos;
-            go.GetComponent<Image>().color = onColor;
+            RoundedSprite.Apply(go.GetComponent<Image>(), onColor, 1.4f);
             go.GetComponent<Button>().onClick.AddListener(() => AnswerConsent(granted));
             go.AddComponent<ButtonJuice>();
             Label(go.transform, text, Vector2.zero, new Vector2(620f, 110f), 50f);
@@ -205,28 +493,12 @@ namespace DrawRush.UI
             answer?.Invoke(granted);
         }
 
-        private void ToggleAdConsent()
+        // ---------- helpers ----------
+
+        private static void Stretch(RectTransform rt, float left, float right)
         {
-            DrawRush.Ads.AdConsent.Set(!DrawRush.Ads.AdConsent.Personalised);
-            Refresh();
-        }
-
-        private static void OpenPrivacyPolicy() => Application.OpenURL(DrawRush.Ads.AdConsent.PrivacyPolicyUrl);
-
-        private void ToggleVibration() { Haptics.Enabled = !Haptics.Enabled; Refresh(); if (Haptics.Enabled) Haptics.Light(); }
-        private void ToggleJoystick() { FloatingJoystick.FixedMode = !FloatingJoystick.FixedMode; Refresh(); }
-
-        private void Refresh()
-        {
-            bool vib = Haptics.Enabled;
-            _vibrationLabel.text = vib ? "VIBRATION: ON" : "VIBRATION: OFF";
-            _vibrationButton.color = vib ? onColor : offColor;
-            bool fixedStick = FloatingJoystick.FixedMode;
-            _joystickLabel.text = fixedStick ? "JOYSTICK: FIXED" : "JOYSTICK: FLOATING";
-            _joystickButton.color = onColor;
-            bool personal = DrawRush.Ads.AdConsent.Personalised;
-            _adsLabel.text = personal ? "PERSONALISED ADS: ON" : "PERSONALISED ADS: OFF";
-            _adsButton.color = personal ? onColor : offColor;
+            rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
+            rt.offsetMin = new Vector2(left, 0f); rt.offsetMax = new Vector2(-right, 0f);
         }
 
         private TextMeshProUGUI Label(Transform parent, string text, Vector2 pos, Vector2 size, float fontSize)
@@ -237,8 +509,11 @@ namespace DrawRush.UI
             rt.sizeDelta = size;
             rt.anchoredPosition = pos;
             var t = go.GetComponent<TextMeshProUGUI>();
-            if (font != null) t.font = font;
+            TMP_FontAsset f = cardFont != null ? cardFont : font;
+            if (f != null) t.font = f;
             t.text = text; t.fontSize = fontSize; t.alignment = TextAlignmentOptions.Center; t.color = Color.white; t.raycastTarget = false;
+            t.characterSpacing = 2f;                       // a little air between letters
+            t.textWrappingMode = TextWrappingModes.NoWrap;
             return t;
         }
 

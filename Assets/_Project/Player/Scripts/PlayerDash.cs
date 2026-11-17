@@ -47,8 +47,8 @@ namespace DrawRush.Player
             _trail.widthCurve = new AnimationCurve(new Keyframe(0f, 0.55f), new Keyframe(1f, 0f));
             _trail.material = new Material(Shader.Find("Sprites/Default"));
             var g = new Gradient();
-            g.SetKeys(new[] { new GradientColorKey(new Color(0.35f, 0.55f, 1f), 0f), new GradientColorKey(Color.white, 1f) },
-                      new[] { new GradientAlphaKey(0.7f, 0f), new GradientAlphaKey(0f, 1f) });
+            g.SetKeys(new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },   // white streak (Kaan)
+                      new[] { new GradientAlphaKey(0.85f, 0f), new GradientAlphaKey(0f, 1f) });
             _trail.colorGradient = g;
             _trail.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             _trail.emitting = false;
@@ -73,7 +73,14 @@ namespace DrawRush.Player
         private void OnLevelBound(DrawRush.Drawing.EdgeNetwork _)
         {
             _readyAt = 0f;
-            if (!DashSkill.Owned || PlayerPrefs.GetInt(HintKey, 0) >= hintTimes) return;
+            if (!DashSkill.Owned) return;
+            if (DashTutorial.PracticePending && GetComponent<DashPractice>() == null)
+            {
+                DashPractice.Begin(gameObject);   // the guided first dash replaces the first hint
+                PlayerPrefs.SetInt(HintKey, Mathf.Max(1, PlayerPrefs.GetInt(HintKey, 0)));
+                return;
+            }
+            if (PlayerPrefs.GetInt(HintKey, 0) >= hintTimes) return;
             PlayerPrefs.SetInt(HintKey, PlayerPrefs.GetInt(HintKey, 0) + 1);
             var hud = FindFirstObjectByType<BoosterHud>();
             if (hud != null) hud.Toast("DASH READY", Application.isMobilePlatform ? "Double-tap to dash" : "Double-tap or Space to dash", new Color(0.35f, 0.55f, 1f));

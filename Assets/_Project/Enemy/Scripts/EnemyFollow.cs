@@ -133,7 +133,7 @@ namespace DrawRush.Enemy
         [Tooltip("Seconds it stands after landing.")]
         [SerializeField] private float lungeRest = 0.75f;
         [Tooltip("How far one lunge goes (m), at speed 1.")]
-        [SerializeField] private float lungeDistance = 3.6f;
+        [SerializeField] private float lungeDistance = 3.24f;
         [Tooltip("How far past the player a lunge may carry it (m), so a late dodge still works.")]
         [SerializeField] private float lungeOvershoot = 0.5f;
         [Tooltip("The wind-up sound plays only for a player closer than this (m).")]

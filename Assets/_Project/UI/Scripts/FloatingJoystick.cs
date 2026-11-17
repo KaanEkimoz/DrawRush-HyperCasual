@@ -51,13 +51,10 @@ namespace DrawRush.UI
         /// <summary>Raised when the player switches between floating and fixed in Settings.</summary>
         public static event System.Action ModeChanged;
 
-        /// <summary>Player setting: false = floating (spawns under the thumb, the default),
-        /// true = fixed (always visible at the bottom centre, no follow).</summary>
-        public static bool FixedMode
-        {
-            get => PlayerPrefs.GetInt(FixedKey, 0) == 1;
-            set { PlayerPrefs.SetInt(FixedKey, value ? 1 : 0); PlayerPrefs.Save(); ModeChanged?.Invoke(); }
-        }
+        /// <summary>The stick always floats (spawns under the thumb). The fixed mode setting was
+        /// removed (Kaan, 2026-11-17); its code paths stay for now but never run, and an old saved
+        /// "fixed" choice is ignored.</summary>
+        public static bool FixedMode => false;
 
         [InputControl(layout = "Vector2")]
         [SerializeField] private string controlPath = "<Gamepad>/leftStick";
@@ -168,16 +165,42 @@ namespace DrawRush.UI
                 Sizing();
                 if (FixedMode) { SendValueToControl(Vector2.zero); OnDrag(eventData); return; }   // parked stick: steer from its centre
                 background.anchoredPosition = local;
-                // After a dash the hero keeps running the way it was going: the ring opens behind
-                // the thumb, so the stick is already at full deflection in that direction.
-                if (dashTap && _heldDeflection.sqrMagnitude > 0.04f)
-                    background.anchoredPosition = local - _heldDeflection.normalized * _reach;
+                // After a dash the hero keeps running the way the pencil faces (the way it just
+                // dashed): the ring opens behind the thumb, so the stick is already at full
+                // deflection in that direction. The facing is used rather than the last stick
+                // value because the first tap of the double tap has already reset that to zero.
+                if (dashTap && TryDashDirection(out Vector2 runDir))
+                    background.anchoredPosition = local - runDir * _reach;
                 if (handle != null) handle.anchoredPosition = local;
                 background.gameObject.SetActive(true);
                 if (handle != null) handle.gameObject.SetActive(true);
             }
             SendValueToControl(Vector2.zero);
             OnDrag(eventData);
+        }
+
+        private Transform _hero;
+
+        /// <summary>Stick direction (unit) that would steer the way the hero faces, else the stick's
+        /// last held direction. False when neither is known.</summary>
+        private bool TryDashDirection(out Vector2 dir)
+        {
+            dir = Vector2.zero;
+            if (_hero == null)
+            {
+                var dash = FindFirstObjectByType<DrawRush.Player.PlayerDash>();
+                if (dash != null) _hero = dash.transform;
+            }
+            if (_hero != null)
+            {
+                // Inverse of ThirdPersonMovement: heading yaw = atan2(stick.x, stick.y) + camera yaw.
+                var cam = DrawRush.Core.GameServices.MainCamera;
+                float yaw = (_hero.eulerAngles.y - (cam != null ? cam.eulerAngles.y : 0f)) * Mathf.Deg2Rad;
+                dir = new Vector2(Mathf.Sin(yaw), Mathf.Cos(yaw));
+                return true;
+            }
+            if (_heldDeflection.sqrMagnitude > 0.04f) { dir = _heldDeflection.normalized; return true; }
+            return false;
         }
 
         public void OnDrag(PointerEventData eventData)

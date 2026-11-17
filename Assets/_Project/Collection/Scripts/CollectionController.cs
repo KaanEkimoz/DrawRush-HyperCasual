@@ -210,7 +210,7 @@ namespace DrawRush.Collection
                 bool collected = stars > 0;
                 if (collected) owned++;
                 cell.art.color = collected ? Color.white : lockedTint;
-                cell.label.text = collected ? cell.entry.DisplayName : "?";
+                cell.label.text = collected ? DrawRush.Localization.Loc.T(cell.entry.DisplayName) : "?";
                 for (int s = 0; s < cell.stars.Length; s++)
                 {
                     cell.stars[s].gameObject.SetActive(collected);

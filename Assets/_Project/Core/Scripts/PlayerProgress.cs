@@ -86,6 +86,44 @@ namespace DrawRush.Core
             return sum;
         }
 
+        /// <summary>Back to the first level (the tutorial), as on a fresh install: level position,
+        /// difficulty curve and shape bag are cleared. Coins, skins, upgrades and stars stay.</summary>
+        public static void ResetLevelProgress()
+        {
+            PlayerPrefs.SetInt(TutorialCompletedKey, 0);
+            PlayerPrefs.SetInt(LastLevelIndexKey, -1);
+            PlayerPrefs.SetInt(LevelsPlayedKey, 0);
+            PlayerPrefs.SetInt(WonLevelKey, -1);
+            PlayerPrefs.SetInt(LastLevelEnemiesKey, -1);
+            PlayerPrefs.SetString(LevelBagKey, string.Empty);
+            PlayerPrefs.Save();
+        }
+
+        /// <summary>
+        /// A fresh start, as on a new install: levels, stars (and so the collection), coins, skins,
+        /// stat/dash/booster upgrades and the one-time hints are all cleared. Device-level choices
+        /// stay: language, sound/music mutes, vibration and the ad-consent answer. Only the game's
+        /// own keys are deleted, so ad/analytics SDK data in PlayerPrefs is left alone.
+        /// </summary>
+        public static void ResetEverything()
+        {
+            string[] keys =
+            {
+                TutorialCompletedKey, CoinsKey, LastLevelIndexKey, LevelsPlayedKey, WonLevelKey, LevelBagKey,
+                LastLevelEnemiesKey, OwnedCosmeticsKey, EquippedCosmeticKey,
+                "Skill_Dash", "DashHintShown", "DashPracticePending", "PetLevel", "BuddyLevel",
+                "DrawRush.TrapTest", "DrawRush.TrapTest.LastLevel", "JoystickFixed",
+            };
+            foreach (string k in keys) PlayerPrefs.DeleteKey(k);
+            for (int i = 0; i < 512; i++) PlayerPrefs.DeleteKey(StarsKeyPrefix + i);
+            foreach (string stat in System.Enum.GetNames(typeof(PlayerStat))) PlayerPrefs.DeleteKey("Stat_" + stat);
+            foreach (string b in System.Enum.GetNames(typeof(DrawRush.Boosters.BoosterType))) PlayerPrefs.DeleteKey("BoosterLevel_" + b);
+            PlayerPrefs.DeleteKey("BoosterLevel_Magnet");
+            PlayerPrefs.Save();
+            CoinsChanged?.Invoke(0);
+            CosmeticChanged?.Invoke(string.Empty);
+        }
+
         /// <summary>True once the player has finished the tutorial level.</summary>
         public static bool TutorialCompleted
         {

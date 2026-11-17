@@ -59,16 +59,16 @@ namespace DrawRush.Ads
             if (hud == null) return;
             if (hud.LosePanel != null)
             {
-                _revive = MakeButton(hud.LosePanel.transform, "Second Chance (Ad)", loseButtonY, OnRevive);
-                _shieldRetry = MakeButton(hud.LosePanel.transform, "Retry with Shield (Ad)", loseButtonY, OnShieldRetry);
+                _revive = MakeButton(hud.LosePanel.transform, DrawRush.Localization.Loc.T("Second Chance (Ad)"), loseButtonY, OnRevive);
+                _shieldRetry = MakeButton(hud.LosePanel.transform, DrawRush.Localization.Loc.T("Retry with Shield (Ad)"), loseButtonY, OnShieldRetry);
             }
             if (hud.WinPanel != null)
-                _doubleCoins = MakeButton(hud.WinPanel.transform, "x2 Coins (Ad)", winButtonY, OnDoubleCoins);
+                _doubleCoins = MakeButton(hud.WinPanel.transform, DrawRush.Localization.Loc.T("x2 Coins (Ad)"), winButtonY, OnDoubleCoins);
             if (countdown == null) countdown = FindFirstObjectByType<LevelStartCountdown>();
             if (levels == null) levels = FindFirstObjectByType<LevelManager>();
             // On the HUD canvas itself (the panels' parent), since no panel is open at level start.
             Transform canvas = hud.LosePanel != null ? hud.LosePanel.transform.parent : null;
-            if (canvas != null) _startShield = MakeButton(canvas, "Start with Shield (Ad)", startButtonY, OnStartShield);
+            if (canvas != null) _startShield = MakeButton(canvas, DrawRush.Localization.Loc.T("Start with Shield (Ad)"), startButtonY, OnStartShield);
         }
 
         private void OnEnable()

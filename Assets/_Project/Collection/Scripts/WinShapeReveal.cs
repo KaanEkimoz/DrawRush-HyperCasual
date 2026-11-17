@@ -35,7 +35,7 @@ namespace DrawRush.Collection
                 illustration.gameObject.SetActive(show);
                 if (show) illustration.sprite = entry.Illustration;
             }
-            if (nameLabel != null) nameLabel.text = entry != null ? entry.DisplayName : string.Empty;
+            if (nameLabel != null) nameLabel.text = entry != null ? DrawRush.Localization.Loc.T(entry.DisplayName) : string.Empty;
 
             GameState state = GameServices.State;
             if (newBadge != null) newBadge.SetActive(show && state != null && state.LastShapeWasNew);
