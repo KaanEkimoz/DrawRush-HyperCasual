@@ -88,12 +88,14 @@ namespace DrawRush.Hazards
         [Header("Roller")]
         [Tooltip("Length (m) of the stretch of line it rolls along.")]
         [SerializeField] private float rollerSpan = 3.2f;
-        [SerializeField] private float rollerRadius = 0.28f;
-        [SerializeField] private float rollerLength = 1.7f;
+        // Renamed fields (Kaan, 2026-11-17: smaller pencil, twice the rest at each end) so values
+        // saved in the scene under the old names don't override the new ones.
+        [SerializeField] private float rollerBodyRadius = 0.2f;
+        [SerializeField] private float rollerBodyLength = 1.2f;
         [Tooltip("Seconds for one trip there and back.")]
         [SerializeField] private float rollerPeriod = 3.2f;   // rolling time for a there-and-back
         [Tooltip("Seconds it rests at each end before rolling back (and goes quiet).")]
-        [SerializeField] private float rollerHold = 0.6f;
+        [SerializeField] private float rollerRestSeconds = 1.2f;
 
         [SerializeField] private float knockbackForce = 7f;
 
@@ -357,23 +359,23 @@ namespace DrawRush.Hazards
                 stop.sprite = Square();
                 stop.color = new Color(0.16f, 0.17f, 0.22f, 0.85f);
                 stop.transform.SetParent(root.transform, false);
-                stop.transform.localPosition = new Vector3(0f, 0.035f, end * (trap.Half + rollerRadius + 0.08f));
+                stop.transform.localPosition = new Vector3(0f, 0.035f, end * (trap.Half + rollerBodyRadius + 0.08f));
                 stop.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
-                stop.transform.localScale = new Vector3(rollerLength * 0.8f, 0.1f, 1f);
+                stop.transform.localScale = new Vector3(rollerBodyLength * 0.8f, 0.1f, 1f);
             }
 
             // The highlighter: body, a cap at one end and a clip that shows it turning.
             var body = new GameObject("Roller").transform;
             body.SetParent(root.transform, false);
             Part(body, PrimitiveType.Cylinder, Vector3.zero, Quaternion.Euler(0f, 0f, 90f),
-                new Vector3(rollerRadius * 2f, rollerLength * 0.5f, rollerRadius * 2f), rollerBody);
-            Part(body, PrimitiveType.Cylinder, new Vector3(rollerLength * 0.42f, 0f, 0f), Quaternion.Euler(0f, 0f, 90f),
-                new Vector3(rollerRadius * 2.12f, rollerLength * 0.1f, rollerRadius * 2.12f), rollerCap);
-            Part(body, PrimitiveType.Cube, new Vector3(rollerLength * 0.25f, rollerRadius * 1.02f, 0f), Quaternion.identity,
-                new Vector3(rollerLength * 0.32f, 0.06f, 0.1f), rollerCap);
+                new Vector3(rollerBodyRadius * 2f, rollerBodyLength * 0.5f, rollerBodyRadius * 2f), rollerBody);
+            Part(body, PrimitiveType.Cylinder, new Vector3(rollerBodyLength * 0.42f, 0f, 0f), Quaternion.Euler(0f, 0f, 90f),
+                new Vector3(rollerBodyRadius * 2.12f, rollerBodyLength * 0.1f, rollerBodyRadius * 2.12f), rollerCap);
+            Part(body, PrimitiveType.Cube, new Vector3(rollerBodyLength * 0.25f, rollerBodyRadius * 1.02f, 0f), Quaternion.identity,
+                new Vector3(rollerBodyLength * 0.32f, 0.06f, 0.1f), rollerCap);
             trap.Moving = body;
-            trap.Clock = Random.Range(0f, rollerPeriod + 2f * rollerHold);
-            trap.Blocker = PaintBlockers.Add(at, rollerRadius + 0.3f);
+            trap.Clock = Random.Range(0f, rollerPeriod + 2f * rollerRestSeconds);
+            trap.Blocker = PaintBlockers.Add(at, rollerBodyRadius + 0.3f);
             return trap;
         }
 
@@ -390,11 +392,11 @@ namespace DrawRush.Hazards
         }
 
         // Where the roller is (-1..1 along its stretch) and how fast it is going (0-1): it eases
-        // from one end to the other, then rests there for rollerHold before rolling back.
+        // from one end to the other, then rests there for rollerRestSeconds before rolling back.
         private float RollerAt(float clock, out float speed)
         {
             float move = rollerPeriod * 0.5f;
-            float leg = move + rollerHold;
+            float leg = move + rollerRestSeconds;
             float c = Mathf.Repeat(clock, leg * 2f);
             float dir = c < leg ? 1f : -1f;
             float k = Mathf.Clamp01((c < leg ? c : c - leg) / move);
@@ -409,9 +411,9 @@ namespace DrawRush.Hazards
             if (t.Retired) t.Sink = Mathf.MoveTowards(t.Sink, 1f, Time.deltaTime * 2f);
             // Retired, it shrinks away (a highlighter cannot sink into the page).
             t.Moving.localScale = Vector3.one * (1f - t.Sink);
-            t.Moving.localPosition = new Vector3(0f, rollerRadius * (1f - t.Sink), s);
+            t.Moving.localPosition = new Vector3(0f, rollerBodyRadius * (1f - t.Sink), s);
             // Rolls without slipping: turned by the distance travelled over its radius.
-            t.Moving.localRotation = Quaternion.AngleAxis(s / rollerRadius * Mathf.Rad2Deg, Vector3.right);
+            t.Moving.localRotation = Quaternion.AngleAxis(s / rollerBodyRadius * Mathf.Rad2Deg, Vector3.right);
             if (t.Sink >= 1f && t.Moving.gameObject.activeSelf) t.Moving.gameObject.SetActive(false);
             if (t.Retired) return;
 
@@ -423,7 +425,7 @@ namespace DrawRush.Hazards
             Vector3 d = hero - ground; d.y = 0f;
             float a = Vector3.Dot(d, t.Along);
             float across = Vector3.Dot(d, Vector3.Cross(Vector3.up, t.Along));
-            if (Mathf.Abs(a) >= rollerRadius + 0.25f || Mathf.Abs(across) >= rollerLength * 0.5f + 0.15f) return;
+            if (Mathf.Abs(a) >= rollerBodyRadius + 0.25f || Mathf.Abs(across) >= rollerBodyLength * 0.5f + 0.15f) return;
             combat.TakeDamage(1);
             if (knockback != null) knockback.ApplyKnockback(Mathf.Abs(a) > 0.01f ? t.Along * Mathf.Sign(a) : t.Along, knockbackForce);
             Haptics.Medium();
