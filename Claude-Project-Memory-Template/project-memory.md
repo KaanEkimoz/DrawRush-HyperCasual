@@ -5,6 +5,12 @@
 
 ---
 
+## 🚀 1.7.0 (versionCode 14) REVIEW'DA — 20 Kas 2026, Play API ile gönderildi (`8b376466`, dal `claude-dev-feat-controls` push'lu, master'a merge edilmedi)
+- İçerik: EN/TR/ES dil, showroom mağaza (sıralı açılım), alınabilir geliştirme rozeti, Dash tutorial, kenar başına 2 altın, yeni ayarlar (3-2-1, Reset game, ToS linki), diken 2.5/2.5 sn, küçük fosforlu kalem + uçlarda 2x bekleme.
+- ⚠️ Diken/fosforlu ayarı Play modunda denenmeden yayına girdi.
+- Keystore şifresi macOS Keychain'den otomatik yükleniyor (`Assets/Editor/KeystoreFromKeychain.cs`); Kaan'ın şifre girmesine gerek yok.
+- iOS hâlâ 1.6.0; bu değişiklikler iOS'a gitmedi.
+
 ## 🧭 Yeni yön — 31 Eki 2026: Defter Doodle + Kırtasiye Çetesi (henüz kod yok)
 - Kaan seçti: tasarım dili Defter Doodle; düşmanlar zımba (normal), makas (hızlı), delgeç (tank), kalemtıraş (çizgi yiyen), raptiye (atılan). Kalem kahraman.
 - Eklenecek: can = kalemin boyu, mürekkep hokkası pickup, Sakar Devler (kahve fincanı, masa sallanması), Dev Silgi boss, kahraman sınıfları (Kurşun/Tükenmez/Fırça).
